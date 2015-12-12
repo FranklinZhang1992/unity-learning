@@ -1,0 +1,9 @@
+#!/bin/bash
+
+ROOT_PATH=$HOME/temp
+# generate pm.xml
+$HOME/workspace/ruby-demo/spine/configs/platform_probe start
+# ruby $HOME/workspace/ruby-demo/spine/configure.rb
+$HOME/temp/usr/lib/spine/configure
+# ruby $HOME/workspace/ruby-demo/spine/spine.rb
+$HOME/temp/usr/sbin/spine

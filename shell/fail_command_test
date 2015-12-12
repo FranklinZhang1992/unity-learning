@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ssh user@192.168.234.10
+echo "exec finished"

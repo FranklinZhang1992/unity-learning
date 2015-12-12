@@ -1,0 +1,22 @@
+#!/bin/bash
+
+ROOT_PATH=$HOME/temp
+# LOGM="logger -p daemon.notice -t platform_probe"
+PMDIR=$ROOT_PATH/etc/platform_management
+# SERV_ACTIVE="services active"
+# IBMTOOLS=/var/run
+# manuf=""
+# model=""
+# copy_xml=0
+
+case "$1" in
+    start)
+        $ROOT_PATH/sbin/pm_describe > $PMDIR/pm.temp.xml
+        # If temp file has non-zero content, install it as pm.xml
+        [ -s $PMDIR/pm.temp.xml ] && mv $PMDIR/pm.temp.xml $PMDIR/pm.xml
+        ;;
+    *)
+        ;;
+esac
+
+exit 0

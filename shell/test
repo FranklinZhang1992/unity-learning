@@ -1,0 +1,14 @@
+#!/bin/bash
+
+loopindex=0
+hostname
+while true
+do
+	echo "testing"
+	loopindex=`expr $loopindex + 1`
+	if [ $loopindex == 10 ]
+	then
+		break
+	fi
+	sleep 1
+done

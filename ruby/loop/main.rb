@@ -1,0 +1,3 @@
+require './syncer'
+
+Syncer.create

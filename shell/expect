@@ -1,0 +1,20 @@
+#!/usr/bin/expect
+
+set timeout 30
+set host 192.168.234.104
+set username user
+set password password
+set path /mnt/stratus/CloudMgmtDeploy1/jetty-distribution-9.2.7.v20150116/webapps/
+set filename root.war
+set path2 /home/franklin/temp/packages/
+
+
+
+spawn scp $username@$host:$path$filename $path2$filename
+expect "password:"
+send "$password\r"
+expect eof
+spawn echo "hello"
+expect eof
+
+

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+while true
+do
+	echo "What's your name?"
+	read person
+	if [ $person == "franklin" ]; then
+		echo "Hello, $person"
+	else 
+		echo "break"
+		break
+	fi
+done

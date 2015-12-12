@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm -rf $HOME/temp/etc
+rm -rf $HOME/temp/var
+rm -rf $HOME/temp/usr
+rm -rf $HOME/temp/sbin
+echo "clean spine finished"

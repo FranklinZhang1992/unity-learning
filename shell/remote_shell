@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+
+
+
+
+
+SCRIPT_PATH=/home/user/script/test.sh
+
+echo "remote script execute start"
+ssh user@192.168.234.104 /home/user/script/test.sh
+echo "remote script execute end"

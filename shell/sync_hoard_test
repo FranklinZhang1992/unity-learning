@@ -1,0 +1,27 @@
+#!/bin/bash
+
+shopt -s nullglob
+
+spool=/home/usr/franklin/temp/sync
+
+function updates_exist {
+	for f in $spool/{creates, updates}*
+	do
+		[ -s $f ] && return 0
+	done
+	return 1
+}
+
+while true
+do
+	updates_exist
+	result=$?
+	
+	if [ $result == 0 ]; then
+		echo "update exist"
+		sleep 1
+	else
+		echo "no update"
+		sleep 1
+	fi
+done

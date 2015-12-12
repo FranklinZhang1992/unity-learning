@@ -1,0 +1,90 @@
+#!/bin/bash
+
+packagePath=/home/franklin/temp/packages
+
+ssh user@192.168.234.104
+
+# function try_available {
+# 	./expect
+# }
+
+# try_available && {
+# 	echo "hello"
+# }
+echo "end"
+
+
+# for f in $packagePath
+# do
+# 	echo $f
+# done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# echo "File Name: $0"
+# echo "First Parameter: $1"
+# echo "Second Parameter: $2"
+# echo "Quoted Values: $@"
+# echo "Quoted Values: $*"
+# echo "Total Number of Parameters: $#"
+
+# spool=/home/usr/franklin/temp/sync/
+
+# for f in $spool/{creates, updates}*
+# do
+# 	# [ -s $f ] && echo "file is zero"
+# 	if [ -s $f ]
+# 	then
+# 		echo "file size is not zero"
+# 	else
+# 		echo "file size is zero"
+# 	fi
+# done
+# echo "end"
+
+# file1=/home/usr/franklin/temp/sync/creates
+# file2=/home/usr/franklin/temp/sync/updates
+
+# if [ -s file1 ]
+# then
+#     echo "file size is not zero"
+#  else
+#     echo "file size is zero"
+# fi
+
+# if [ -s file2 ]
+# then
+#     echo "file size is not zero"
+#  else
+#     echo "file size is zero"
+# fi
+
+# while true
+# do
+# 	echo "input a number"
+# 	read aNum
+# 	while true
+# 	do
+# 		echo "input another number"
+# 		read bNum
+# 		if [ $bNum == 5 ]
+# 		then
+# 			echo "end"
+# 			break
+# 		fi
+# 	done
+# done
+
+
+

@@ -1,0 +1,9 @@
+#!/usr/bin/ruby
+
+$HOME_PATH = ENV['HOME']
+
+def show
+
+    end
+
+end

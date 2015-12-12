@@ -1,0 +1,43 @@
+#!/bin/bash
+echo $0
+param="hello world mike"
+
+if [[  "${param}" =~ " world " ]] && [[ "${param}" =~ " world " ]]
+then
+	echo "yes"
+else
+	echo "no"
+fi
+
+# string="hello hello world"
+# substring="hello"
+
+# result=${string#$substring }
+# echo $result
+
+# if [ -e /home/franklin/workspace/demo/shell/test ]
+# then
+# 	echo -e "yes\nhelp"
+# else
+# 	echo "no"
+# fi
+
+# packagePath=/home/franklin/temp/packages
+
+# echo $0
+# echo $1
+
+# if [ -e $packagePath/test ]
+# then
+# 	echo "file exists"
+# else
+# 	echo "file not exist"
+# 	touch $packagePath/test
+# fi
+
+# if [ -s $packagePath/test ]
+# then
+# 	echo "file is not empty"
+# else
+# 	echo "file is empty"
+# fi

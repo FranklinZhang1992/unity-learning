@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<configs domain_name="ubuntu">
+  <device>
+    <type>disk</type>
+    <name>sda</name>
+    <storage-group-name>Initial Storage Group</storage-group-name>
+  </device>
+  <device>
+    <type>disk</type>
+    <name>sdb</name>
+    <storage-group-name>test1</storage-group-name>
+  </device>
+  <device>
+    <type>network</type>
+    <name>eth1</name>
+    <virtual-network-name>network0</virtual-network-name>
+  </device>
+</configs>

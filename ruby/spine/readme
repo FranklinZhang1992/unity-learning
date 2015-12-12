@@ -1,0 +1,3 @@
+Project start step:
+sudo ./init_spine 0
+sudo ./run_script
