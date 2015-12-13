@@ -60,12 +60,12 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
     end
     def get_all
         puts "=> all"
-        xml_path = "response.xml";
+        xml_path = "mock/response.xml";
         doc = Document.new(File.open(xml_path))
     end
     def get_networks
         puts "=> network"
-        xml_path = "response_network.xml"
+        xml_path = "mock/response_network.xml"
         doc = Document.new(File.open(xml_path))
     end
 end

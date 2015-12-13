@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# send https request without cert
+# curl --insecure https://localhost:8999/watch
+
+# send https request with cert
+# generate the pem files with the commands below
+# 2ay 1
+# <openssl pkcs12 -clcerts -nokeys -in client.pfx -out client.pem>
+# <openssl pkcs12 -nocerts -nodes -in client.pfx -out key.pem>
+# way 2
+# <openssl pkcs12 -in  cert.pfx -out all.pem -nodes>
+curl -k --cert cert/client.pem --key cert/key.pem https://localhost:8999/watch

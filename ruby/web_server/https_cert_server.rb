@@ -1,6 +1,7 @@
 require 'webrick'
+require 'webrick/https'
+require 'openssl'
 require 'rexml/document'
-
 
 class ClientError < StandardError
     def initialize(body=nil, type='text/xml')
@@ -73,7 +74,9 @@ end
 class Server
     def bootstrap
         puts "start up server"
-        config = { :Port => 8999,:DoNotListen => true }
+        cert = OpenSSL::X509::Certificate.new File.read 'cert/server.crt'
+        pkey = OpenSSL::PKey::RSA.new File.read 'cert/server.key'
+        config = { :Port => 8999, :DoNotListen => true, :SSLEnable => true, :SSLCertificate => cert, :SSLPrivateKey => pkey}
         @server = WEBrick::HTTPServer.new(config)
         @server.listen('::1', 8999)
         @server.listen('localhost', 8999)
