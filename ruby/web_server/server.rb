@@ -44,6 +44,8 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
                 data = get_all
             when "network"
                 data = get_networks
+            when "host"
+                data = get_hosts
             else
                 data = get_all
             end
@@ -66,6 +68,11 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
     def get_networks
         puts "=> network"
         xml_path = "mock/response_network.xml"
+        doc = Document.new(File.open(xml_path))
+    end
+    def get_hosts
+        puts "=> hosts"
+        xml_path = "response_host.xml"
         doc = Document.new(File.open(xml_path))
     end
 end

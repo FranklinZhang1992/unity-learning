@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<responses>
+   <response id="1" seconds="0.089" current-time="1446540068061" status="ok" target="host">
+      <output index="0">
+         <host id="host:o23">
+            <guid>
+               093cf72b-ca92-4d3f-91e8-658bd6bc99bd
+            </guid>
+            <name>
+               node0
+            </name>
+            <internal-name>
+               node0
+            </internal-name>
+            <boot-counter>
+               2
+            </boot-counter>
+            <boot-time>
+               1446513973000
+            </boot-time>
+            <description>
+            </description>
+            <manufacturer>
+               Dell Inc.
+            </manufacturer>
+            <manufacturer-enum>
+               unknown
+            </manufacturer-enum>
+            <model>
+               PowerEdge 2950
+            </model>
+            <model-enum>
+               unknown
+            </model-enum>
+            <serialnumber>
+               57N5PD1
+            </serialnumber>
+            <standing-state explain="explain:334">
+               normal
+            </standing-state>
+            <operational-mode>
+               normal
+            </operational-mode>
+            <maintenance>
+               <allowed>
+                  true
+               </allowed>
+               <warning>
+                  <guest-shutdown>
+                     false
+                  </guest-shutdown>
+                  <maintenance-delay>
+                     false
+                  </maintenance-delay>
+               </warning>
+            </maintenance>
+            <stp-state explain="explain:335">
+               stp
+            </stp-state>
+            <state attribute="value">
+               running
+            </state>
+            <power-state>
+               nfc
+            </power-state>
+            <sub-state>
+            </sub-state>
+            <is-syncing attribute="value">
+               false
+            </is-syncing>
+            <stp attribute="value">
+            </stp>
+            <is-primary attribute="value">
+               false
+            </is-primary>
+            <bmc-dedicated attribute="value">
+               true
+            </bmc-dedicated>
+            <bmc-available attribute="value">
+               false
+            </bmc-available>
+            <bmc-connectivity attribute="value">
+               none
+            </bmc-connectivity>
+            <failure-predicted attribute="value">
+               false
+            </failure-predicted>
+            <network-connectivity>
+            </network-connectivity>
+            <memory>
+               <size attribute="value">
+                  8583643136
+               </size>
+            </memory>
+            <imaging-operation>
+            </imaging-operation>
+            <battery>
+               <state>
+                  0
+               </state>
+            </battery>
+            <statistics>
+               <cpu-usage id="statistics:p">
+               </cpu-usage>
+               <memory-usage id="statistics:p">
+               </memory-usage>
+               <network-usage id="statistics:p289">
+               </network-usage>
+            </statistics>
+            <mtbf>
+               <status>
+                  normal
+               </status>
+               <threshold>
+                  5400000
+               </threshold>
+               <occurrences>
+                  <count>
+                     0
+                  </count>
+                  <text>
+                  </text>
+                  <list/>
+               </occurrences>
+            </mtbf>
+            <lbload>
+               0
+            </lbload>
+            <homeload>
+               0
+            </homeload>
+            <load>
+               0
+            </load>
+            <dom0-memory>
+               <actual>
+                  2147483648
+               </actual>
+               <desired>
+                  2147483648
+               </desired>
+               <default>
+                  2147483648
+               </default>
+               <min>
+                  1073741824
+               </min>
+            </dom0-memory>
+            <old-software-version attribute="value">
+               false
+            </old-software-version>
+            <workon class="method"/>
+         </host>
+         <host id="host:o58">
+            <guid>
+               4490da5c-f94d-493f-9ca0-499668c9cc75
+            </guid>
+            <name>
+               node1
+            </name>
+            <internal-name>
+               node1
+            </internal-name>
+            <boot-counter>
+               1
+            </boot-counter>
+            <boot-time>
+               1445569413000
+            </boot-time>
+            <description>
+            </description>
+            <manufacturer>
+               Dell Inc.
+            </manufacturer>
+            <manufacturer-enum>
+               unknown
+            </manufacturer-enum>
+            <model>
+               PowerEdge 2950
+            </model>
+            <model-enum>
+               unknown
+            </model-enum>
+            <serialnumber>
+               27N5PD1
+            </serialnumber>
+            <standing-state explain="explain:1382">
+               normal
+            </standing-state>
+            <operational-mode>
+               normal
+            </operational-mode>
+            <maintenance>
+               <allowed>
+                  true
+               </allowed>
+               <warning>
+                  <guest-shutdown>
+                     false
+                  </guest-shutdown>
+                  <maintenance-delay>
+                     false
+                  </maintenance-delay>
+               </warning>
+            </maintenance>
+            <stp-state explain="explain:1383">
+               stp
+            </stp-state>
+            <state attribute="value">
+               running
+            </state>
+            <power-state>
+               nfc
+            </power-state>
+            <sub-state>
+            </sub-state>
+            <is-syncing attribute="value">
+               false
+            </is-syncing>
+            <stp attribute="value">
+            </stp>
+            <is-primary attribute="value">
+               true
+            </is-primary>
+            <bmc-dedicated attribute="value">
+               true
+            </bmc-dedicated>
+            <bmc-available attribute="value">
+               false
+            </bmc-available>
+            <bmc-connectivity attribute="value">
+               none
+            </bmc-connectivity>
+            <failure-predicted attribute="value">
+               false
+            </failure-predicted>
+            <network-connectivity>
+            </network-connectivity>
+            <memory>
+               <size attribute="value">
+                  8583643136
+               </size>
+            </memory>
+            <imaging-operation>
+            </imaging-operation>
+            <battery>
+               <state>
+                  0
+               </state>
+            </battery>
+            <statistics>
+               <cpu-usage id="statistics:p">
+               </cpu-usage>
+               <memory-usage id="statistics:p">
+               </memory-usage>
+               <network-usage id="statistics:p1337">
+               </network-usage>
+            </statistics>
+            <mtbf>
+               <status>
+                  normal
+               </status>
+               <threshold>
+                  5400000
+               </threshold>
+               <occurrences>
+                  <count>
+                     0
+                  </count>
+                  <text>
+                  </text>
+                  <list/>
+               </occurrences>
+            </mtbf>
+            <lbload>
+               0
+            </lbload>
+            <homeload>
+               0
+            </homeload>
+            <load>
+               0
+            </load>
+            <dom0-memory>
+               <actual>
+                  2147483648
+               </actual>
+               <desired>
+                  2147483648
+               </desired>
+               <default>
+                  2147483648
+               </default>
+               <min>
+                  1073741824
+               </min>
+            </dom0-memory>
+            <old-software-version attribute="value">
+               false
+            </old-software-version>
+            <workon class="method"/>
+         </host>
+      </output>
+   </response>
+</responses>

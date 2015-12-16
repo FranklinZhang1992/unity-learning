@@ -1,0 +1,13 @@
+#!/usr/bin/expect
+
+# spawn "user_name=`whoami`"
+# expect -re "([0-9]*)([a-zA-Z]*)"
+
+# send "ret=`whoami`\r"
+# spawn "echo I will exit by ret=\$ret\r"
+# expect eof
+
+
+
+send "user_name=`whoami`\r"
+expect -re "([a-zA-Z]*[a-zA-Z])" {exit $expect_out(1,string)}
