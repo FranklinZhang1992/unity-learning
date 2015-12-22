@@ -98,11 +98,11 @@ main (int argc, char const *argv[])
   }
 
   /* PRNG */
-  RAND_poll ();
-  while (RAND_status () == 0) {
-    unsigned short rand_ret = rand () % 65536;
-    RAND_seed (&rand_ret, sizeof (rand_ret));
-  }
+  // RAND_poll ();
+  // while (RAND_status () == 0) {
+  //   unsigned short rand_ret = rand () % 65536;
+  //   RAND_seed (&rand_ret, sizeof (rand_ret));
+  // }
 
   /* ssl connect */
   ret = SSL_connect (ssl);
