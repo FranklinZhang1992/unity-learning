@@ -1,7 +1,5 @@
 #!/bin/bash
 
-rm -rf $HOME/temp/etc
-rm -rf $HOME/temp/var
-rm -rf $HOME/temp/usr
-rm -rf $HOME/temp/sbin
+ROOT_PATH=/tmp/spine
+rm -rf $ROOT_PATH
 echo "clean spine finished"

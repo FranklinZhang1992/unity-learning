@@ -1,7 +1,8 @@
 #!/bin/bash
 
 NODE_NUMBER=$1
-ROOT_PATH=$HOME/temp
+ROOT_PATH=/tmp/spine
+BUILD_DIR=`pwd`
 
 function param_check {
 	if [ "$NODE_NUMBER" == "0" ] || [ "$NODE_NUMBER" == "1" ]
@@ -10,7 +11,7 @@ function param_check {
 	else
 		echo "Param cannot be empty"
 		exit 0
-	fi 
+	fi
 }
 
 param_check && {
@@ -38,25 +39,28 @@ param_check && {
 	mkdir -p $ROOT_PATH/sbin
 	# /etc/platform_management/pm.xml
 	mkdir -p $ROOT_PATH/etc/platform_management
+	# Create a script for spine to get build directory
+	echo "echo $BUILD_DIR" > $ROOT_PATH/build_dir
+	chmod +x $ROOT_PATH/build_dir
 
 	if [ "$NODE_NUMBER" == "0" ]
 	then
-		cp -f $HOME/workspace/ruby-demo/spine/configs/node0-config-uuid $ROOT_PATH/etc/opt/ft/node-config-uuid
+		cp -f $BUILD_DIR/configs/node0-config-uuid $ROOT_PATH/etc/opt/ft/node-config-uuid
 	else
-		cp -f $HOME/workspace/ruby-demo/spine/configs/node1-config-uuid $ROOT_PATH/etc/opt/ft/node-config-uuid
+		cp -f $BUILD_DIR/configs/node1-config-uuid $ROOT_PATH/etc/opt/ft/node-config-uuid
 	fi
 	echo "copy node-config-uuid to $ROOT_PATH/etc/opt/ft/node-config-uuid"
-	cp -f $HOME/workspace/ruby-demo/spine/dmiconfigure.rb $ROOT_PATH/usr/lib/spine/bin/dmiconfigure
+	cp -f $BUILD_DIR/dmiconfigure.rb $ROOT_PATH/usr/lib/spine/bin/dmiconfigure
 	echo "copy dmiconfigure.rb to $ROOT_PATH/usr/lib/spine/bin/dmiconfigure"
     # /usr/lib/spine/configure
-	cp -f $HOME/workspace/ruby-demo/spine/configure.rb $ROOT_PATH/usr/lib/spine/configure
+	cp -f $BUILD_DIR/configure.rb $ROOT_PATH/usr/lib/spine/configure
 	echo "copy configure.rb to $ROOT_PATH/usr/lib/spine/configure"
 	# /usr/sbin/spine
-	cp -f $HOME/workspace/ruby-demo/spine/spine.rb $ROOT_PATH/usr/sbin/spine
+	cp -f $BUILD_DIR/spine.rb $ROOT_PATH/usr/sbin/spine
 	echo "copy spine.rb to $ROOT_PATH/usr/sbin/spine"
 	# /sbin/pm_describe
-	cp -f $HOME/workspace/ruby-demo/spine/configs/pm_describe $ROOT_PATH/sbin/pm_describe
+	cp -f $BUILD_DIR/configs/pm_describe $ROOT_PATH/sbin/pm_describe
 	echo "copy pm_describe to $ROOT_PATH/sbin/pm_describe"
-	
+
 	echo "Init finished"
 }

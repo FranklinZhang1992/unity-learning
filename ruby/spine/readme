@@ -1,3 +1,6 @@
 Project start step:
+sudo ./clean_spine
 sudo ./init_spine 0
-sudo ./run_script
+sudo ./run_spine
+
+Project spine should be put under {user foler}/workspace/unity-learning/spine

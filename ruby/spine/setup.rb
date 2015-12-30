@@ -2,8 +2,8 @@ require 'supernova/spine'
 require 'supernova/sysconfig'
 
 $HOME_PATH = ENV['HOME']
-$ROOT_PATH = "#{$HOME_PATH}/temp"
-$INSTALL = "#{$HOME_PATH}/workspace/ruby-demo/spine"
+$ROOT_PATH = "/tmp/spine"
+$INSTALL = "#{$HOME_PATH}/workspace/unity-learning/ruby/spine"
 $:.unshift($INSTALL)
 
 class SetupTimeout < Exception
@@ -20,7 +20,7 @@ class File
 		File.open(name, 'a') do |fh|
 			fh.seek(seek)
 			fh.write(string)
-		end 
+		end
 	end
 end
 
@@ -262,6 +262,6 @@ if __FILE__ == $0
 		$PM_UUID = root.attributes['id'].downcase
 		$model_id = root.get_elements('/pm/model')[0].attributes.get_attribute('id').to_s
 	rescue => err
-		
+
 	end
 end

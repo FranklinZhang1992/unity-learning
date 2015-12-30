@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT_PATH=$HOME/temp
+ROOT_PATH=/tmp/spine
 # LOGM="logger -p daemon.notice -t platform_probe"
 PMDIR=$ROOT_PATH/etc/platform_management
 # SERV_ACTIVE="services active"

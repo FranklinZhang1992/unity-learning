@@ -1,0 +1,10 @@
+#!/bin/bash
+
+BUILD_DIR=`pwd`
+ROOT_PATH=/tmp/spine
+# generate pm.xml
+$BUILD_DIR/configs/platform_probe start
+# ruby spine/configure.rb
+$ROOT_PATH/usr/lib/spine/configure
+# ruby spine/spine.rb
+$ROOT_PATH/usr/sbin/spine

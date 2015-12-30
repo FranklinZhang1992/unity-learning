@@ -4,8 +4,7 @@ require 'sdbm'
 require 'yaml'
 require 'socket'
 
-$HOME_PATH = ENV['HOME']
-$ROOT_PATH = "#{$HOME_PATH}/temp"
+$ROOT_PATH = "/tmp/spine"
 $SYSCONFIG_PATH = "#{$ROOT_PATH}/etc/sysconfig"
 $config = "#{$ROOT_PATH}/etc/opt/ft/spine"
 
