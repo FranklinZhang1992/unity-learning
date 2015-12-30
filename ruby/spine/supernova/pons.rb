@@ -6,8 +6,8 @@ module SuperNova
         Pons::Service.instance
     end
     module Pons
-        # curl http://localhost:8999/pvm/{uuid}
-        # curl -X POST -d 'test1' http://localhost:8999/pvm/{uuid}
+        # curl http://localhost:8999/protected-virtual-machines/{uuid}
+        # curl -X POST -d 'test1' http://localhost:8999/protected-virtual-machines/{uuid}
         class Domain < Net::WebDAV::Resource
             def initialize(server, *options)
                 super(server, *options)
@@ -27,7 +27,7 @@ module SuperNova
             end
         end
 
-        # curl -X PUT -d '' http://localhost:8999/pvm
+        # curl -X PUT -d '' http://localhost:8999/protected-virtual-machines
         class Domains < Net::WebDAV::Dictionary
             def initialize(server, filename, controller)
                 super(server, filename, controller, Domain)
@@ -45,7 +45,7 @@ module SuperNova
         class Root < Net::WebDAV::Collection
             def initialize(server, *options)
                 super(server, "")
-                @domains = add_view(Domains, 'pvm', SuperNova.domains)
+                @domains = add_view(Domains, 'protected-virtual-machines', SuperNova.domains)
             end
         end
 

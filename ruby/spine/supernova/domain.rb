@@ -33,7 +33,7 @@ module SuperNova
         end
         # key-set => { :id, :name, :vcpus }
         def initialize(data)
-            logDebug{"Initializing pvm"}
+            logDebug{"Initializing protected-virtual-machines"}
 
              @uuid = Kernel.uuid
              uuid = data[:id]

@@ -22,7 +22,7 @@ module SuperNova
         end
         def bootstrap
             @booted = false
-            @hoard = Hoard.new(self, 'pvm', Domain)
+            @hoard = Hoard.new(self, 'protected-virtual-machines', Domain)
             @booted = true
             logDebug { "DomainService booted" }
         end
