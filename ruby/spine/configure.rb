@@ -11,16 +11,16 @@ $SYSCONFIG = "#{$ROOT_PATH}/etc/sysconfig/spine"
 link2addr = Hash.new
 link2mac = Hash.new
 [ :priv0, :ibiz0 ].each do |dev|
-	cmd = ""
-	output = %x{#{cmd} 2> /dev/null}
-	if $?.success?
-		output.each_line do |line|
-			mac = '' #TODO
-			address = '' #TODO
-			link2addr[dev] = address
-			link2mac[dev] = mac
-		end
-	end
+    cmd = ""
+    output = %x{#{cmd} 2> /dev/null}
+    if $?.success?
+        output.each_line do |line|
+            mac = '' #TODO
+            address = '' #TODO
+            link2addr[dev] = address
+            link2mac[dev] = mac
+        end
+    end
 end
 
 $private_address = "#{link2addr[:priv0]}%priv0" if link2addr[:priv0]
@@ -34,31 +34,31 @@ end
 dmiconf until File.exists? $SYSCONFIG unless File.exists? $SYSCONFIG
 
 def load_sysconfig
-	IO.read($SYSCONFIG).each_line do |line|
-		key, value = line.strip.split('=')
-		next if key.nil?
-		case key
-		when 'PM_UUID';
-			$PM_UUID = value
-		end
-	end
+    IO.read($SYSCONFIG).each_line do |line|
+        key, value = line.strip.split('=')
+        next if key.nil?
+        case key
+        when 'PM_UUID';
+            $PM_UUID = value
+        end
+    end
 end
 
 load_sysconfig
 if $PM_UUID.nil?
-	%x{#{$ROOT_PATH}/usr/lib/spine/bin/dmiconfigure}.each_line { |line|
-		puts line
-	}
-	load_sysconfig
+    %x{#{$ROOT_PATH}/usr/lib/spine/bin/dmiconfigure}.each_line { |line|
+        puts line
+    }
+    load_sysconfig
 end
 raise "Failed to load sysconfig" if $PM_UUID.nil?
 $UUID = IO.read("#{$ROOT_PATH}/etc/opt/ft/node-config-uuid").strip
 
 File.open("#{$SYSCONFIG}.new", 'w') do |o|
-	o.puts "PM_UUID=#{$PM_UUID}"
-	o.puts "UUID=#{$UUID}"
-	o.puts "PUBLIC_ADDRESS=#{$public_address}" if $public_address
-	o.puts "PRIVATE_ADDRESS=#{$private_address}" if $private_address
+    o.puts "PM_UUID=#{$PM_UUID}"
+    o.puts "UUID=#{$UUID}"
+    o.puts "PUBLIC_ADDRESS=#{$public_address}" if $public_address
+    o.puts "PRIVATE_ADDRESS=#{$private_address}" if $private_address
 end
 File.chmod(0644, "#{$SYSCONFIG}.new")
 File.rename("#{$SYSCONFIG}.new", $SYSCONFIG)

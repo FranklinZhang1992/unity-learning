@@ -12,17 +12,17 @@ args = 'mike'
 
 
 message = {
-	:node => $UUID,
-	:ident => serial,
-	:service => name,
-	:method => symbol,
-	:args => args
+    :node => $UUID,
+    :ident => serial,
+    :service => name,
+    :method => symbol,
+    :args => args
 }
 
 s = UDPSocket.new(Socket::AF_INET6)
 sent_size = s.send(Marshal.dump(message), 0, address, 8999)
 
 # while line = s.gets
-# 	puts line.chop
+#     puts line.chop
 # end
 # s.close
