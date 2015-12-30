@@ -2,6 +2,7 @@ require 'net/http'
 require 'rexml/document'
 
 module SuperNova
+
     class Base
         attr_reader :host, :port
         def initialize(host='::1', port='8999')

@@ -1,10 +1,12 @@
-require 'supernova/spine'
-require 'supernova/sysconfig'
+#!/usr/bin/ruby
 
 $HOME_PATH = ENV['HOME']
 $ROOT_PATH = "/tmp/spine"
 $INSTALL = "#{$HOME_PATH}/workspace/unity-learning/ruby/spine"
 $:.unshift($INSTALL)
+
+require 'supernova/spine'
+require 'supernova/sysconfig'
 
 class SetupTimeout < Exception
 end

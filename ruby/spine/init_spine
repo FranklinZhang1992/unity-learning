@@ -58,6 +58,9 @@ param_check && {
     # /usr/sbin/spine
     cp -f $BUILD_DIR/spine.rb $ROOT_PATH/usr/sbin/spine
     echo "copy spine.rb to $ROOT_PATH/usr/sbin/spine"
+    # /sbin/setup.rb
+    cp -f $BUILD_DIR/setup.rb $ROOT_PATH/sbin
+    echo "copy setup.rb to $ROOT_PATH/sbin/setup.rb"
     # /sbin/pm_describe
     cp -f $BUILD_DIR/configs/pm_describe $ROOT_PATH/sbin/pm_describe
     echo "copy pm_describe to $ROOT_PATH/sbin/pm_describe"

@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 #==================================================
 # Necessary folders:
-# {user folder}/temp
+# /tmp/spine
 #==================================================
 
 $HOME_PATH = ENV['HOME']
