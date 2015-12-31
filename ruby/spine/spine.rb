@@ -65,6 +65,30 @@ class Main
         end
     end
 
+    def restart(signal=nil)
+        logNotice {"Received: #{signal}"} unless signal.nil?
+        logNotice {" ======= SPINE RESTART STARTED ======="}
+        begin
+            SuperNova.pons.stop
+            trap(34,"IGNORE")
+            SuperNova::Service.each { |service|
+                logDebug {"Shutdown service #{service.class.to_s}"}
+                service.stop
+            }
+        rescue Exception => exception
+            logWarning {"shutting down => #{exception}"}
+            Kernel.exit
+        end
+        logNotice {"Shutdown: killing other threads"}
+        Thread.list.each { |thread|
+            logInfo {"Thread: stopping thread '#{thread['name'].to_s}' in state #{thread.status}"}
+            next if thread == Thread.main
+            thread.exit
+        }
+        logNotice {" ======= SPINE RESTART ======="}
+        Kernel.exit
+    end
+
     def shutdown(signal = nil)
         logNotice { "Received: #{signal}" } unless signal.nil?
         logNotice { "====== SPINE SHUTDOWN STARTED ======" }
@@ -117,6 +141,8 @@ class Main
         load_sysconfig
         boot_services
         start_local_services
+        trap("HUP")  { restart('HUP') }
+        trap("QUIT") { restart('QUIT') }
         trap("INT") { shutdown('INT')}
         trap("TERM") { shutdown('TERM')}
 

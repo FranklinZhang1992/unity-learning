@@ -1,0 +1,25 @@
+#!/bin/bash
+
+spine_pid=$(ps -ef | grep -i "\[spine\]" | grep -v "grep" | awk '{print $2}')
+if [ -z $spine_pid ]
+then
+  spine_pid=""
+fi
+echo "find spine pid: ${spine_pid}"
+if [ $spine_pid ]
+then
+  kill -HUP ${spine_pid}
+fi
+spine_new_pid=$(ps -ef | grep -i "\[spine\]" | grep -v "grep" | awk '{print $2}')
+if [ -z $spine_new_pid ]
+then
+  spine_new_pid=""
+fi
+echo "find spine new pid: ${spine_new_pid}"
+while [ ${spine_pid} = ${spine_new_pid} ]
+do
+  sleep 1
+  spine_new_pid=$(ps -ef | grep -i "\[spine\]" | grep -v "grep" | awk '{print $2}')
+  echo "waiting for spine to restart"
+done
+echo "spine restart successfully"
