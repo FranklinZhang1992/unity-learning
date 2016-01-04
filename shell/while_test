@@ -1,0 +1,11 @@
+#!/bin/bash
+
+index="test"
+new_index="test"
+
+while [ $index = $new_index ]
+do
+  echo "wait"
+  new_index="test2"
+done
+echo "while done, index is $new_index"

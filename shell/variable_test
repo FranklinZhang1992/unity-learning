@@ -1,0 +1,8 @@
+#!/bin/bash
+
+var="test1"
+echo $var
+var="test2"
+echo $var
+var="test3"
+echo $var
