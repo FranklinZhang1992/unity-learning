@@ -1,0 +1,1 @@
+puts FileTest.exist?("check_file.rb")
