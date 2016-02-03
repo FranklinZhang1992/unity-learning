@@ -116,7 +116,7 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
         when "int"
             result = log_machine_service.log_machine.on_event("int")
         else
-            result = "UNKNOWD"
+            result = "UNKNOWN"
         end
         parse_response(response, result)
     rescue ClientError => exception

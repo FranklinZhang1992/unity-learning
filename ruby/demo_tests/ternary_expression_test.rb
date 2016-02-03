@@ -8,3 +8,10 @@ def vm0?
   end
 end
 puts vm0? ? '1' : '0'
+
+num1 = nil
+num2 =1
+
+puts num1
+num1 = num2 > num1 ? num2 : num1
+puts num1
