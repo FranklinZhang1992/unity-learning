@@ -39,12 +39,19 @@ def prepare_mount_point
 end
 
 def mount(full_path)
+  puts "=================mount begin========================="
+  puts "full_path: #{full_path}"
   params = {}
   result = full_path.match(Regexp.new('^([\S]*)/([\S]*\.iso)$'))
+  return if result.nil?
   params[:mount_url] = result[1]
-  puts "iso is #{result[2]}"
+  params[:iso_file] = result[2]
+  puts "params => #{params}"
   mount_point = do_mount(params)
-  puts mount_point
+  mounted_iso_file_path = "#{mount_point}/#{params[:iso_file]}"
+  puts "mounted_iso_file_path = #{mounted_iso_file_path}"
+  puts "=================mount end========================="
+  mounted_iso_file_path
 end
 
 def do_mount(params={})
@@ -84,3 +91,7 @@ end
 # main("/home/franklin/temp/windows.iso")
 
 mount("134.111.24.224:/developer/fzhang/my-pool/en_windows_server_2012_r2_x64_dvd_2707946.iso")
+mount("en_windows_server_2012_r2_x64_dvd_2707946.iso")
+mount("134.111.24.224:/developer/fzhang/my-pool")
+mount("134.111.24.224:/developer/fzhang/my-pool/")
+mount("test")
