@@ -1,3 +1,7 @@
 # Exec command and get the return value
-result = %x{pwd}
-puts "result = #{result}"
+require 'fileutils'
+puts File.exist?("/mnt/mountpoint")
+FileUtils.mkdir_p("/mnt/point")
+%x{umount -v /mnt/point}
+mount_cmd = "mount //192.168.0.104/shared /mnt/point -o username=franklin,password=abc123"
+%x{#{mount_cmd}}
