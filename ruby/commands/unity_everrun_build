@@ -1,0 +1,24 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./unity_everrun_build {workspace_path} {dut_name}
+#                             $1             $2
+#                       shanghai_build     greece
+
+#=============================================================================
+
+# This script is used to do the complete build for everrun.
+
+#=============================================================================
+
+$WORKSPACE_PATH = ARGV[0].to_s
+$DUT_NAME = ARGV[1].to_s
+$USER_NAME = %x{whoami}
+
+def show_params
+  puts "workspace path = #{$WORKSPACE_PATH}, dut name = #{$DUT_NAME}, user name = #{$USER_NAME}"
+end
+
+show_params

@@ -75,6 +75,7 @@ class Main
   attr_accessor :mgmt_folder
 
   SAMBA_FOLDER = "^//(\\d{1,3}[.]){3}\\d{1,3}/\\S*$"
+  NFS_FOLDER = "^(\\d{1,3}[.]){3}\\d{1,3}[:]/\\S*$"
   LINUX_FOLDER = "^/\\S*$"
   WINDOWS_FOLDER = "^[A-Z]:\\\\S*$"
 
