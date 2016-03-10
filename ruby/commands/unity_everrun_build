@@ -17,8 +17,74 @@ $WORKSPACE_PATH = ARGV[0].to_s
 $DUT_NAME = ARGV[1].to_s
 $USER_NAME = %x{whoami}
 
-def show_params
-  puts "workspace path = #{$WORKSPACE_PATH}, dut name = #{$DUT_NAME}, user name = #{$USER_NAME}"
+class Main
+  attr_accessor :workspace_path
+  attr_accessor :dut_name
+  attr_accessor :user_name
+  DUT_RESERVER_REGEXP = "Reserved: ([a-zA-Z]{1,})[ ]"
+  def show_params
+    puts "Received params: workspace path = #{self.workspace_path}, dut name = #{self.dut_name}, user name = #{self.user_name}"
+  end
+  def check_params
+    if self.workspace_path.nil? || self.dut_name.nil?
+      raise "Please input the parameters!"
+    end
+  end
+  def check_dut_available
+    puts "===================begin to check dut available========================"
+    rinfo_message = %x{rinfo | grep "^#{self.dut_name} *[0-9]*%"}
+    dut_reserver_regexp = "Reserved: (#{self.user_name})[ ]"
+    if rinfo_message.nil?
+      raise "The dut #{self.dut_name} does not exist!"
+    elsif rinfo_message.match(dut_reserver_regexp)
+      puts "The dut is reserved by #{self.user_name}"
+    else
+      raise "Only the dut is reserved by yourself, then you can build everrun to it, but the dut #{self.dut_name} is: \n#{rinfo_message}"
+    end
+  end
+  def verify_access
+    puts "===================begin to verify the access========================"
+    begin
+      timeout(10) {%x{/developer/#{self.user_name}/script/access-verified}}
+    rescue => e
+      raise "Cannot access build server, #{e}"
+    end
+    puts "===================verified successfully========================"
+  end
+  def fetch_source_code
+    puts "===================begin to get the source code of everrun from GitHub========================"
+    dest_folder = "/developer/#{self.user_name}/#{self.workspace_path}"
+    %x{git clone git@github.com:stratustech/unity-stratus #{dest_folder}}
+    %x{git clone git@github.com:stratustech/unity-drivers #{dest_folder}/unity-stratus}
+    %x{git clone git@github.com:stratustech/unity-third-party #{dest_folder}/unity-stratus}
+    %x{git clone git@github.com:stratustech/unity-libvirt #{dest_folder}/unity-stratus}
+    %x{sed -i \"76c UNITY_PACKAGER := #{self.user_name}\" #{dest_folder}/unity-stratus/Config.mk}
+    %x{ln -s #{dest_folder}/unity-stratus #{dest_folder}/unity-build}
+    puts "===================cloned successfully========================"
+  end
+  def compile_source_code
+    puts "===================begin to exec make (do not delete the file nohup.out generated in the source code folder)========================"
+    %x{ssh #{self.user_name}@134.111.24.204 /developer/#{self.user_name}/script/compile_everrun #{self.workspace_path}}
+    puts "===================exec make finished, wait until the compile is done========================"
+  end
+  def deploy_everrun
+    puts "===================begin to deploy========================"
+    puts "===================deployed finished======================="
+  end
+  def run
+    self.workspace_path = $WORKSPACE_PATH
+    self.dut_name = $DUT_NAME
+    self.user_name = $USER_NAME
+    check_params
+    verify_access
+    fetch_source_code
+    compile_source_code
+  end
 end
 
-show_params
+begin
+  main = Main.new
+  main.run
+rescue Exception => e
+  puts "Error occured during executing build => #{e}"
+end
