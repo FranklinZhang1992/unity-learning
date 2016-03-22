@@ -1,0 +1,12 @@
+#!/usr/bin/ruby
+puts File.dirname(__FILE__)
+$stdout.sync = true
+while true
+  puts "hello"
+  $stdout.puts "world"
+  sleep 3
+end
+# loop {
+   
+#   sleep 3
+# }

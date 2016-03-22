@@ -36,4 +36,15 @@ require "fileutils"
       end
      }
   end
-  scan_folder("/mnt/point")
+  # scan_folder("/mnt/point")
+  def exist?(path)
+    result = File.exist?(path)
+    if result
+      puts "File #{path} exists"
+    else
+      puts "File #{path} does not exist"
+    end
+  end
+
+exist?("/tmp/test")
+exist?("/tmp/test_file")

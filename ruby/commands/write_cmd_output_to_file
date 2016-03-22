@@ -1,0 +1,25 @@
+#!/usr/bin/ruby
+
+begin
+  File.delete("../logs/output.log") if File.exist?("../logs/output.log")
+  # result = %x{/home/franklin/workspace/unity-learning/shell/multi_line_output}
+  # p result
+
+  IO.popen("/home/franklin/workspace/unity-learning/shell/multi_line_output") { |io|
+    while line = io.gets
+      File.open("../logs/output.log", "a") { |f|
+        f.write line
+      }
+    end
+  }
+
+  # file = IO.popen("/home/franklin/workspace/unity-learning/shell/multi_line_output") 
+  # file.each_line do |text|
+  #   puts text
+  # end
+  # file.close
+  puts "execute finish"
+rescue Exception => e
+    puts "Exception => #{e}"
+    raise
+end
