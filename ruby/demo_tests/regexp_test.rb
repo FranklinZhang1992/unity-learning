@@ -7,6 +7,7 @@ LINUX_FOLDER = "^/\\S*$"
 WINDOWS_FOLDER = "^[A-Z]:\\\\S*$"
 MANAGED_FOLDER = "^(\\S*)[【](\\d+)[】]$"
 ISO_FILE = '^\S*[\.][iI][sS][oO]$'
+WIN_2K12_REGEXP = 'win\S*2[0-9a-zA-Z]{0,}12'
 
 def match_test(type, str)
   puts "match for #{str}"
@@ -150,6 +151,15 @@ def check_dut_reserve
   end
 end
 
+def check_for_win2k12(name)
+  pattern = Regexp.new(WIN_2K12_REGEXP)
+  if name.match(pattern)
+    puts "#{name} is win2k12"
+  else
+    puts "#{name} is not win2k12"
+  end
+end
+
 # match_linux_folder("/tmp")
 # match_windows_folder("E:\\")
 # match_folder("c【2】")
@@ -186,4 +196,8 @@ end
 
 # check_make_finished
 
-check_dut_reserve
+# check_dut_reserve
+
+check_for_win2k12("en_windows_server_2012_r2_x64_dvd_2707946")
+check_for_win2k12("windows2012")
+check_for_win2k12("win2k12")

@@ -1,0 +1,28 @@
+#!/usr/bin/ruby
+
+def clear
+  puts "clear originlal rpms"
+  %x{rm -rf /home/fzhang/rpms/libguestfs-1.28.1-1.55.el7.centos.x86_64.rpm}
+  %x{rm -rf /home/fzhang/rpms/libguestfs-tools-c-1.28.1-1.55.el7.centos.x86_64.rpm}
+  %x{rm -rf /home/fzhang/rpms/virt-v2v-1.28.1-1.55.el7.centos.x86_64.rpm}
+end
+
+def copy
+  puts "copy new generated rpms"
+  rpm_folder = "/home/fzhang/work/unity-third-party/virt-v2v/build/RPMS/x86_64"
+  result = %x{cp -v /home/fzhang/work/unity-third-party/virt-v2v/build/RPMS/x86_64/libguestfs-1.28.1-1.55.el7.centos.x86_64.rpm /home/fzhang/rpms/}
+  puts result
+  result = %x{cp -v /home/fzhang/work/unity-third-party/virt-v2v/build/RPMS/x86_64/libguestfs-tools-c-1.28.1-1.55.el7.centos.x86_64.rpm /home/fzhang/rpms/}
+  puts result
+  result = %x{cp -v /home/fzhang/work/unity-third-party/virt-v2v/build/RPMS/x86_64/virt-v2v-1.28.1-1.55.el7.centos.x86_64.rpm /home/fzhang/rpms/}
+  puts result
+
+end
+
+begin
+  clear
+  copy
+rescue Exception => e
+  puts "error: #{e}"
+  raise
+end

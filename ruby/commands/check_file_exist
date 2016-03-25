@@ -1,0 +1,22 @@
+#!/usr/bin/ruby
+
+$PATH = ARGV[0].to_s
+def check
+  dest_folder = "#{$PATH}"
+  dest_folder.chomp!
+  if File.exist?(dest_folder)
+    kit_file = Dir.glob("#{$dest_folder}/*.kit")
+    iso_file = Dir.glob("#{$dest_folder}/*.iso")
+    if kit_file.length > 0 && iso_file.length > 0
+      puts "exist"
+    else
+      puts "not exist"
+    end
+  end
+end
+
+begin
+  check
+rescue Exception => e
+  puts "error: #{e}"
+end

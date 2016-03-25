@@ -32,4 +32,8 @@ def get_value
 end
 
 # remove_xml_node
-get_value
+# get_value
+
+str = '<td class="reserved">0% DUT 10g Rel=3.1.1 Vms=4 dr drbd2 model_t310 processor_nehalem rack_7c raid sc_perc_6i simplexboot sn vendor_dell vlanFault Reserved: untriage at 23-Feb 15:10; FAILED IMAGE of DUT (check physical nodes, possibly known Power or BMC Issue) (AUTO), overnight</td>'
+doc = Document.new(str)
+p doc.root

@@ -41,6 +41,7 @@ class Main
     Regexp.new("make\\[1\\]: Leaving directory \\`/developer/fzhang/#{self.workspace_path}/unity-stratus/upgrade")
   end
   def build_info_file() "/developer/#{self.user_name}/#{self.workspace_path}/unity-build/build_info.out" end
+  def kit_folder() "/developer/#{self.user_name}/#{self.workspace_path}/unity-build/kit" end
   def deploy_folder() "/test_logs1/#{self.user_name}/#{self.workspace_path}" end
   def show_params
     puts "Received params: workspace path = #{self.workspace_path}, dut name = #{self.dut_name}, user name = #{self.user_name}"
@@ -113,17 +114,12 @@ class Main
   end
   def build_finished?
     is_finished = false
-    if File.exist?(build_info_file)
-      File.open(build_info_file) { |f|
-        while line = f.gets
-          line.chomp!
-          if line.match(buid_finished_regexp)
-            puts "build finished"
-            is_finished = true
-            break
-          end
-        end
-      }
+    if File.exist?(kit_folder)
+      kit_file = Dir.glob("#{kit_folder}/*.kit")
+      iso_file = Dir.glob("#{kit_folder}/*.iso")
+      if kit_file.length > 0 && iso_file.length > 0
+        is_finished = true
+      end
     end
     is_finished
   end
@@ -155,6 +151,10 @@ class Main
     %x{ln -s /developer/#{self.user_name}/#{self.workspace_path}/unity-build #{deploy_folder}/local}
     puts "===================prepare finished======================="
   end
+  def fttest_success?(dut_name)
+    %x{curl http://#{dut_name}.sn.stratus.com}
+    return $?.success?
+  end
   def run_fttest
     puts "===================begin to run fttest========================"
     run_fttest_cmd = "/developer/#{self.user_name}/script/run_fttest #{deploy_folder} #{self.dut_name}"
@@ -184,6 +184,10 @@ class Main
       prepare_fttest_folder
     end
     run_fttest
+    if !fttest_success?(self.dut_name)
+      puts "fttest failed, try for a second time"
+      run_fttest
+    end
   end
 end
 
