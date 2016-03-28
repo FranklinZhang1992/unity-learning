@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-$INSTALL = "/home/franklin/workspace/unity-learning/ruby/file_manager"
+$INSTALL = "/home/franklin/workspace/unity-learning/ruby/utils/file_manager"
 $:.unshift($INSTALL)
 
 require 'singleton'
