@@ -1,0 +1,281 @@
+#!/usr/bin/ruby
+
+require 'readline'
+require 'net/http'
+require 'uri'
+require 'rexml/document'
+
+#=============================================================================
+
+# Use example:
+# ./dut_searcher
+# > help
+#=============================================================================
+
+# This script is used to search for a DUT you need.
+
+#=============================================================================
+
+include REXML
+
+class String
+  def to_bool
+    return true if self =~ (/^(true|t|yes|y|1)$/i)
+    return false if self.empty? || self =~ (/^(false|f|no|n|0)$/i)
+
+    raise ArgumentError.new "invalid value: #{self}"
+  end
+end
+
+class Commands
+  WIN_2K12_REGEXP = 'win\S*2[0-9a-zA-Z]{0,}12'
+  def help
+    msg = "Dut searcher:\n"
+    msg += "Usage: <command> [args...]\n"
+    msg += "duts <accessible-only> <count> <scope>            list all DUTs(optional scope values are: all, idle, reserved), accessible-only: default is no, if type yes, then will only list the DUTs on which DOH is accessible\n"
+    msg += "vcd <name> <count> <scope>                        search for a DUT contains specified VCD.\n"
+    msg += "version <version> <build num> <count> <scope>     search for a DUT with the version you need, version can be [7.3, 7.4], build num is the one you got fron JIRA,like 127\n"
+    msg += "host <release_num> <count> <scope>                search for a DUT hosting on specified OS.\n"
+    msg += "quit                                              exit\n\n"
+    puts msg
+  end
+  def fetch_duts(mode="all")
+    raise "unknown mode #{mode}" unless mode == "all" || mode == "idle" || mode == "reserved"
+    data = nil
+    duts = []
+    Net::HTTP.start('134.111.24.33', 80) do |http|
+      response = http.get('/')
+      raise "Cannot talk to rinfo" unless response.code.to_i == 200
+      data = response.body
+    end
+    data = data.gsub('target=_blank', 'target="_blank"')
+    data = data.gsub('class=reserved', 'class="reserved"')
+    data = data.gsub('class=idle', 'class="idle"')
+    data = data.gsub('class=busy', 'class="busy"')
+    data = data.gsub('>=', '=')
+    data = data.gsub('<=', '=')
+    data = data.gsub(/<a href=\S* onclick="return confirm\('Are you sure you want to release DUT [0-9a-zA-Z]{1,} \?'\);"\/>[0-9\?]*<\/a>/, '')
+    begin_index = data.index('<tbody>')
+    end_index = data.index('</tbody>')
+    data = data[begin_index, end_index - begin_index + 8]
+    doc = Document.new(data)
+    empty = Element.new
+    tr_xmls = doc.root
+    (tr_xmls||empty).elements.each do |tr|
+      td_xml = (tr||empty).elements['td']
+      type = (td_xml||empty).attributes['class']
+      dut_name = ((td_xml||empty).elements['a']||empty).text
+      case mode
+      when "all"
+        duts << dut_name
+      when "idle"
+        duts << dut_name if type == "idle"
+      when "reserved"
+        duts << dut_name if type == "reserved"
+      end
+    end # end of block
+    duts
+  end
+  private :fetch_duts
+  def fetch_doh(dut)
+    # puts "Get doh topo from DUT #{dut}"
+    data = nil
+    server = "#{dut}.sn.stratus.com"
+    begin
+      req = Net::HTTP::Post.new("http://#{server}/doh/")
+      req.body = "<requests output='XML'><request id='1' target='supernova'><watch/></request></requests>"
+      req.content_type = 'text/xml'
+      Net::HTTP.start(server, 80) do |http|
+        response = http.request(req)
+        raise "Cannot talk to DUT #{dut}" unless response.code.to_i == 200
+        data = response.body
+      end
+    rescue Exception => e
+      # puts "error occured during fetch doh topo from DUT #{dut} => #{e}"
+    end
+    data
+  end
+  private :fetch_doh
+  def duts(*args)
+    accessible_only = args.shift
+    puts "accessible_only is required (\"yes\" or \"no\")" if accessible_only.nil?
+    raise "valid accessible_only values are \"yes\" and \"no\"" unless accessible_only == "yes" || accessible_only == "no"
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = 9999 if count.to_i == 0
+    count = count.to_i
+    mode = args.shift
+    puts "Find DUT begin, this may take a few minutes."
+    duts = mode.nil? ? fetch_duts : fetch_duts(mode)
+    find_count = 0
+    if accessible_only == "yes"
+      duts.each do |dut|
+        break if find_count >= count
+        data = fetch_doh(dut)
+        if !data.nil?
+          puts dut
+          find_count += 1
+        end
+      end
+      puts "Total find #{find_count} DUTs"
+    elsif accessible_only == "no"
+      duts.each do |dut|
+        break if find_count >= count
+        puts dut
+        find_count += 1
+      end
+      puts "Total find #{find_count} DUTs"
+    end
+  end
+  def find_vcd(dest, pattern, scope, count)
+    puts "Find VCD #{dest} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = (root.elements['response']||empty).elements['output']
+      (outputs_xml||empty).elements.each do |output_xml|
+        next unless output_xml.name == 'volume'
+        is_iso = (((output_xml.elements['media-info']||empty).elements['isiso']||empty).text||"false").to_bool
+        if is_iso
+          name = (output_xml.elements['name']||empty).text
+          if name.match(Regexp.new(pattern))
+            puts "[Result] DUT #{dut} contains a #{dest} VCD"
+            got_count += 1
+            break
+          end
+        end
+      end # end of volumes_xml block
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_vcd
+  def vcd(*args)
+    name = args.shift
+    count = args.shift
+    scope = args.shift || "all"
+    raise "vcd name is reuired" if name.nil?
+    raise "count is required" if count.nil?
+    count = 9999 if count.to_i == 0
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    case name
+    when "win2k12"
+      find_vcd("win2k12", WIN_2K12_REGEXP, scope, count.to_i)
+    else
+      puts "unsupported VCD name, valid VCD names are: \"win2k12\""
+    end
+  end
+  def find_dut_by_version(version, count, scope)
+    puts "Find DUT with version #{version} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = (root.elements['response']||empty).elements['output']
+      dut_ver = ((outputs_xml||empty).elements['supernova']||empty).elements['version'].text
+      if dut_ver == version
+        puts "[Result] DUT #{dut}'s version is #{version}"
+        got_count += 1
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_dut_by_version
+  def version(*args)
+    version = args.shift
+    raise "DUT version is reuired" if version.nil?
+    build_num = args.shift
+    raise "build number is reuired" if build_num.nil?
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = 9999 if count.to_i == 0
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    dut_ver = "#{version}.0-#{build_num}"
+    find_dut_by_version(dut_ver, count.to_i, scope)
+  end
+  def find_dut_by_relase_num(release_num, pattern, count, scope)
+    puts "Find DUT with release #{release_num} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      result = %x{ftssh #{dut} cat /etc/redhat-release}
+      next unless $?.success?
+      if result.match(pattern)
+        puts "[Result] DUT #{dut} is hosted on #{result}"
+        got_count += 1
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_dut_by_relase_num
+  def host(*args)
+    release_num = args.shift
+    raise "release number is required" if release_num.nil?
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = 9999 if count.to_i == 0
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    case release_num
+    when "centos-7.1"
+      pattern = Regexp.new('CentOS release 7.1')
+      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+    when "centos-6.6"
+      pattern = Regexp.new('CentOS release 6.6')
+      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+    when "centos-6.7"
+      pattern = Regexp.new('CentOS release 6.7')
+      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+    when "centos-7.2"
+      pattern = Regexp.new('CentOS release 7.2')
+      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+    else
+      puts "unsupported release number, valid release numbers are: \"centos-7.1\", \"centos-7.2\", \"centos-6.6\", \"centos-6.7\""
+    end
+  end
+  def quit
+    Kernel.exit
+  end
+end
+
+com = Commands.new
+
+commands = com.methods - Object.methods
+
+Readline.completion_proc = lambda { |s|
+  commands.find_all { |e| e.match(s) }
+}
+
+loop do
+  line = Readline.readline("> ", true)
+  next if line == ""
+  if line.nil?
+    puts "\n"
+    Kernel.exit
+  end
+  begin
+    args = line.split
+    command = args.shift
+    if com.respond_to? command
+      com.send(command.intern, *args)
+    else
+      puts "unsupported command #{command}"
+    end
+  rescue SystemExit => exception
+    puts "Quitting: #{exception}\n"
+    Kernel.exit
+  rescue Exception => exception
+    puts "Error executing #{line}\n"
+    puts " == #{exception} == \n"
+  end
+end

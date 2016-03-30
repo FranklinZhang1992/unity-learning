@@ -86,6 +86,25 @@ class Main
       return false
     end
   end
+  def modify_config_mk(config_file)
+    begin
+      content = []
+      io = File.open(config_file)
+      io.each_line do |line|
+        line.chomp!
+        if line == "RELEASE:=R$(MAJOR_REV).$(MINOR_REV).$(MAINT_REV)"
+          content << "UNITY_PACKAGER := #{self.user_name}\n"
+        end
+        content << "#{line}\n"
+      end
+      io.close
+      io = File.open(config_file, 'w')
+      io.puts content
+      io.close
+    rescue Exception => e
+      puts "Failed to modify Config.mk => #{e}"
+    end
+  end
   def fetch_source_code
     puts "===================begin to get the source code of everrun from GitHub========================"
     dest_folder = "/developer/#{self.user_name}/#{self.workspace_path}"
@@ -94,19 +113,20 @@ class Main
     %x{git clone git@github.com:stratustech/unity-drivers #{dest_folder}/unity-stratus/unity-drivers}
     %x{git clone git@github.com:stratustech/unity-third-party #{dest_folder}/unity-stratus/unity-third-party}
     %x{git clone git@github.com:stratustech/unity-libvirt #{dest_folder}/unity-stratus/unity-libvirt}
-    %x{sed -i \"76c UNITY_PACKAGER := #{self.user_name}\" #{dest_folder}/unity-stratus/Config.mk}
+    modify_config_mk("#{dest_folder}/unity-stratus/Config.mk")
+    # %x{sed -i \"76c UNITY_PACKAGER := #{self.user_name}\" #{dest_folder}/unity-stratus/Config.mk}
     %x{ln -s #{dest_folder}/unity-stratus #{dest_folder}/unity-build}
     puts "===================cloned successfully========================"
   end
   def compile_source_code
     puts "===================begin to exec make (do not delete the file build_info.out generated in the source code folder)========================"
     File.delete(build_info_file) if File.exist?(build_info_file)
-    IO.popen("ssh #{self.user_name}@134.111.24.204 /developer/#{self.user_name}/script/compile_everrun #{self.workspace_path}") { |io|
+    IO.popen("ssh #{self.user_name}@shanghai5.sn.stratus.com /developer/#{self.user_name}/script/common/compile_everrun #{self.workspace_path}") { |io|
       while line = io.gets
         line.chomp!
         puts line
         File.open(build_info_file, "a") { |f|
-          f.write line
+          f.write "#{line}\n"
         }
       end
     }

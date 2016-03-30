@@ -160,6 +160,16 @@ def check_for_win2k12(name)
   end
 end
 
+def match_os(str)
+  puts "match for #{str}"
+  pattern = Regexp.new('CentOS release 7.1')
+  if str.match(pattern)
+    puts "yes"
+  else
+    puts "no"
+  end
+end
+
 # match_linux_folder("/tmp")
 # match_windows_folder("E:\\")
 # match_folder("c【2】")
@@ -198,6 +208,8 @@ end
 
 # check_dut_reserve
 
-check_for_win2k12("en_windows_server_2012_r2_x64_dvd_2707946")
-check_for_win2k12("windows2012")
-check_for_win2k12("win2k12")
+# check_for_win2k12("en_windows_server_2012_r2_x64_dvd_2707946")
+# check_for_win2k12("windows2012")
+# check_for_win2k12("win2k12")
+
+match_os("CentOS release 7.2 (Final)")
