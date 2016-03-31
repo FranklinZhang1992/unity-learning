@@ -28,15 +28,24 @@ class String
 end
 
 class Commands
-  WIN_2K12_REGEXP = 'win\S*2[0-9a-zA-Z]{0,}12'
+  WIN_2K12_REGEXP = Regexp.new('win\S*2[0-9a-zA-Z]{0,}12')
+  VALID_VERSION_REGEXP = Regexp.new('[0-9][.][0-9]')
+  VALID_BUILD_NUM_REGEXP = Regexp.new('[0-9]{1,}')
+  DUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
+  INPUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})')
+  def win2k12_re() WIN_2K12_REGEXP end
+  def valid_version_re() VALID_VERSION_REGEXP end
+  def valid_build_num_re() VALID_BUILD_NUM_REGEXP end
+  def dut_version_re() DUT_VERSION_REGEXP end
+  def input_version_re() INPUT_VERSION_REGEXP end
   def help
     msg = "Dut searcher:\n"
     msg += "Usage: <command> [args...]\n"
-    msg += "duts <accessible-only> <count> <scope>            list all DUTs(optional scope values are: all, idle, reserved), accessible-only: default is no, if type yes, then will only list the DUTs on which DOH is accessible\n"
-    msg += "vcd <name> <count> <scope>                        search for a DUT contains specified VCD.\n"
-    msg += "version <version> <build num> <count> <scope>     search for a DUT with the version you need, version can be [7.3, 7.4], build num is the one you got fron JIRA,like 127\n"
-    msg += "host <release_num> <count> <scope>                search for a DUT hosting on specified OS.\n"
-    msg += "quit                                              exit\n\n"
+    msg += "duts <accessible-only> <count> <scope>                      list all DUTs(optional scope values are: all, idle, reserved), accessible-only: default is no, if type yes, then will only list the DUTs on which DOH is accessible\n"
+    msg += "vcd <name> <count> <scope>                                  search for a DUT contains specified VCD.\n"
+    msg += "version <compare> <version> <build num> <count> <scope>     search for a DUT with the version you need, version can be [7.3, 7.4], build num is the one you got fron JIRA,like 127\n"
+    msg += "host <release_num> <count> <scope>                          search for a DUT hosting on specified OS.\n"
+    msg += "quit                                                        exit\n\n"
     puts msg
   end
   def fetch_duts(mode="all")
@@ -143,7 +152,7 @@ class Commands
         is_iso = (((output_xml.elements['media-info']||empty).elements['isiso']||empty).text||"false").to_bool
         if is_iso
           name = (output_xml.elements['name']||empty).text
-          if name.match(Regexp.new(pattern))
+          if name.match(pattern)
             puts "[Result] DUT #{dut} contains a #{dest} VCD"
             got_count += 1
             break
@@ -164,12 +173,55 @@ class Commands
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
     case name
     when "win2k12"
-      find_vcd("win2k12", WIN_2K12_REGEXP, scope, count.to_i)
+      find_vcd("win2k12", win2k12_re, scope, count.to_i)
     else
       puts "unsupported VCD name, valid VCD names are: \"win2k12\""
     end
   end
-  def find_dut_by_version(version, count, scope)
+  def compare_dut_ver(dut_ver, version, build_num)
+    dut_ver_match_result = dut_ver.match(dut_version_re)
+    input_ver_match_result = version.match(input_version_re)
+    raise "Not a valid dut version #{dut_ver}" if dut_ver_match_result.nil?
+    raise "NOt a valid version #{version}" if input_ver_match_result.nil?
+    # Convert DUT version
+    dut_main_ver = dut_ver_match_result[1] || "0"
+    dut_sub_ver = dut_ver_match_result[2] || "0"
+    dut_build_num = dut_ver_match_result[3] || "0"
+    dut_main_ver = dut_main_ver.to_i
+    dut_sub_ver = dut_sub_ver.to_i
+    dut_build_num = dut_build_num.to_i
+    # Convert input version
+    main_ver = input_ver_match_result[1] || "0"
+    sub_ver = input_ver_match_result[2] || "0"
+    main_ver = main_ver.to_i
+    sub_ver = sub_ver.to_i
+    build_num = build_num.to_i
+
+    cmp_arr1 = []
+    cmp_arr2 = []
+    cmp_arr1 << dut_main_ver
+    cmp_arr1 << dut_sub_ver
+    cmp_arr1 << dut_build_num
+
+    cmp_arr2 << main_ver
+    cmp_arr2 << sub_ver
+    cmp_arr2 << build_num
+
+    compare_result = 0
+    for i in 0 .. 2
+      next if cmp_arr1[i] == cmp_arr2[i]
+      if cmp_arr1[i] > cmp_arr2[i]
+        compare_result = 1
+        break
+      elsif cmp_arr1[i] < cmp_arr2[i]
+        compare_result = -1
+        break
+      end
+    end
+    return compare_result
+  end
+  private :compare_dut_ver
+  def find_dut_by_version(version, build_num, count, scope, compare)
     puts "Find DUT with version #{version} begin, this may take a few minutes."
     got_count = 0
     duts = fetch_duts(scope)
@@ -181,26 +233,64 @@ class Commands
       empty = Element.new
       outputs_xml = (root.elements['response']||empty).elements['output']
       dut_ver = ((outputs_xml||empty).elements['supernova']||empty).elements['version'].text
-      if dut_ver == version
-        puts "[Result] DUT #{dut}'s version is #{version}"
-        got_count += 1
+      case compare
+      when ">"
+        if compare_dut_ver(dut_ver, version, build_num) > 0
+          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+          got_count += 1
+        end
+      when "<"
+        if compare_dut_ver(dut_ver, version, build_num) < 0
+          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+          got_count += 1
+        end
+      when "="
+        if compare_dut_ver(dut_ver, version, build_num) == 0
+          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+          got_count += 1
+        end
+      when ">="
+        if compare_dut_ver(dut_ver, version, build_num) >= 0
+          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+          got_count += 1
+        end
+      when "<="
+        if compare_dut_ver(dut_ver, version, build_num) <= 0
+          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+          got_count += 1
+        end
       end
     end # end of duts block
     puts "Total find #{got_count} DUTs"
   end
   private :find_dut_by_version
+  VALID_COMPARE_SYMBOL = %w{> < = >= <=}
+  def valid_compare?(compare)
+    return VALID_COMPARE_SYMBOL.to_set.include?(compare)
+  end
+
+  def valid_version?(version)
+    return version.match(valid_version_re)
+  end
+  def valid_build_num?(build_num)
+    return build_num.match(valid_build_num_re)
+  end
   def version(*args)
+    compare = args.shift
+    raise "compare is reuired" if compare.nil?
+    raise "Not a valid compare, allowed values are #{VALID_COMPARE_SYMBOL}" unless valid_compare?(compare)
     version = args.shift
     raise "DUT version is reuired" if version.nil?
+    raise "Not a valid version" unless valid_version?(version)
     build_num = args.shift
     raise "build number is reuired" if build_num.nil?
+    raise "Not a valid build number" unless valid_build_num?(build_num)
     count = args.shift
     raise "count is required" if count.nil?
     count = 9999 if count.to_i == 0
     scope = args.shift || "all"
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
-    dut_ver = "#{version}.0-#{build_num}"
-    find_dut_by_version(dut_ver, count.to_i, scope)
+    find_dut_by_version(version, build_num, count.to_i, scope, compare)
   end
   def find_dut_by_relase_num(release_num, pattern, count, scope)
     puts "Find DUT with release #{release_num} begin, this may take a few minutes."

@@ -8,6 +8,10 @@ WINDOWS_FOLDER = "^[A-Z]:\\\\S*$"
 MANAGED_FOLDER = "^(\\S*)[【](\\d+)[】]$"
 ISO_FILE = '^\S*[\.][iI][sS][oO]$'
 WIN_2K12_REGEXP = 'win\S*2[0-9a-zA-Z]{0,}12'
+VALID_VERSION_REGEXP = Regexp.new('[0-9][.][0-9]')
+def valid_version_re() VALID_VERSION_REGEXP end
+VALID_RELEASE_NUM_REGEXP = Regexp.new('[0-9]{1,}')
+def valid_release_num_re() VALID_RELEASE_NUM_REGEXP end
 
 def match_test(type, str)
   puts "match for #{str}"
@@ -170,6 +174,41 @@ def match_os(str)
   end
 end
 
+def match_version(version)
+  if version.match(valid_version_re)
+    puts "yes"
+  else
+    puts "no"
+  end
+end
+
+def match_release_num(release_num)
+  if release_num.match(valid_release_num_re)
+    puts "yes"
+  else
+    puts "no"
+  end
+end
+
+def divide_dut_ver(dut_ver)
+  puts "divide for #{dut_ver}"
+  pattern = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
+  result = dut_ver.match(pattern)
+  if result
+    num1 = result[1] || "0"
+    num2 = result[2] || "0"
+    num3 = result[3] || "0"
+    num1 = num1.to_i
+    num2 = num2.to_i
+    num3 = num3.to_i
+    p num1
+    p num2
+    p num3
+  else
+    puts "no"
+  end
+end
+
 # match_linux_folder("/tmp")
 # match_windows_folder("E:\\")
 # match_folder("c【2】")
@@ -212,4 +251,15 @@ end
 # check_for_win2k12("windows2012")
 # check_for_win2k12("win2k12")
 
-match_os("CentOS release 7.2 (Final)")
+# match_os("CentOS release 7.2 (Final)")
+
+# match_version("7.4")
+# match_version("74")
+
+# match_release_num("1")
+# match_release_num("12")
+# match_release_num("123")
+
+divide_dut_ver("7.4.0-119")
+divide_dut_ver("7.4.0-1")
+divide_dut_ver("7.4.0-")
