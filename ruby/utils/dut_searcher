@@ -38,15 +38,78 @@ class Commands
   def valid_build_num_re() VALID_BUILD_NUM_REGEXP end
   def dut_version_re() DUT_VERSION_REGEXP end
   def input_version_re() INPUT_VERSION_REGEXP end
-  def help
-    msg = "Dut searcher:\n"
-    msg += "Usage: <command> [args...]\n"
-    msg += "duts <accessible-only> <count> <scope>                      list all DUTs(optional scope values are: all, idle, reserved), accessible-only: default is no, if type yes, then will only list the DUTs on which DOH is accessible\n"
-    msg += "vcd <name> <count> <scope>                                  search for a DUT contains specified VCD.\n"
-    msg += "version <compare> <version> <build num> <count> <scope>     search for a DUT with the version you need, version can be [7.3, 7.4], build num is the one you got fron JIRA,like 127\n"
-    msg += "host <release_num> <count> <scope>                          search for a DUT hosting on specified OS.\n"
-    msg += "quit                                                        exit\n\n"
-    puts msg
+  def help(*args)
+    command = args.shift
+    if command.nil?
+      msg = "Dut searcher:\n"
+      msg += "Usage: <command> [args...]\n"
+      msg += "    1. duts <accessible_only> <count> <scope>                                    list all DUTs\n"
+      msg += "    2. vcd <name> <count> <scope>                                                search for a DUT contains specified VCD.\n"
+      msg += "    3. version <compare> <version> <build_num> <count> <scope>                   search for a DUT with the specified version.\n"
+      msg += "    4. host <release_num> <count> <scope>                                        search for a DUT hosting on specified OS.\n"
+      msg += "Use \" help <command>\" to show  the detail information. (e.g. help duts).\n"
+      msg += "quit   --->   exit\n\n"
+      puts msg
+    else
+      case command
+      when "duts"
+        msg = "Usage\n"
+        msg += "    duts <accessible_only> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts which can be accessed or not.\n\n"
+        msg += "Arguments\n"
+        msg += "    accessible_only            Use the flag to specify the dut you want must be accessed, it can accept the value \"yes\" or \"no\".\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Example\n"
+        msg += "    Find two idle duts which can be accessed.\n"
+        msg += "    > duts yes 2 idle\n\n"
+        puts msg
+      when "vcd"
+        msg = "Usage\n"
+        msg += "    vcd <name> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts contain the specified vcd-name.\n\n"
+        msg += "Arguments\n"
+        msg += "    name                       The vcd name, it can only accept the value \"win2k12\" now, you can contact Franklin to add other VCD support.\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find ten reserved duts which contain the vcd with the name win2k12.\n"
+        msg += "    > vcd win2k12 2 reserved\n\n"
+        puts msg
+      when "version"
+        msg = "Usage\n"
+        msg += "    version <compare> <version> <build_num> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts with a rang version.\n\n"
+        msg += "Arguments\n"
+        msg += "    compare                    The compare symbol of version, it can accept the values \">\", \">=\", \"=\", \"<\", \"<=\".\n"
+        msg += "    version                    The version point of the dut.\n"
+        msg += "    build_num                  The build number of the dut.\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find a idle dut which the version is before 7.4-127\n"
+        msg += "    > version <= 7.4 127 1 idle\n\n"
+        puts msg
+      when "host"
+        msg = "Usage\n"
+        msg += "    host <release_num> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts which the specified host OS.\n\n"
+        msg += "Arguments\n"
+        msg += "    release_num                The release version of the host OS you want to find, it can accept the values \"centos-6.6\", \"centos-6.7\", \"centos-7.1\", \"centos-7.2\".\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find a idle dut which the host OS is centos-6.6\n"
+        msg += "    > host centos-7.1 1 idle\n\n"
+        puts msg
+      else
+        puts "unsupported command #{command}"
+      end
+    end
   end
   def fetch_duts(mode="all")
     raise "unknown mode #{mode}" unless mode == "all" || mode == "idle" || mode == "reserved"
@@ -182,7 +245,7 @@ class Commands
     dut_ver_match_result = dut_ver.match(dut_version_re)
     input_ver_match_result = version.match(input_version_re)
     raise "Not a valid dut version #{dut_ver}" if dut_ver_match_result.nil?
-    raise "NOt a valid version #{version}" if input_ver_match_result.nil?
+    raise "Not a valid version #{version}" if input_ver_match_result.nil?
     # Convert DUT version
     dut_main_ver = dut_ver_match_result[1] || "0"
     dut_sub_ver = dut_ver_match_result[2] || "0"
@@ -222,7 +285,7 @@ class Commands
   end
   private :compare_dut_ver
   def find_dut_by_version(version, build_num, count, scope, compare)
-    puts "Find DUT with version #{version} begin, this may take a few minutes."
+    puts "Find DUT #{compare} #{version}-#{build_num} begin, this may take a few minutes."
     got_count = 0
     duts = fetch_duts(scope)
     duts.each do |dut|
@@ -232,7 +295,8 @@ class Commands
       root = Document.new(data).root
       empty = Element.new
       outputs_xml = (root.elements['response']||empty).elements['output']
-      dut_ver = ((outputs_xml||empty).elements['supernova']||empty).elements['version'].text
+      dut_ver = (((outputs_xml||empty).elements['supernova']||empty).elements['version']||empty).text
+      next if dut_ver.nil?
       case compare
       when ">"
         if compare_dut_ver(dut_ver, version, build_num) > 0
