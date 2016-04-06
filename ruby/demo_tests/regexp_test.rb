@@ -166,7 +166,7 @@ end
 
 def match_os(str)
   puts "match for #{str}"
-  pattern = Regexp.new('CentOS release 7.1')
+  pattern = Regexp.new('CentOS [\S ]* 7.2')
   if str.match(pattern)
     puts "yes"
   else
@@ -251,7 +251,7 @@ end
 # check_for_win2k12("windows2012")
 # check_for_win2k12("win2k12")
 
-# match_os("CentOS release 7.2 (Final)")
+match_os("CentOS Linux release 7.2.1511 (Core)")
 
 # match_version("7.4")
 # match_version("74")
@@ -260,6 +260,6 @@ end
 # match_release_num("12")
 # match_release_num("123")
 
-divide_dut_ver("7.4.0-119")
-divide_dut_ver("7.4.0-1")
-divide_dut_ver("7.4.0-")
+# divide_dut_ver("7.4.0-119")
+# divide_dut_ver("7.4.0-1")
+# divide_dut_ver("7.4.0-")

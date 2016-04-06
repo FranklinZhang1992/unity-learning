@@ -362,7 +362,7 @@ class Commands
     duts = fetch_duts(scope)
     duts.each do |dut|
       break if got_count >= count
-      result = %x{ftssh #{dut} cat /etc/redhat-release}
+      result = %x{ftssh #{dut} cat /etc/redhat-release 2>&1}
       next unless $?.success?
       if result.match(pattern)
         puts "[Result] DUT #{dut} is hosted on #{result}"
@@ -382,16 +382,16 @@ class Commands
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
     case release_num
     when "centos-7.1"
-      pattern = Regexp.new('CentOS release 7.1')
+      pattern = Regexp.new('CentOS [\S ]* 7.1')
       find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
     when "centos-6.6"
-      pattern = Regexp.new('CentOS release 6.6')
+      pattern = Regexp.new('CentOS [\S ]* 6.6')
       find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
     when "centos-6.7"
-      pattern = Regexp.new('CentOS release 6.7')
+      pattern = Regexp.new('CentOS [\S ]* 6.7')
       find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
     when "centos-7.2"
-      pattern = Regexp.new('CentOS release 7.2')
+      pattern = Regexp.new('CentOS [\S ]* 7.2')
       find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
     else
       puts "unsupported release number, valid release numbers are: \"centos-7.1\", \"centos-7.2\", \"centos-6.6\", \"centos-6.7\""

@@ -25,7 +25,7 @@ class Main
   attr_accessor :workspace_path
   attr_accessor :dut_name
   attr_accessor :user_name
-  def initialize(workspace_path, dut_name, user_name)
+  def initialize
     self.workspace_path = "#{$WORKSPACE_PATH}"
     self.dut_name = "#{$DUT_NAME}"
     self.user_name = "#{$USER_NAME}"
@@ -43,6 +43,7 @@ class Main
   def build_info_file() "/developer/#{self.user_name}/#{self.workspace_path}/unity-build/build_info.out" end
   def kit_folder() "/developer/#{self.user_name}/#{self.workspace_path}/unity-build/kit" end
   def deploy_folder() "/test_logs1/#{self.user_name}/#{self.workspace_path}" end
+  def backup_folder() "/test_logs1/#{self.user_name}/#{self.workspace_path}.backup" end
   def show_params
     puts "Received params: workspace path = #{self.workspace_path}, dut name = #{self.dut_name}, user name = #{self.user_name}"
   end
@@ -121,7 +122,7 @@ class Main
   def compile_source_code
     puts "===================begin to exec make (do not delete the file build_info.out generated in the source code folder)========================"
     File.delete(build_info_file) if File.exist?(build_info_file)
-    IO.popen("ssh #{self.user_name}@shanghai5.sn.stratus.com /developer/#{self.user_name}/script/common/compile_everrun #{self.workspace_path}") { |io|
+    IO.popen("ssh #{self.user_name}@shanghai6.sn.stratus.com /developer/#{self.user_name}/script/common/compile_everrun #{self.workspace_path}") { |io|
       while line = io.gets
         line.chomp!
         puts line
@@ -175,9 +176,13 @@ class Main
     %x{curl http://#{dut_name}.sn.stratus.com}
     return $?.success?
   end
+  def backup_origin_log
+    puts "copy original log files to #{backup_folder}"
+    %x{cp -rv #{deploy_folder}/sn/* #{backup_folder}}
+  end
   def run_fttest
     puts "===================begin to run fttest========================"
-    run_fttest_cmd = "/developer/#{self.user_name}/script/run_fttest #{deploy_folder} #{self.dut_name}"
+    run_fttest_cmd = "/developer/#{self.user_name}/script/common/run_fttest #{deploy_folder} #{self.dut_name}"
     IO.popen(run_fttest_cmd) { |io|
       while line = io.gets
         line.chomp!
@@ -206,13 +211,14 @@ class Main
     run_fttest
     if !fttest_success?(self.dut_name)
       puts "fttest failed, try for a second time"
+      backup_origin_log
       run_fttest
     end
   end
 end
 
 begin
-  main = Main.new($WORKSPACE_PATH, $DUT_NAME, $USER_NAME)
+  main = Main.new
   main.run
 rescue Exception => e
   puts "Error occured during executing build => #{e}"
