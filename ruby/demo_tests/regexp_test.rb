@@ -209,6 +209,18 @@ def divide_dut_ver(dut_ver)
   end
 end
 
+def match_version(str)
+  puts "match for #{str}"
+  pattern = Regexp.new('7[.]4[.][0-9][.][0-9]-[0-9]{1,}')
+  result = str.match(pattern)
+  if result
+    puts "yes"
+    p result
+  else
+    puts "no"
+  end
+end
+
 # match_linux_folder("/tmp")
 # match_windows_folder("E:\\")
 # match_folder("c【2】")
@@ -251,7 +263,7 @@ end
 # check_for_win2k12("windows2012")
 # check_for_win2k12("win2k12")
 
-match_os("CentOS Linux release 7.2.1511 (Core)")
+# match_os("CentOS Linux release 7.2.1511 (Core)")
 
 # match_version("7.4")
 # match_version("74")
@@ -263,3 +275,6 @@ match_os("CentOS Linux release 7.2.1511 (Core)")
 # divide_dut_ver("7.4.0-119")
 # divide_dut_ver("7.4.0-1")
 # divide_dut_ver("7.4.0-")
+
+match_version("lrwxrwxrwx  1 untriage user   11 Apr  7 20:31 current -> 7.4.0.0-145")
+match_version("lrwxrwxrwx  1 untriage user   1")

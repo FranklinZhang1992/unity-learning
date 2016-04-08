@@ -4,6 +4,7 @@ require 'readline'
 require 'net/http'
 require 'uri'
 require 'rexml/document'
+require 'cgi'
 
 #=============================================================================
 
@@ -33,11 +34,17 @@ class Commands
   VALID_BUILD_NUM_REGEXP = Regexp.new('[0-9]{1,}')
   DUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
   INPUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})')
+  EVERRUN_73_VERSION_REGEXP = Regexp.new('7[.]3[.]0[.]0-[0-9]{1,}')
+  EVERRUN_74_VERSION_REGEXP = Regexp.new('7[.]4[.]0[.]0-[0-9]{1,}')
+  DOH_USERNAME = "admin"
+  DOH_PASSWORD = "admin"
   def win2k12_re() WIN_2K12_REGEXP end
   def valid_version_re() VALID_VERSION_REGEXP end
   def valid_build_num_re() VALID_BUILD_NUM_REGEXP end
   def dut_version_re() DUT_VERSION_REGEXP end
   def input_version_re() INPUT_VERSION_REGEXP end
+  def everrun_73_version_re() EVERRUN_73_VERSION_REGEXP end
+  def everrun_74_version_re() EVERRUN_74_VERSION_REGEXP end
   def help(*args)
     command = args.shift
     if command.nil?
@@ -149,18 +156,57 @@ class Commands
     duts
   end
   private :fetch_duts
-  def fetch_doh(dut)
-    # puts "Get doh topo from DUT #{dut}"
-    data = nil
+  def fetch_doh_session(dut)
+    session = nil
     server = "#{dut}.sn.stratus.com"
     begin
       req = Net::HTTP::Post.new("http://#{server}/doh/")
-      req.body = "<requests output='XML'><request id='1' target='supernova'><watch/></request></requests>"
+      req.body = "<requests output='XML'><request id='1' target='session'><login><username>#{DOH_USERNAME}</username><password>#{DOH_PASSWORD}</password></login></request></requests>"
       req.content_type = 'text/xml'
       Net::HTTP.start(server, 80) do |http|
         response = http.request(req)
         raise "Cannot talk to DUT #{dut}" unless response.code.to_i == 200
         data = response.body
+        unless data.nil?
+          root = Document.new(data).root
+          empty = Element.new
+          login_xml = (root.elements['response']||empty).elements['login']
+          status = (login_xml||empty).attributes['status']
+          if status == "ok"
+            session = ((login_xml||empty).elements['session-id']||empty).text
+          end
+        end
+      end
+    rescue Exception => e
+      # puts "error occured during fetch doh session from DUT #{dut} => #{e}"
+    end
+    session
+  end
+  private :fetch_doh_session
+  def fetch_doh(dut)
+    # puts "Get doh topo from DUT #{dut}"
+    data = nil
+    server = "#{dut}.sn.stratus.com"
+    begin
+      session = fetch_doh_session(dut)
+      req = Net::HTTP::Post.new("http://#{server}/doh/")
+      req.body = "<requests output='XML'><request id='1' target='supernova'><watch/></request></requests>"
+      req.content_type = 'text/xml'
+      unless session.nil?
+        puts "session = #{session}"
+        cookie = CGI::Cookie.new("JSESSIONID", "#{session}")
+        req['Cookie'] = cookie.to_s
+      end
+      Net::HTTP.start(server, 80) do |http|
+        response = http.request(req)
+        raise "Cannot talk to DUT #{dut}" unless response.code.to_i == 200
+        data = response.body
+        root = Document.new(data).root
+        empty = Element.new
+        status = (root.elements['response']||empty).attributes['status']
+        unless status == "ok"
+          data = nil
+        end
       end
     rescue Exception => e
       # puts "error occured during fetch doh topo from DUT #{dut} => #{e}"
@@ -396,6 +442,43 @@ class Commands
     else
       puts "unsupported release number, valid release numbers are: \"centos-7.1\", \"centos-7.2\", \"centos-6.6\", \"centos-6.7\""
     end
+  end
+  def find_avance(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = 9999 if count.to_i == 0
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "Find Avance begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      version = ((((root.elements['response']||empty).elements['output']||empty).elements['supernova ']||empty).elements['version']||empty).text
+      unless version.nil?
+        if version[0] = 'R'
+          puts "[Result] DUT #{dut} hosts Avance"
+          got_count += 1
+        end
+      end
+    end # end of duts block
+  end
+  def dut_detail(*args)
+    dut = args.shift
+    raise "DUT name is requied" if dut.nil?
+    data = fetch_doh(dut)
+    raise "DUT #{dut} is not available" if data.nil?
+    puts "TODO"
+    # supernova_xml = ((root.elements['response']||empty).elements['output']||empty).elements['supernova ']
+    # version = ((supernova_xml||empty).elements['version']||empty).text
+    # provisioning_xml = (supernova_xml||empty).elements['provisioning']
+    # vcpus = (((((provisioning_xml||empty).elements['allowed']||empty).elements['vcpus']||empty).elements['hard']||empty).text
+    # memory = (((((provisioning_xml||empty).elements['allowed']||empty).elements['memory']||empty).elements['hard']||empty).text
+    
   end
   def quit
     Kernel.exit
