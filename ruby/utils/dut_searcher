@@ -54,7 +54,9 @@ class Commands
       msg += "    2. vcd <name> <count> <scope>                                                search for a DUT contains specified VCD.\n"
       msg += "    3. version <compare> <version> <build_num> <count> <scope>                   search for a DUT with the specified version.\n"
       msg += "    4. host <release_num> <count> <scope>                                        search for a DUT hosting on specified OS.\n"
-      msg += "Use \" help <command>\" to show  the detail information. (e.g. help duts).\n"
+      msg += "    5. find_avance <count> <scope>                                               search for an Avance DUT.\n"
+      msg += "    6. dut_detail <dut>                                                          show detail information of a DUT.\n"
+      msg += "Use \" help <command>\" to show the detail information. (e.g. help duts).\n"
       msg += "quit   --->   exit\n\n"
       puts msg
     else
@@ -112,6 +114,14 @@ class Commands
         msg += "Examples\n"
         msg += "    Find a idle dut which the host OS is centos-6.6\n"
         msg += "    > host centos-7.1 1 idle\n\n"
+        puts msg
+      when "find_avance"
+        msg = "Usage\n"
+        msg += "    find_avance <count> <scope>\n\n"
+        puts msg
+      when "dut_detail"
+        msg = "Usage\n"
+        msg += "    dut_detail <dut>\n\n"
         puts msg
       else
         puts "unsupported command #{command}"
@@ -478,7 +488,6 @@ class Commands
     # provisioning_xml = (supernova_xml||empty).elements['provisioning']
     # vcpus = (((((provisioning_xml||empty).elements['allowed']||empty).elements['vcpus']||empty).elements['hard']||empty).text
     # memory = (((((provisioning_xml||empty).elements['allowed']||empty).elements['memory']||empty).elements['hard']||empty).text
-    
   end
   def quit
     Kernel.exit
