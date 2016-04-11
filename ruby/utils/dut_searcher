@@ -35,8 +35,8 @@ class Commands
   VALID_BUILD_NUM_REGEXP = Regexp.new('[0-9]{1,}')
   DUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
   INPUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})')
-  EVERRUN_73_VERSION_REGEXP = Regexp.new('7[.]3[.]0[.]0-[0-9]{1,}')
-  EVERRUN_74_VERSION_REGEXP = Regexp.new('7[.]4[.]0[.]0-[0-9]{1,}')
+  EVERRUN_73_VERSION_REGEXP = Regexp.new('7[.]3[.][0-9][.][0-9]-([0-9]{1,})')
+  EVERRUN_74_VERSION_REGEXP = Regexp.new('7[.]4[.][0-9][.][0-9]-([0-9]{1,})')
   DOH_USERNAME = "admin"
   DOH_PASSWORD = "admin"
   def win2k12_re() WIN_2K12_REGEXP end
@@ -57,6 +57,8 @@ class Commands
       msg += "    4. host <release_num> <count> <scope>                                        search for a DUT hosting on specified OS.\n"
       msg += "    5. find_avance <count> <scope>                                               search for an Avance DUT.\n"
       msg += "    6. dut_detail <dut>                                                          show detail information of a DUT.\n"
+      msg += "    7. available_versions <count> <build_version>                                search for available everRun build versions\n"
+      msg += "    8. prepare_fttest_folder <build_version>                                     auto generate a folder to run fttest"
       msg += "Use \" help <command>\" to show the detail information. (e.g. help duts).\n"
       msg += "quit   --->   exit\n\n"
       puts msg
@@ -123,6 +125,14 @@ class Commands
       when "dut_detail"
         msg = "Usage\n"
         msg += "    dut_detail <dut>\n\n"
+        puts msg
+      when "available_versions"
+        msg = "Usage\n"
+        msg += "    available_versions <count> <build_version>\n\n"
+        puts msg
+      when "prepare_fttest_folder"
+        msg = "Usage\n"
+        msg += "    available_versions <build_version>\n\n"
         puts msg
       else
         puts "unsupported command #{command}"
@@ -490,6 +500,7 @@ class Commands
       end # end of output_xml block
       primary_node_xml
   end
+  private :get_primary_node
   def dut_detail(*args)
     dut = args.shift
     raise "DUT name is requied" if dut.nil?
@@ -514,6 +525,123 @@ class Commands
     msg += "vcpus:   #{vcpus}\n"
     msg += "memory:  #{memory}G\n"
     puts msg
+  end
+  # Can only be used for sorting build versions
+  def bubble_sort(array)
+    return array if array.size < 2
+    (array.size - 2).downto(0) do |i|
+      (0 .. i).each do |j|
+        release_num1 = begin array[j][1].to_i rescue 0 end
+        release_num2 = begin array[j + 1][1].to_i rescue 0 end
+        array[j], array[j + 1] = array[j + 1], array[j] if release_num1 <= release_num2
+      end
+    end
+    return array
+  end
+  private :bubble_sort
+  def show_build_versions(build_versions, count)
+    got_count = 0
+    build_versions.each do |version|
+      break if got_count >= count
+      puts version
+      got_count += 1
+    end
+  end
+  def get_everrun_74_builds(count)
+    build_versions = []
+    builds = Dir.glob("/test_logs/fttest2/unity-7.4/builds/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(everrun_74_version_re)
+        unless match_result.nil?
+          build_versions << match_result
+        end
+      end
+    end # end of builds block
+    build_versions = bubble_sort(build_versions)
+    puts "Available everRun-7.4 builds are:"
+    show_build_versions(build_versions, count)
+  end
+  private :get_everrun_74_builds
+  def get_everrun_73_builds(count)
+    build_versions = []
+    builds = Dir.glob("/test_logs/fttest2/unity-7.3/builds/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(everrun_73_version_re)
+        unless match_result.nil?
+          build_versions << match_result
+        end
+      end
+    end # end of builds block
+    build_versions = bubble_sort(build_versions)
+    puts "Available everRun-7.3 builds are:"
+    show_build_versions(build_versions, count)
+  end
+  private :get_everrun_73_builds
+  def available_versions(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    version = args.shift
+    case version
+    when "7.3"
+      get_everrun_73_builds(count)
+    when "7.4"
+      get_everrun_74_builds(count)
+    else
+      get_everrun_73_builds(count)
+      get_everrun_74_builds(count)
+    end
+  end
+  def prepare_fttest_folder(*args)
+    version = args.shift
+    raise "build version is required" if version.nil?
+    source_folder = nil
+    user_name = "#{%x{whoami}}"
+    user_name.chomp!
+    # generate source folder url
+    if version.match(everrun_73_version_re)
+      source_folder = "/test_logs/fttest2/unity-7.3/builds/#{version}"
+    elsif version.match(everrun_74_version_re)
+      source_folder = "/test_logs/fttest2/unity-7.4/builds/#{version}"
+    elsif version == "current"
+      builds = Dir.glob("/test_logs/fttest2/unity-7.4/builds/*")
+      max_release_num = 0
+      current_version = nil
+      builds.each do |file|
+        if File.directory?(file)
+          match_result = file.match(everrun_74_version_re)
+          unless match_result.nil?
+            release_num = begin match_result[1].to_i rescue 0 end
+            if release_num >= max_release_num
+              max_release_num = release_num
+              current_version = match_result
+            end
+          end
+        end
+      end # end of builds block
+      raise "no current version is found" if current_version.nil?
+      puts "current version is #{current_version}"
+      version = current_version
+      source_folder = "/test_logs/fttest2/unity-7.4/builds/#{version}"
+    else
+      raise "Version #{version} not found, valid version should be like: 7.4.0.0-142"
+    end # end of if
+    raise "#{source_folder} does not exist" if source_folder.nil? || !File.exist?(source_folder)
+    deploy_folder = "/test_logs1/#{user_name}/everrun_build/#{version}"
+    local_file = "#{deploy_folder}/local"
+    project_file = "#{deploy_folder}/project"
+    if File.exist?(deploy_folder) && File.exist?(local_file) && File.exist?(project_file)
+      puts "Already ready to run fttest, you can run fttest (nohup fttest sn/null,dut=$dut_name,vms=1 &) under:"
+      puts deploy_folder
+    else
+      %x{mkdir -p #{deploy_folder}}
+      %x{ln -s /test_logs/fttest2/unity/current #{deploy_folder}/project}
+      %x{ln -s #{source_folder} #{deploy_folder}/local}
+      puts "You can now run fttest (nohup fttest sn/null,dut=$dut_name,vms=1 &) under:"
+      puts deploy_folder
+    end
   end
   def quit
     Kernel.exit
