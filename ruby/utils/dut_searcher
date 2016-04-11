@@ -57,8 +57,10 @@ class Commands
       msg += "    4. host <release_num> <count> <scope>                                        search for a DUT hosting on specified OS.\n"
       msg += "    5. find_avance <count> <scope>                                               search for an Avance DUT.\n"
       msg += "    6. dut_detail <dut>                                                          show detail information of a DUT.\n"
-      msg += "    7. available_versions <count> <build_version>                                search for available everRun build versions\n"
-      msg += "    8. prepare_fttest_folder <build_version>                                     auto generate a folder to run fttest"
+      msg += "    7. reserve <dut> <comments>                                                  reserve a DUT\n"
+      msg += "    8. release <dut> <comments>                                                  release a DUT\n"
+      msg += "    9. available_versions <count> <build_version>                                search for available everRun build versions\n"
+      msg += "    10. prepare_fttest_folder <build_version>                                     auto generate a folder to run fttest"
       msg += "Use \" help <command>\" to show the detail information. (e.g. help duts).\n"
       msg += "quit   --->   exit\n\n"
       puts msg
@@ -126,13 +128,21 @@ class Commands
         msg = "Usage\n"
         msg += "    dut_detail <dut>\n\n"
         puts msg
+      when "reserve"
+        msg = "Usage\n"
+        msg += "    reserve <dut> <comments>\n\n"
+        puts msg
+      when "release"
+        msg = "Usage\n"
+        msg += "    release <dut> <comments>\n\n"
+        puts msg
       when "available_versions"
         msg = "Usage\n"
         msg += "    available_versions <count> <build_version>\n\n"
         puts msg
       when "prepare_fttest_folder"
         msg = "Usage\n"
-        msg += "    available_versions <build_version>\n\n"
+        msg += "    prepare_fttest_folder <build_version>\n\n"
         puts msg
       else
         puts "unsupported command #{command}"
@@ -473,7 +483,6 @@ class Commands
     duts = fetch_duts(scope)
     duts.each do |dut|
       break if got_count >= count
-      puts "find for #{dut}"
       data = fetch_doh(dut)
       next if data.nil?
       root = Document.new(data).root
@@ -537,6 +546,30 @@ class Commands
       end
     end
     return array
+  end
+  def reserve(*args)
+    dut = args.shift
+    raise "DUT name is required" if dut.nil?
+    comments = args.shift || "overnight; testing"
+    cmd = "rschedule reserve --host=#{dut} --comment=\"#{comments}\""
+    result = %x{#{cmd} 2>&1}
+    if $?.success?
+      puts "[Result] Successfully reserved DUT #{dut}"
+    else
+      puts "Failed to reserve DUT #{dut} => #{result}"
+    end
+  end
+  def release(*args)
+    dut = args.shift
+    raise "DUT name is required" if dut.nil?
+    comments = args.shift || "finished test"
+    cmd = "rschedule release --host=#{dut} --comment=\"#{comments}\""
+    result = %x{#{cmd} 2>&1}
+    if $?.success?
+      puts "[Result] Successfully released DUT #{dut}"
+    else
+      puts "Failed to release DUT #{dut} => #{result}"
+    end
   end
   private :bubble_sort
   def show_build_versions(build_versions, count)
