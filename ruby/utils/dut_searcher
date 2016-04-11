@@ -5,6 +5,7 @@ require 'net/http'
 require 'uri'
 require 'rexml/document'
 require 'cgi'
+require 'set'
 
 #=============================================================================
 

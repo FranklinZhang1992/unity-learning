@@ -1,0 +1,98 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./textfile_comparer {first file} {second file}  {show which diff}
+#                         $1            $2              $3
+#                        file1         file2            1/2
+
+#=============================================================================
+
+# This script is used comparing two text files.
+
+#=============================================================================
+
+require 'set'
+
+$stdout.sync = true
+
+$FIRST_FILE = ARGV[0].to_s
+$SECOND_FILE = ARGV[1].to_s
+$DIFF = ARGV[2].to_s
+
+class Comparer
+  attr_accessor :first_file
+  attr_accessor :second_file
+  attr_accessor :first_more
+  attr_accessor :second_more
+  def initialize(first_file, second_file)
+    self.first_file = "#{first_file}"
+    self.second_file = "#{second_file}"
+    self.first_file.chomp!
+    self.second_file.chomp!
+    raise "file #{self.first_file} does not exist" unless file_exist?(self.first_file)
+    raise "file #{self.second_file} does not exist" unless file_exist?(self.second_file)
+    self.first_more = []
+    self.second_more = []
+  end
+  def file_exist?(file)
+    return File.exist?(file)
+  end
+  def compare
+    first_content = []
+    second_contnt = []
+    # Load first file
+    File.open(self.first_file) { |f|
+      while line = f.gets
+        line.chomp!
+        first_content << line
+      end
+    }
+    # Load second file
+    File.open(self.second_file) { |f|
+      while line = f.gets
+        line.chomp!
+        second_contnt << line
+      end
+    }
+
+    first_content.each do |line|
+      unless second_contnt.to_set.include?(line)
+        self.first_more << line
+      end
+    end # end of first_content bolck
+    second_contnt.each do |line|
+      unless first_content.to_set.include?(line)
+        self.second_more << line
+      end
+    end # end of second_contnt block
+  end
+  def show(which)
+    case which
+    when "1"
+      puts "These can only be found in #{self.first_file}"
+      self.first_more.each do |line|
+        puts "#{line}"
+      end
+    when "2"
+      puts "These can only be found in #{self.second_file}"
+      self.second_more.each do |line|
+        puts "#{line}"
+      end
+    else
+      puts "unknown choice: \"#{which}\", you should add param \"1\" or \"2\""
+    end # end of case
+  end
+end
+
+begin
+  choice = "#{$DIFF}"
+  choice.chomp!
+  comparer = Comparer.new($FIRST_FILE, $SECOND_FILE)
+  comparer.compare
+  comparer.show(choice)
+rescue Exception => e
+  puts "Error occured during comparision => #{e}"
+  raise
+end
