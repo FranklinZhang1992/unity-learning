@@ -203,7 +203,6 @@ class Commands
       req.body = "<requests output='XML'><request id='1' target='supernova'><watch/></request></requests>"
       req.content_type = 'text/xml'
       unless session.nil?
-        puts "session = #{session}"
         cookie = CGI::Cookie.new("JSESSIONID", "#{session}")
         req['Cookie'] = cookie.to_s
       end
@@ -230,8 +229,7 @@ class Commands
     raise "valid accessible_only values are \"yes\" and \"no\"" unless accessible_only == "yes" || accessible_only == "no"
     count = args.shift
     raise "count is required" if count.nil?
-    count = 9999 if count.to_i == 0
-    count = count.to_i
+    count = (count.to_i == 0) ? 9999 : count.to_i
     mode = args.shift
     puts "Find DUT begin, this may take a few minutes."
     duts = mode.nil? ? fetch_duts : fetch_duts(mode)
@@ -288,11 +286,11 @@ class Commands
     scope = args.shift || "all"
     raise "vcd name is reuired" if name.nil?
     raise "count is required" if count.nil?
-    count = 9999 if count.to_i == 0
+    count = (count.to_i == 0) ? 9999 : count.to_i
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
     case name
     when "win2k12"
-      find_vcd("win2k12", win2k12_re, scope, count.to_i)
+      find_vcd("win2k12", win2k12_re, scope, count)
     else
       puts "unsupported VCD name, valid VCD names are: \"win2k12\""
     end
@@ -407,10 +405,10 @@ class Commands
     raise "Not a valid build number" unless valid_build_num?(build_num)
     count = args.shift
     raise "count is required" if count.nil?
-    count = 9999 if count.to_i == 0
+    count = (count.to_i == 0) ? 9999 : count.to_i
     scope = args.shift || "all"
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
-    find_dut_by_version(version, build_num, count.to_i, scope, compare)
+    find_dut_by_version(version, build_num, count, scope, compare)
   end
   def find_dut_by_relase_num(release_num, pattern, count, scope)
     puts "Find DUT with release #{release_num} begin, this may take a few minutes."
@@ -433,22 +431,22 @@ class Commands
     raise "release number is required" if release_num.nil?
     count = args.shift
     raise "count is required" if count.nil?
-    count = 9999 if count.to_i == 0
+    count = (count.to_i == 0) ? 9999 : count.to_i
     scope = args.shift || "all"
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
     case release_num
     when "centos-7.1"
       pattern = Regexp.new('CentOS [\S ]* 7.1')
-      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+      find_dut_by_relase_num(release_num, pattern, count, scope)
     when "centos-6.6"
       pattern = Regexp.new('CentOS [\S ]* 6.6')
-      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+      find_dut_by_relase_num(release_num, pattern, count, scope)
     when "centos-6.7"
       pattern = Regexp.new('CentOS [\S ]* 6.7')
-      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+      find_dut_by_relase_num(release_num, pattern, count, scope)
     when "centos-7.2"
       pattern = Regexp.new('CentOS [\S ]* 7.2')
-      find_dut_by_relase_num(release_num, pattern, count.to_i, scope)
+      find_dut_by_relase_num(release_num, pattern, count, scope)
     else
       puts "unsupported release number, valid release numbers are: \"centos-7.1\", \"centos-7.2\", \"centos-6.6\", \"centos-6.7\""
     end
@@ -456,7 +454,7 @@ class Commands
   def find_avance(*args)
     count = args.shift
     raise "count is required" if count.nil?
-    count = 9999 if count.to_i == 0
+    count = (count.to_i == 0) ? 9999 : count.to_i
     scope = args.shift || "all"
     raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
     puts "Find Avance begin, this may take a few minutes."
@@ -464,30 +462,57 @@ class Commands
     duts = fetch_duts(scope)
     duts.each do |dut|
       break if got_count >= count
+      puts "find for #{dut}"
       data = fetch_doh(dut)
       next if data.nil?
       root = Document.new(data).root
       empty = Element.new
       version = ((((root.elements['response']||empty).elements['output']||empty).elements['supernova ']||empty).elements['version']||empty).text
       unless version.nil?
-        if version[0] = 'R'
-          puts "[Result] DUT #{dut} hosts Avance"
+        if version[0, 1] == "R"
+          puts "[Result] DUT #{dut} is installed with Avance"
           got_count += 1
         end
       end
     end # end of duts block
+  end
+  def get_primary_node(root)
+    primary_node_xml = nil
+      outputs_xml = (root.elements['response']||empty).elements['output']
+      (outputs_xml||empty).elements.each do |output_xml|
+        next unless output_xml.name == 'host'
+        is_primary = ((output_xml.elements['is-primary']||empty).text||"false").to_bool
+        if is_primary
+          primary_node_xml = output_xml
+          break
+        end
+      end # end of output_xml block
+      primary_node_xml
   end
   def dut_detail(*args)
     dut = args.shift
     raise "DUT name is requied" if dut.nil?
     data = fetch_doh(dut)
     raise "DUT #{dut} is not available" if data.nil?
-    puts "TODO"
-    # supernova_xml = ((root.elements['response']||empty).elements['output']||empty).elements['supernova ']
-    # version = ((supernova_xml||empty).elements['version']||empty).text
-    # provisioning_xml = (supernova_xml||empty).elements['provisioning']
-    # vcpus = (((((provisioning_xml||empty).elements['allowed']||empty).elements['vcpus']||empty).elements['hard']||empty).text
-    # memory = (((((provisioning_xml||empty).elements['allowed']||empty).elements['memory']||empty).elements['hard']||empty).text
+    root = Document.new(data).root
+    supernova_xml = ((root.elements['response']||empty).elements['output']||empty).elements['supernova ']
+    version = ((supernova_xml||empty).elements['version']||empty).text
+    provisioning_xml = (supernova_xml||empty).elements['provisioning']
+    # vcpu
+    vcpus = begin provisioning_xml.elements['allowed'].elements['vcpus'].elements['hard'].text.to_i rescue 0 end
+    # memory
+    unlicensed = begin provisioning_xml.elements['data'].elements['memory'].elements['unlicensed-memory'].text.to_i rescue 0 end
+    primary_node_xml = get_primary_node(root)
+    ramDisk = begin primary_node_xml.elements['dom0-memory'].elements['actual'].text.to_i > supernova_xml.elements['ramdisk-configuration'].elements['size'].text.to_i ? supernova_xml.elements['ramdisk-configuration'].elements['size'].text.to_i : 0 rescue 0 end
+    avanceMem = begin primary_node_xml.elements['dom0-memory'].elements['actual'].text.to_i - ramDisk rescue 0 end
+    total_memory = begin provisioning_xml.elements['data'].elements['memory'].elements['memory-total'].text.to_i rescue 0 end
+    memory = format("%0.1f", ((total_memory + unlicensed + avanceMem + ramDisk) / (1024.0 * 1024.0 * 1024.0)))
+    # output message
+    msg = "DUT #{dut} detail:\n"
+    msg += "version: #{version}\n"
+    msg += "vcpus:   #{vcpus}\n"
+    msg += "memory:  #{memory}G\n"
+    puts msg
   end
   def quit
     Kernel.exit
