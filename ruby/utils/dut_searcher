@@ -411,32 +411,36 @@ class Commands
       outputs_xml = (root.elements['response']||empty).elements['output']
       dut_ver = (((outputs_xml||empty).elements['supernova']||empty).elements['version']||empty).text
       next if dut_ver.nil?
-      case compare
-      when ">"
-        if compare_dut_ver(dut_ver, version, build_num) > 0
-          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
-          got_count += 1
+      begin
+        case compare
+        when ">"
+          if compare_dut_ver(dut_ver, version, build_num) > 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "<"
+          if compare_dut_ver(dut_ver, version, build_num) < 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "="
+          if compare_dut_ver(dut_ver, version, build_num) == 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when ">="
+          if compare_dut_ver(dut_ver, version, build_num) >= 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "<="
+          if compare_dut_ver(dut_ver, version, build_num) <= 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
         end
-      when "<"
-        if compare_dut_ver(dut_ver, version, build_num) < 0
-          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
-          got_count += 1
-        end
-      when "="
-        if compare_dut_ver(dut_ver, version, build_num) == 0
-          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
-          got_count += 1
-        end
-      when ">="
-        if compare_dut_ver(dut_ver, version, build_num) >= 0
-          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
-          got_count += 1
-        end
-      when "<="
-        if compare_dut_ver(dut_ver, version, build_num) <= 0
-          puts "[Result] DUT #{dut}'s version is #{dut_ver}"
-          got_count += 1
-        end
+      rescue Exception => e
+        next
       end
     end # end of duts block
     puts "Total find #{got_count} DUTs"
