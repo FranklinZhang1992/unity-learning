@@ -1,0 +1,281 @@
+#!/usr/bin/ruby
+
+require 'securerandom'
+require 'rexml/document'
+
+class IsoProbe
+  def self.probe(path)
+    check = WindowsProbe.new(path)
+    info = check.probe
+    if info.nil?
+      check = LinuxProbe.new(path)
+      info = check.probe
+    end
+    show(info)
+  end
+  def self.probe_iso(iso_file)
+    raise "ISO file path is required" if iso_file.nil?
+    uuid = SecureRandom.uuid
+    mount_point = "#{uuid}-mount"
+    %x{mkdir -p #{mount_point}}
+    %x{mount -t udf,iso9660 -o ro -o loop #{iso_file} #{mount_point} 2>&1}
+    IsoProbe.probe(mount_point)
+    %x{umount -v #{mount_point} 2>&1}
+    %x{rmdir #{mount_point} 2>&1}
+  end
+  def show(info)
+    if info.nil?
+      puts "Nothing detected"
+      return
+    end
+    msg = "ISO info:\n"
+    msg += "  description: #{info.description}\n"
+    msg += "  version:     #{info.version}\n"
+    msg += "  build:       #{info.build}\n"
+    msg += "  major:       #{info.major}\n"
+    msg += "  minor:       #{info.minor}\n"
+    msg += "  arch:        #{info.arch}\n"
+    msg += "  inst:        #{info.inst}\n"
+    puts msg
+  end
+end
+
+class IsoInfo
+  attr_reader :description, :version, :build, :major, :minor, :arch, :path, :inst
+  def initialize(description, major, minor, build, arch, path, inst)
+    @description = description
+    @version = "#{major}.#{minor}"
+    @build = build
+    @major = major
+    @minor = minor
+    @arch = arch
+    @path = path
+    @inst = inst
+  end
+end
+
+class WindowsProbe
+  def initialize(path)
+    @path = path
+  end
+  def probe
+    return nil unless @path and File.exists?(@path)
+    begin
+      @arch = get_arch
+      @major, @minor, @build = get_build
+      return nil if @major.nil? or @minor.nil? or @build.nil?
+    rescue Exception => e
+      return nil
+    end
+
+    begin
+      @inst = get_mediatype
+      @description = get_winstring
+    rescue Exception => e
+      @inst = '' unless @inst
+      @description = 'Windows' unless @description
+    end
+
+    return IsoInfo.new(@description, @major, @minor, @build, @arch, @path, @inst)
+  end
+
+  # Determine if this Windows is 64-bit or 32-bit. Some CDs can have more than
+  # one architecture on multiple install images.
+  def get_arch
+    if defined?(@arch) then return @arch else @arch = nil end
+    search = File.join(@path, '{*/system32,{i386,amd64}}/ntdll.dll')
+    ntdlls = Dir.glob(search, File::FNM_CASEFOLD)
+    if ntdlls.length > 0
+      machine = %x{pev -c #{ntdlls.first} | grep -i Machine}
+      if $?.success?
+        @arch = '64-bit' if machine =~ /0x8664/
+        @arch = '32-bit' if machine =~ /14c/
+      end
+    else
+      search = File.join(@path, 'sources/{setup.exe,winsetup.dll}')
+      setup = Dir.glob(search, File::FNM_CASEFOLD)
+      setup.each do |file|
+        machine = %x{pev -c #{file} | grep -i Machine}
+        if $?.success?
+          @arch = '64-bit' if machine =~ /0x8664/
+          @arch = '32-bit' if machine =~ /14c/
+          break
+        end
+      end # end of setup block
+      begin
+        get_xmlinfo if not defined?(@xmlinfo)
+        arches = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE/WINDOWS/ARCH/text()')
+        arch = arches.first
+        if arches.count(arch) == arches.size
+            arch = Integer(arch.to_s)
+            @arch = '64-bit' if arch == 9
+            @arch = '32-bit' if arch == 0
+        else
+            @arch = '32/64-bit' unless @arch
+        end
+      rescue
+      end
+    end
+    @arch
+  end
+
+    # Get the build numbers for this Windows, e.g. 5.2.3790.
+    def get_build
+      if defined?(@major) and defined?(@minor) and defined?(@build) then
+        return @major, @minor, @build 
+      else
+        @major, @minor, @build = nil
+      end
+      search = File.join(@path, '{*/system32,{i386,amd64}}/ntdll.dll')
+      ntdlls = Dir.glob(search, File::FNM_CASEFOLD)
+      if ntdlls.length > 0
+        dumpvers = %x{pev -p #{ntdlls.first}}
+        if $?.success?
+          major, minor, build = dumpvers.split('.')
+          @major, @minor, @build = Integer(major), Integer(minor), Integer(build)
+        end
+      else
+        search = File.join(@path, 'sources/{setup.exe,winsetup.dll}')
+        setup = Dir.glob(search, File::FNM_CASEFOLD)
+        setup.each do |file|
+        dumpvers = %x{pev -p #{file}}
+          if $?.success?
+            major, minor, build = dumpvers.split('.')
+            @major, @minor, @build = Integer(major), Integer(minor), Integer(build)
+            break
+          end
+        end # end of setup block
+        begin
+          get_xmlinfo if not defined?(@xmlinfo)
+          majors = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE/WINDOWS/VERSION/MAJOR/text()')
+          minors = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE/WINDOWS/VERSION/MINOR/text()')
+          builds = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE/WINDOWS/VERSION/BUILD/text()')
+          major = majors.first # The install.wim image will have multiple sub-
+          minor = minors.first # images. Check to make sure each one has the same
+          build = builds.first # version number.
+          if majors.count(major) == majors.size and
+            minors.count(minor) == minors.size and
+            builds.count(build) == builds.size then
+            @major, @minor, @build = Integer(major.to_s), Integer(minor.to_s), Integer(build.to_s)
+          end
+        rescue
+        end
+      end
+      return @major, @minor, @build
+    end
+
+    # Decide if this is an ISO image or an OS root.
+    def get_mediatype
+      if defined?(@inst) then return @inst else @inst = nil end
+      search = File.join(@path, 'setup.exe')
+      setup = Dir.glob(search, File::FNM_CASEFOLD)
+      @inst = File.exists?(setup.first) ? 'Install Media' : ''
+    end
+
+    # Create a description string for this version of Windows.
+    def get_winstring
+      if defined?(@description) then return @description else @description = nil end
+      get_build if not @major
+      if @major < 6 # Vista and up use install.wim
+        version = "#{@major}.#{@minor}"
+        releases = {
+          '5.0' => { 2195 => 'Windows 2000' },
+          '5.1' => { 2600 => 'Windows XP' },
+          '5.2' => { 2600 => 'Windows XP',
+                     3790 => 'Windows Server 2003' }
+        } # Get the closest build. Makes more sense with a bigger table.
+        closest, description = releases[version].first
+        releases[version].each do |build, name|
+          if (build-@build).abs < (closest-@build).abs
+            description = name
+            closest = build
+          end
+        end # end of releases block
+        @description = description
+      else # Only works for ISO images for now. Use hivex for OS-root folders.
+        begin
+          substitutions = { # Products that don't have good descriptions.
+            'ServerSBSStandard' => 'Windows Small Business Server',
+            'SERVERSBSSTANDARD' => 'Windows Small Business Server',
+            'ServerHomeStandard' => 'Windows Home Server',
+            'ServerHomePremium' => 'Windows Home Server',
+            'Windows Longhorn' => 'Windows Server 2008',
+            'Windows Longhorn Client' => 'Windows Vista'
+          }
+          get_xmlinfo if not defined?(@xmlinfo)
+          imagecount = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE').length
+          descriptions = REXML::XPath.match(@xmlinfo, '/WIM/IMAGE/NAME/text()')
+          description = String.new(descriptions.first.to_s)
+          if descriptions.length > 1
+            # Get common name prefixes to ignore product editions,
+            # like 'Ultimate' or 'Home Basic'. Do this by counting each
+            # individual word from the product names and removing those
+            # words that only appear once. It is important to remove them
+            # longest-word-first, since some editions are substrings of
+            # another, e.g. SERVERSTANDARD and SERVERSTANDARDCORE. If there
+            # are any non-matching versions of Windows, it is too hard to
+            # say which one is going to get installed, so return 'Windows'.
+            descriptions = descriptions.map { |xml| xml.to_s.split }
+            descriptions = descriptions.flatten
+            wordcounts = Hash.new(0)
+            descriptions.each { |word| wordcounts[word] += 1 }
+            wordcounts = wordcounts.reject { |word, count| count == imagecount }
+            sorted = wordcounts.keys.sort_by { |string| string.length }
+            sorted.reverse_each { |word, count| description.slice! word }
+            description.rstrip!
+          end
+          description = 'Windows' if description.empty?
+          @description = substitutions.keys.include?(description) ?
+                         substitutions[description] : description
+        rescue
+            @description = "Windows"
+        end
+      end
+      @description
+    end
+
+    # Dump [1].xml from a Windows install image.
+    def get_xmlinfo
+      def do_xmlget(imagepath)
+        xmlinfo = %x{imagex info --xml #{imagepath}}
+        @xmlinfo = REXML::Document.new xmlinfo
+        return @xmlinfo
+      end
+      if defined?(@xmlinfo) then return @xmlinfo else @xmlinfo = nil end
+      search = File.join(@path, 'sources/install.wim')
+      wimage = Dir.glob(search, File::FNM_CASEFOLD)
+      if wimage.length > 0
+        return do_xmlget(wimage.first)
+      end
+      search = File.join(@path, 'sources/boot.wim')
+      bimage = Dir.glob(search, File::FNM_CASEFOLD)
+      if bimage.length > 0
+        return do_xmlget(bimage.first)
+      end
+      @xmlinfo
+    end
+end
+
+class LinuxProbe
+  def initialize(path)
+    @path = path
+  end
+  def probe
+    # return IsoInfo.new(@description, @major, @minor, @build, @arch, @path, @inst)
+    return nil
+  end
+end
+
+def iso?(url)
+  return url.match(Regexp.new('^\S*[\.][iI][sS][oO]$'))
+end
+
+begin
+  puts "Please input location of the ISO:"
+  path = gets.chomp
+  raise "File #{path} not found" unless File.exist?(path)
+  iso?(path) ? IsoProbe.probe_iso(path) : IsoProbe.probe(path)
+rescue Exception => e
+  puts "error occur: #{e}"
+  raise
+end
