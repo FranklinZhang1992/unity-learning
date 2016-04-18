@@ -6,7 +6,7 @@
 
 $HOME_PATH = ENV['HOME']
 $ROOT_PATH = "/tmp/spine"
-$INSTALL = "#{$HOME_PATH}/workspace/unity-learning/ruby/spine"
+$INSTALL = ARGV[0].to_s.chomp
 $:.unshift($INSTALL)
 $0 = '[spine]'
 $debug = 0

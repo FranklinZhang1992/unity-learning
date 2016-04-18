@@ -5,8 +5,6 @@ require 'yaml'
 
 $HOME_PATH = ENV['HOME']
 $ROOT_PATH = "/tmp/spine"
-$INSTALL = "#{$HOME_PATH}/workspace/unity-learning/ruby/spine"
-$:.unshift($INSTALL)
 $SYSCONFIG = "#{$ROOT_PATH}/etc/sysconfig/spine"
 link2addr = Hash.new
 link2mac = Hash.new

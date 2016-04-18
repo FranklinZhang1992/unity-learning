@@ -1,10 +1,11 @@
 #!/bin/bash
 
 BUILD_DIR=`pwd`
+echo "run spine under $BUILD_DIR"
 ROOT_PATH=/tmp/spine
 # generate pm.xml
 $BUILD_DIR/configs/platform_probe start
 # ruby spine/configure.rb
 $ROOT_PATH/usr/lib/spine/configure
 # ruby spine/spine.rb
-$ROOT_PATH/usr/sbin/spine
+$ROOT_PATH/usr/sbin/spine $BUILD_DIR
