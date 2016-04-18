@@ -1,0 +1,27 @@
+run v2v server(version: 18):
+supermin5 netpbm-progs icoutils libosinfo fuse attr cryptsetup dosfstools gdisk genisoimage hivex lsscsi lzop mdadm psmisc scrub syslinux syslinux-extlinux yajl qemu-kvm libvirt-daemon-kvm fuse-libs hexedit libconfig gtk2
+
+run v2v server(version: 55):
+supermin5 augeas-libs netpbm-progs icoutils libosinfo fuse libvirt-daemon-kvm fuse-libs attr cryptsetup dosfstools gdisk genisoimage hivex lsof mdadm psmisc scrub syslinux syslinux-extlinux hexedit libconfig unzip atk cairo gtk2
+ruby-devel
+
+rpms:
+libguestfs-1.28.1-1.55.el7.centos.x86_64.rpm
+libguestfs-tools-c-1.28.1-1.55.el7.centos.x86_64.rpm
+libguestfs-winsupport-7.2-1.el7.x86_64.rpm
+perl-Sys-Guestfs-1.28.1-1.55.el7.centos.x86_64.rpm
+ruby-libguestfs-1.28.1-1.55.el7.centos.x86_64.rpm
+virt-v2v-1.28.1-1.55.el7.centos.x86_64.rpm
+
+build p2v.iso:
+livecd-tools
+
+virt-p2v-make-kickstart http://common.sn.stratus.com/centos/7.2-automirror/os/x86_64/
+livecd-creator p2v.ks
+
+ignore make check:
+~/.rpmmacros
+%libguestfs_runtests 0
+
+build rpms:
+git patch rpm-build autoconf automake libtool gettext-devel hivex-devel augeas-devel readline-devel libxml2-devel createrepo glibc-static glibc-static libselinux-devel fuse-devel pcre-devel file-devel libvirt-devel po4a gperf flex bison libconfig-devel xz-devel ocaml ocaml-findlib-devel ocaml-gettext-devel lua-devel libacl-devel libcap-devel yajl-devel systemd-devel bash-completion wget gtk2-devel python-devel ruby-devel rubygem-rake rubygem-minitest.noarch ruby-irb java-1.7.0-openjdk java-1.7.0-openjdk-devel jpackage-utils glib2-devel gobject-introspection-devel gjs strace gfs2-utils perl-XML-XPath.noarch perl-Sys-Virt perl-Test-Pod perl-Test-Pod-Coverage.noarch perl-local-lib.noarch perl-libintl perl-Tk-devel.x86_64
