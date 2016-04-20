@@ -6,8 +6,8 @@ module SuperNova
         Pons::Service.instance
     end
     module Pons
-        # curl http://localhost:8999/protected-virtual-machines/{uuid}
-        # curl -X POST -d 'test1' http://localhost:8999/protected-virtual-machines/{uuid}
+        # curl http://localhost:8999/protected-virtual-machines/id/{uuid}
+        # curl -X POST -d 'test1' http://localhost:8999/protected-virtual-machines/id/{uuid}
         class Domain < Net::WebDAV::Resource
             def initialize(server, *options)
                 super(server, *options)
