@@ -1,0 +1,8 @@
+#!/bin/bash
+
+name=""
+
+if [ $name ]
+then
+  echo "name = $name"
+fi

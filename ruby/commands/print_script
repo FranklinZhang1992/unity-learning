@@ -6,7 +6,3 @@ while true
   $stdout.puts "world"
   sleep 3
 end
-# loop {
-   
-#   sleep 3
-# }

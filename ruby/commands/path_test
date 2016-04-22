@@ -1,0 +1,9 @@
+#!/usr/bin/ruby
+
+result = %x{pwd}
+puts "result = #{result}"
+result = %x{./hello_world}
+puts "result2 = #{result}"
+$:.unshift("/home/franklin/workspace/unity-learning/shell")
+result = %x{./hello_world}
+puts "result3 = #{result}"
