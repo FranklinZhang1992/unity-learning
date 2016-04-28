@@ -298,14 +298,14 @@ class Commands
     session
   end
   private :fetch_doh_session
-  def fetch_doh(dut)
+  def do_doh_request(dut, request_body)
     # puts "Get doh topo from DUT #{dut}"
     data = nil
     server = "#{dut}.sn.stratus.com"
     begin
       session = fetch_doh_session(dut)
       req = Net::HTTP::Post.new("http://#{server}/doh/")
-      req.body = "<requests output='XML'><request id='1' target='supernova'><watch/></request></requests>"
+      req.body = "<requests output='XML'>#{request_body}</requests>"
       req.content_type = 'text/xml'
       unless session.nil?
         cookie = CGI::Cookie.new("JSESSIONID", "#{session}")
@@ -321,13 +321,23 @@ class Commands
         unless status == "ok"
           data = nil
         end
-      end
+      end # end of Net::HTTP.start block
     rescue Exception => e
       # puts "error occured during fetch doh topo from DUT #{dut} => #{e}"
     end
     data
   end
+  private :do_doh_request
+  def fetch_doh(dut)
+    request_body = "<request id='1' target='supernova'><watch/></request>"
+    return do_doh_request(dut, request_body)
+  end
   private :fetch_doh
+  def fetch_dut_version(dut)
+    request_body = "<request id='1' target='supernova'><select>supernova/version</select></request>"
+    return do_doh_request(dut, request_body)
+  end
+  private :fetch_dut_version
   def find_vcd(dest, pattern, scope, count)
     puts "Find VCD #{dest} begin, this may take a few minutes."
     got_count = 0
@@ -404,12 +414,12 @@ class Commands
     duts = fetch_duts(scope)
     duts.each do |dut|
       break if got_count >= count
-      data = fetch_doh(dut)
+      data = fetch_dut_version(dut)
       next if data.nil?
       root = Document.new(data).root
       empty = Element.new
       outputs_xml = (root.elements['response']||empty).elements['output']
-      dut_ver = (((outputs_xml||empty).elements['supernova']||empty).elements['version']||empty).text
+      dut_ver = ((outputs_xml||empty).elements['version']||empty).text
       next if dut_ver.nil?
       begin
         case compare
@@ -551,7 +561,7 @@ class Commands
     if accessible_only == "yes"
       duts.each do |dut|
         break if find_count >= count
-        data = fetch_doh(dut)
+        data = fetch_dut_version(dut)
         if !data.nil?
           puts dut
           find_count += 1
