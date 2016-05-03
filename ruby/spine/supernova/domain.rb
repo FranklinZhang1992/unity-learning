@@ -30,6 +30,7 @@ module SuperNova
             else
                 self.send("name=", newName)
             end
+            to_s
         end
         # key-set => { :id, :name, :vcpus }
         def initialize(data)
