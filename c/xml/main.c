@@ -69,7 +69,7 @@ parse_xml (char *xml_name)
 
 }
 
-int main(int argc, char const *argv[])
+int main (int argc, char const *argv[])
 {
   char xml_name[] = "demo.xml";
   parse_xml (xml_name);
