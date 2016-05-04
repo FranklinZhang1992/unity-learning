@@ -10,11 +10,11 @@ wrap_calculate_something (VALUE self, VALUE aa, VALUE bb)
 
   a = FIX2INT (aa);
   b = (float) NUM2DBL (bb);
-  result = calculate_something (a, b);
+  result = a + b;
   return DBL2NUM (result);
 }
 
 void Init_wrap ()
 {
-  rb_define_global_function ("calculate_something", wrap_calculate_something, 2);
+  rb_define_global_function ("calculate", wrap_calculate_something, 2);
 }
