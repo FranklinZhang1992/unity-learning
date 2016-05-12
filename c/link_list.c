@@ -44,22 +44,40 @@ void print (struct Node *p_head)
 {
   struct Node *p_temp;
   printf ("---The list contains %d members:---\n", count);
-  p_temp = p_head;
-  while (p_temp != NULL) {
-    printf ("number is %d\n", p_temp->num);
-    p_temp = p_temp->p_next;
+  if (count > 0) {
+    p_temp = p_head;
+    while (p_temp != NULL) {
+      printf ("number is %d\n", p_temp->num);
+      p_temp = p_temp->p_next;
+    }
   }
 }
 
-struct Node* insert_node (struct Node *p_head)
+struct Node* head_insert_node (struct Node *p_head)
 {
   struct Node *p_new;
-  printf ("---Insert member at first\n");
+  printf ("---Insert member at first---\n");
   p_new = (struct Node*) malloc (sizeof (struct Node));
   scanf ("%d", &p_new->num);
   p_new->p_next = p_head;
   p_head = p_new;
   count ++;
+  return p_head;
+}
+
+struct Node* tail_insert_node (struct Node *p_head)
+{
+  struct Node *p_new;
+  struct Node *p_temp;
+  printf ("---Insert a member at last---\n");
+  p_new = (struct Node*) malloc (sizeof (struct Node));
+  scanf ("%d", &p_new->num);
+  p_temp = p_head;
+  while (p_temp->p_next != NULL) {
+    p_temp = p_temp->p_next;
+  }
+  p_new->p_next = NULL;
+  p_temp->p_next = p_new;
   return p_head;
 }
 
@@ -70,7 +88,7 @@ void delete_node (struct Node *p_head, int index)
   struct Node *p_pre;
   p_temp = p_head;
   p_pre = p_temp;
-  printf ("---Delete NO%d memeber---\n", index);
+  printf ("---Delete NO.%d memeber---\n", index);
   for (i = 1; i < index; i++) {
     p_pre = p_temp;
     p_temp = p_temp->p_next;
@@ -80,14 +98,31 @@ void delete_node (struct Node *p_head, int index)
   count --;
 }
 
+void free_link_list (struct Node *p_head)
+{
+  struct Node *p_temp;
+  while (p_head != NULL) {
+    if (p_head->p_next != NULL) {
+      p_temp = p_head;
+      p_head = p_head->p_next;
+    } else {
+      p_temp = p_head;
+      p_head = NULL;
+    }
+    free (p_temp);
+    count --;
+  }
+}
+
 int main (int argc, char const *argv[])
 {
   struct Node *p_head;
   while (1) {
     printf ("1. create link list\n");
-    printf ("2. insert link list\n");
-    printf ("3. delete link list\n");
-    printf ("4. exit\n");
+    printf ("2. head insert link list\n");
+    printf ("3. tail insert link list\n");
+    printf ("4. delete link list\n");
+    printf ("5. exit\n");
     printf ("Please input your option\n");
     int option;
     int exit_flag = 0;
@@ -97,9 +132,12 @@ int main (int argc, char const *argv[])
         p_head = create ();
         break;
       case 2:
-        p_head = insert_node (p_head);
+        p_head = head_insert_node (p_head);
         break;
       case 3:
+        p_head = tail_insert_node (p_head);
+        break;
+      case 4:
         printf("Please input the index\n");
         int index;
         scanf ("%d", &index);
@@ -109,7 +147,8 @@ int main (int argc, char const *argv[])
           delete_node (p_head, index);
         }
         break;
-      case 4:
+      case 5:
+        free_link_list (p_head);
         exit_flag = 1;
         break;
       default:
