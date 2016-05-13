@@ -51,7 +51,7 @@ struct Node* bulk_create (int total_length)
     p_new->num = i + 1;
     count ++;
     if (count == 1) {
-      p_new->p_next = p_head;
+      p_new->p_next = NULL;
       p_end = p_new;
       p_head = p_new;
     } else {
