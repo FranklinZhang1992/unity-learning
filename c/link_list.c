@@ -123,6 +123,9 @@ void delete_node (struct Node *p_head, int index)
 
 void free_link_list (struct Node *p_head)
 {
+  if (count == 0 || p_head == NULL) {
+    return;
+  }
   struct Node *p_temp;
   while (p_head != NULL) {
     if (p_head->p_next != NULL) {
@@ -153,6 +156,7 @@ int main (int argc, char const *argv[])
     scanf ("%d", &option);
     switch (option) {
       case 1:
+        free_link_list (p_head);
         p_head = create ();
         break;
       case 2:
@@ -172,6 +176,7 @@ int main (int argc, char const *argv[])
         }
         break;
       case 5:
+        free_link_list (p_head);
         printf ("Please input total length\n");
         int total_length;
         scanf ("%d", &total_length);
