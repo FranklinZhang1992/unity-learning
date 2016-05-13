@@ -24,7 +24,7 @@ struct Node* create ()
   while (p_new->num != 0) {
     count ++;
     if (count == 1) {
-      p_new->p_next = p_head;
+      p_new->p_next = NULL;
       p_end = p_new;
       p_head = p_new;
     } else {
@@ -37,6 +37,29 @@ struct Node* create ()
     scanf ("%d", &p_new->num);
   }
   free (p_new);
+  return p_head;
+}
+
+struct Node* bulk_create (int total_length)
+{
+  struct Node *p_head = NULL;
+  struct Node *p_end, *p_new;
+  int i;
+  count = 0;
+  for (i = 0; i < total_length; i++) {
+    p_new = (struct Node*) malloc (sizeof (struct Node));
+    p_new->num = i + 1;
+    count ++;
+    if (count == 1) {
+      p_new->p_next = p_head;
+      p_end = p_new;
+      p_head = p_new;
+    } else {
+      p_new->p_next = NULL;
+      p_end->p_next = p_new;
+      p_end = p_new;
+    }
+  }
   return p_head;
 }
 
@@ -122,7 +145,8 @@ int main (int argc, char const *argv[])
     printf ("2. head insert link list\n");
     printf ("3. tail insert link list\n");
     printf ("4. delete link list\n");
-    printf ("5. exit\n");
+    printf ("5. bulk create\n");
+    printf ("6. exit\n");
     printf ("Please input your option\n");
     int option;
     int exit_flag = 0;
@@ -138,7 +162,7 @@ int main (int argc, char const *argv[])
         p_head = tail_insert_node (p_head);
         break;
       case 4:
-        printf("Please input the index\n");
+        printf ("Please input the index\n");
         int index;
         scanf ("%d", &index);
         if (index > count) {
@@ -148,6 +172,12 @@ int main (int argc, char const *argv[])
         }
         break;
       case 5:
+        printf ("Please input total length\n");
+        int total_length;
+        scanf ("%d", &total_length);
+        p_head = bulk_create (total_length);
+        break;
+      case 6:
         free_link_list (p_head);
         exit_flag = 1;
         break;
