@@ -31,6 +31,7 @@ end
 
 class Commands
   WIN_2K12_REGEXP = Regexp.new('win\S*2[0-9a-zA-Z]{0,}12')
+  WIN_REGEXP = Regexp.new('win\S*')
   VALID_VERSION_REGEXP = Regexp.new('[0-9][.][0-9]')
   VALID_BUILD_NUM_REGEXP = Regexp.new('[0-9]{1,}')
   DUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
@@ -41,6 +42,7 @@ class Commands
   DOH_PASSWORD = "admin"
 
   def win2k12_re() WIN_2K12_REGEXP end
+  def win_re() WIN_REGEXP end
   def valid_version_re() VALID_VERSION_REGEXP end
   def valid_build_num_re() VALID_BUILD_NUM_REGEXP end
   def dut_version_re() DUT_VERSION_REGEXP end
@@ -355,7 +357,7 @@ class Commands
         if is_iso
           name = (output_xml.elements['name']||empty).text
           if name.match(pattern)
-            puts "[Result] DUT #{dut} contains a #{dest} VCD"
+            puts "[Result] DUT #{dut} contains a #{dest} VCD [#{name}]"
             got_count += 1
             break
           end
@@ -418,7 +420,7 @@ class Commands
       next if data.nil?
       root = Document.new(data).root
       empty = Element.new
-      outputs_xml = (root.elements['response']||empty).elements['output']
+      outputs_xml = begin (root.elements['response']||empty).elements['output'] rescue nil end
       dut_ver = ((outputs_xml||empty).elements['version']||empty).text
       next if dut_ver.nil?
       begin
@@ -588,6 +590,8 @@ class Commands
     case name
     when "win2k12"
       find_vcd("win2k12", win2k12_re, scope, count)
+    when "win"
+      find_vcd("win", win_re, scope, count)
     else
       puts "unsupported VCD name, valid VCD names are: \"win2k12\""
     end
@@ -807,6 +811,28 @@ class Commands
     else
       puts "[Result] No DUT is reserved by #{reserver}"
     end
+  end
+  def pci_info(*args)
+    keyword = args.shift
+    raise "keywork is required" if keyword.nil?
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "Find DUT PCI info begin, this may take a few minutes."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      result = %x{ftssh #{dut} lspci 2>&1 | grep #{keyword}}
+      next unless $?.success?
+      if result != ""
+        got_count += 1
+        puts "[Result] DUT #{dut}'s PCI info contains keyword #{keyword}"
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
   end
   def quit
     Kernel.exit
