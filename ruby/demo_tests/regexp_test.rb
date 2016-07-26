@@ -9,6 +9,7 @@ MANAGED_FOLDER = "^(\\S*)[【](\\d+)[】]$"
 ISO_FILE = '^\S*[\.][iI][sS][oO]$'
 WIN_2K12_REGEXP = 'win\S*2[0-9a-zA-Z]{0,}12'
 VALID_VERSION_REGEXP = Regexp.new('[0-9][.][0-9]')
+VIRTUAL_SIZE_REGEXP = Regexp.new("virtual\\s+size:\\s+\\S+[A-Z]\\s+\\(([0-9]+)\\s+bytes\\)")
 def valid_version_re() VALID_VERSION_REGEXP end
 VALID_RELEASE_NUM_REGEXP = Regexp.new('[0-9]{1,}')
 def valid_release_num_re() VALID_RELEASE_NUM_REGEXP end
@@ -221,6 +222,16 @@ def match_version(str)
   end
 end
 
+def match_virtual_size(str)
+  puts "match for #{str}"
+  result = str.match(VIRTUAL_SIZE_REGEXP)
+  if result
+    puts "match"
+  else
+    puts "not match"
+  end
+end
+
 # match_linux_folder("/tmp")
 # match_windows_folder("E:\\")
 # match_folder("c【2】")
@@ -276,5 +287,8 @@ end
 # divide_dut_ver("7.4.0-1")
 # divide_dut_ver("7.4.0-")
 
-match_version("lrwxrwxrwx  1 untriage user   11 Apr  7 20:31 current -> 7.4.0.0-145")
-match_version("lrwxrwxrwx  1 untriage user   1")
+# match_version("lrwxrwxrwx  1 untriage user   11 Apr  7 20:31 current -> 7.4.0.0-145")
+# match_version("lrwxrwxrwx  1 untriage user   1")
+
+match_virtual_size("image: win7_pro_convertvda_1b915685-012d-4c3d-8002-30f4bab0ca6c_c0a45da1-a06c-4837-a278-b3be2eb9e4e7\nfile format: raw\nvirtual size: 1.0T (1088292913152 bytes)\ndisk size: 0\n")
+match_virtual_size("file format: qcow2\nvirtual size: 20G (21054357504 bytes)\ndisk size: 9.4G\ncluster_size: 65536\nFormat specific information:\n    compat: 0.10\n")

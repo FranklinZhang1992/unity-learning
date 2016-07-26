@@ -74,6 +74,20 @@ class DiskImage
     self.free_space_needed_for_merge = 0
     self.free_space_needed_for_commit = 0
   end
+  def show
+    msg = "insufficient_free_space_to_snapshot = #{self.insufficient_free_space_to_snapshot}\n"
+    msg += "free_space_needed_to_snapshot = #{self.free_space_needed_to_snapshot}\n"
+    msg += "writable_size = #{self.writable_size}\n"
+    msg += "growth_size = #{self.growth_size}\n"
+    msg += "extra_free_space_needed_to_snapshot = #{self.extra_free_space_needed_to_snapshot}\n"
+    msg += "required_size = #{self.required_size}\n"
+    msg += "used_size = #{self.used_size}\n"
+    msg += "virtual_size = #{self.virtual_size}\n"
+    msg += "overhead_size = #{self.overhead_size}\n"
+    msg += "free_space_needed_for_merge = #{self.free_space_needed_for_merge}\n"
+    msg += "free_space_needed_for_commit = #{self.free_space_needed_for_commit}\n"
+    puts "DiskImage:\n#{msg}\n\n"
+  end
   def set_insufficient_free_space_to_snapshot(value)
     self.insufficient_free_space_to_snapshot = value
     if self.insufficient_free_space_to_snapshot == true
@@ -176,6 +190,20 @@ class LocalImageContainer
     self.resize_reserved_size = 0
     self.snapshot_reserved_size = 0
   end
+  def show
+    msg = "free_size = #{self.free_size}\n"
+    msg += "reported_free_size = #{self.reported_free_size}\n"
+    msg += "reserved_size = #{self.reserved_size}\n"
+    msg += "logical_size = #{self.logical_size}\n"
+    msg += "reported_used_size = #{self.reported_used_size}\n"
+    msg += "growth_size = #{self.growth_size}\n"
+    msg += "overhead_size = #{self.overhead_size}\n"
+    msg += "free_space_needed_for_merge = #{self.free_space_needed_for_merge}\n"
+    msg += "create_reserved_size = #{self.create_reserved_size}\n"
+    msg += "resize_reserved_size = #{self.resize_reserved_size}\n"
+    msg += "snapshot_reserved_size = #{self.snapshot_reserved_size}\n"
+    puts "LocalImageContainer:\n#{msg}\n\n"
+  end
   def set_free_size(reported_free_size, reserved_size)
     reported_free_size = reported_free_size.to_i
     reserved_size = reserved_size.to_i
@@ -252,6 +280,8 @@ class TopologyLoader
     # Begin load
     disk_image.load_disk_image(virtual_size, used_size)
     local_image_container.load_image_container(logical_size, reported_used_size)
+    disk_image.show
+    local_image_container.show
   end
 end
 
