@@ -1,0 +1,192 @@
+#!/usr/bin/ruby
+
+require 'set'
+require 'rexml/document'
+
+$stdout.sync = true
+
+CMD_KEYS_WITH_VALUE = %w{-input -output}
+CMD_KEYS_WITHOUT_VALUE = %w{-v}
+
+def key_with_value?(param)
+  return CMD_KEYS_WITH_VALUE.to_set.include?(param)
+end
+
+def key_without_value?(param)
+  return CMD_KEYS_WITHOUT_VALUE.to_set.include?(param)
+end
+
+def parse_cmd(params)
+  cmd_hash = Hash.new
+  key_detected = nil
+  params.each do |param|
+    current_param = param.chomp
+    if key_with_value?(current_param)
+      if key_detected
+        raise "value if required for key #{key_detected}"
+      else
+        cmd_hash[current_param] = nil
+        key_detected = current_param
+      end
+    elsif key_without_value?(current_param)
+      cmd_hash[current_param] = true
+      key_detected = nil
+    else
+      cmd_hash[key_detected] = current_param
+      key_detected = nil
+    end
+  end
+  cmd_hash
+end
+
+class HtmlToXml
+  include REXML
+  attr_accessor :verbose
+  attr_accessor :html_file
+  attr_accessor :xml_file
+  attr_accessor :html_content
+  attr_accessor :xml_content
+  attr_accessor :html_hash
+  HTML_REGEXP = Regexp.new('\S*[.]html', true)
+  XML_REGEXP = Regexp.new('\S*[.]xml', true)
+  def initialize(input, output, v)
+    html?(input)
+    xml?(output)
+    self.html_file = input
+    self.xml_file = output
+    self.verbose = v
+    self.html_hash = Hash.new
+  end
+  def log
+    puts yield if self.verbose
+  end
+  def log_warn
+    msg = "WARN #{yield}"
+    log {msg}
+  end
+  def log_debug
+    msg = "DEBUG #{yield}"
+    log {msg}
+  end
+  def html?(file)
+    raise "HTML file #{file} is required" if file.nil? || !File.exists?(file)
+    raise "#{file} is not a HTML file" unless HTML_REGEXP.match(file)
+  end
+  def xml?(file)
+    raise "XML file #{file} is required" if file.nil? || !File.exists?(file)
+    raise "#{file} is not a XML file" unless XML_REGEXP.match(file)
+  end
+  def parse_html_str(orig_html_str)
+    begin_index = orig_html_str.index('<dl>')
+    end_index = orig_html_str.index('</dl>')
+    return orig_html_str[begin_index, end_index - begin_index + 5]
+  end
+  def load_html
+    log_debug {"======Load HTML begin======"}
+    html_str = ""
+    File.open(self.html_file) { |f|
+      while line = f.gets
+        html_str += "#{line}"
+      end
+    }
+    html_str = parse_html_str(html_str)
+    self.html_content = begin Document.new(html_str) rescue nil end
+    raise "Failed to load HTML from #{self.html_file}" if self.html_content.nil?
+    log_debug {"HTML =>\n#{self.html_content}"}
+    log_debug {"======Load HTML finished======"}
+  end
+  def load_xml
+    log_debug {"======Load XML begin======"}
+    xml_str = ""
+    File.open(self.xml_file) { |f|
+      while line = f.gets
+        xml_str += "#{line}"
+      end
+    }
+    self.xml_content = begin Document.new(xml_str) rescue nil end
+    self.xml_content.context[:attribute_quote] = :quote # Make sure all attributes are with double quotation marks
+    raise "Failed to load XML from #{self.xml_file}" if self.xml_content.nil?
+    log_debug {"XML =>\n#{self.xml_content}"}
+    log_debug {"======Load XML finished======"}
+  end
+  def load
+    load_html
+    load_xml
+  end
+  def analyse_html
+    log_debug {"======Analyse HTML begin======"}
+    key_detected = nil
+    nodes = self.html_content.root
+    nodes.elements.each do |node|
+      case node.name
+      when "dt"
+        key = begin node.text rescue nil end
+        log_warn {"value expected for key #{key_detected}"} if key_detected
+        self.html_hash[key] = nil
+        key_detected = key
+      when "dd"
+        value = begin node.elements['code'].text rescue nil end
+        value = value.gsub(/[\n\t]{1,}/, " ") # In case there is '\n' or '\t' in string
+        log_warn {"key expected for value #{value}"} unless key_detected
+        self.html_hash[key_detected] = value
+        key_detected = nil
+      end
+    end
+    log_debug {"HTML hashed =>\n#{self.html_hash}"}
+    log_debug {"======Analyse HTML finished======"}
+  end
+  def analyse_xml
+    log_debug {"======Analyse XML begin======"}
+    nodes = self.xml_content.root
+    # Change the original XML if the value is not the same as what it is in HTML
+    nodes.elements.each do |node|
+      key = begin node.attributes['key'] rescue nil end
+      value = begin node.text rescue nil end
+      if self.html_hash[key] && self.html_hash[key] != value
+        node.text = self.html_hash[key]
+        self.html_hash.delete(key)
+      end
+    end
+    self.html_hash.each_key do |key|
+      entry = Element.new("entry")
+      entry.add_attribute("key", key)
+      entry.add_text("#{self.html_hash[key]}")
+      nodes.add_element(entry)
+    end
+    log_debug {"XML modified =>\n#{self.xml_content}"}
+    log_debug {"======Analyse XML finished======"}
+  end
+  def analysis
+    analyse_html
+    analyse_xml
+  end
+  def format(xml)
+    output_str = "#{xml}"
+    properties_end_index = output_str.index("</properties>")
+    if (output_str[properties_end_index - 1] == ">")
+      output_str.insert(properties_end_index, "\n")
+    end
+    output_str = output_str.gsub(/\n<entry/, "\n\t<entry")
+    output_str
+  end
+  def write
+    log_debug {"Begin to write final XML to XML file..."}
+    final_xml = format(self.xml_content)
+    log_debug {"Final XML =>\n#{final_xml}"}
+    file = File.new("/home/franklin/workspace/temp/test.xml", "w+")
+    file.puts final_xml
+    file.close
+    log_debug {"Write to XML file finished"}
+  end
+end
+
+begin
+  params = ARGV
+  cmd_hash = parse_cmd(params)
+  html_to_xml = HtmlToXml.new(cmd_hash["-input"], cmd_hash["-output"], cmd_hash["-v"])
+  html_to_xml.load
+  html_to_xml.analysis
+  html_to_xml.write
+rescue Exception => e
+  raise
+end
