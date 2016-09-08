@@ -74,19 +74,29 @@ public class Convert {
         }
     }
 
+    private String filterSpecialCharacters(String originStr) {
+        originStr = originStr.replaceAll("&#x201c;", "“");
+        originStr = originStr.replaceAll("&#x201d;", "”");
+        originStr = originStr.replaceAll("&#x201e;", "„");
+        return originStr;
+    }
+
     private void convertHtmlStrToHtmlDocument() {
         int begin_index = this.htmlStr.indexOf("<dl>");
         int end_index = this.htmlStr.indexOf("</dl>");
         this.htmlStr = this.htmlStr.substring(begin_index, end_index + 5);
+        this.htmlStr = filterSpecialCharacters(this.htmlStr);
+
         try {
             StringReader sr = new StringReader(this.htmlStr);
             InputSource is = new InputSource(sr);
+            is.setEncoding("utf-8");
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder;
             builder = factory.newDocumentBuilder();
             this.htmlDoc = builder.parse(is);
         } catch (Exception e) {
-            throw new RuntimeException("Convert " + this.xmlFile + " to document" + " failed.");
+            throw new RuntimeException("Convert " + this.xmlFile + " to document" + " failed.\n");
         }
     }
 
@@ -201,7 +211,7 @@ public class Convert {
     public void write() {
         String s = format(toStringFromDoc(this.xmlDoc));
         try {
-            new FileOutputStream(new File(this.xmlFile)).write(s.getBytes());
+            new FileOutputStream(new File(this.xmlFile)).write(s.getBytes("UTF-8"));
         } catch (IOException e) {
             throw new RuntimeException("Failed to write XML document.");
         }
