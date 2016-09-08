@@ -14,6 +14,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -32,8 +33,11 @@ public class Convert {
     private Document xmlDoc;
     private Map<String, String> htmlMap;
 
+    private static final String XML_TITLE_COMMENTS = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    private static final String XML_PROPERTIES_NODE = "<properties>";
+
     public Convert(String htmlFile, String xmlFile) {
-        if(htmlFile == null || xmlFile == null){
+        if (htmlFile == null || xmlFile == null) {
             throw new RuntimeException("input file or output file is required.");
         }
         this.htmlFile = htmlFile;
@@ -96,9 +100,8 @@ public class Convert {
             } else {
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder builder = factory.newDocumentBuilder();
-                this.xmlDoc = builder.newDocument(); 
+                this.xmlDoc = builder.newDocument();
                 Element newNode = this.xmlDoc.createElement("properties");
-                newNode.setAttribute("version", "1.0");
                 this.xmlDoc.appendChild(newNode);
             }
         } catch (FileNotFoundException e) {
@@ -110,7 +113,7 @@ public class Convert {
 
     private void convertHtmlDocumentToHtmlMap() {
         this.htmlMap = new HashMap<String, String>();
-        Element dlElement =this.htmlDoc.getDocumentElement();
+        Element dlElement = this.htmlDoc.getDocumentElement();
         String key = null;
         for (int i = 0; i < dlElement.getChildNodes().getLength(); i++) {
             Node node = dlElement.getChildNodes().item(i);
@@ -118,7 +121,10 @@ public class Convert {
                 key = node.getTextContent();
             } else if ("dd".equals(node.getNodeName())) {
                 String value = null;
-                try { value = node.getChildNodes().item(0).getTextContent(); } catch (Exception e) {}
+                try {
+                    value = node.getChildNodes().item(0).getTextContent();
+                } catch (Exception e) {
+                }
                 value = value.replaceAll("[\n\t]{1,}", " ");
                 this.htmlMap.put(key, value);
                 key = null;
@@ -127,12 +133,12 @@ public class Convert {
     }
 
     private void mergeHtmlToXml() {
-        Element rootElement =this.xmlDoc.getDocumentElement();
+        Element rootElement = this.xmlDoc.getDocumentElement();
         NodeList nodes = rootElement.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Element node = null;
             try {
-                node = (Element)nodes.item(i);
+                node = (Element) nodes.item(i);
             } catch (Exception e) {
                 continue;
             }
@@ -153,8 +159,21 @@ public class Convert {
         }
     }
 
+    private String insert(String origStr, String insertStr, int index) {
+        int totalLength = origStr.length();
+        return origStr.substring(0, index) + insertStr + origStr.substring(index + 1, totalLength - 1);
+    }
+
     private String format(String originStr) {
-        return originStr.replaceAll("\n<entry", "\n\t<entry");
+        originStr = originStr.replaceAll("\n<entry", "\n\t<entry");
+        int insertIndex = originStr.indexOf(XML_TITLE_COMMENTS) + XML_TITLE_COMMENTS.length();
+        originStr = insert(
+                        originStr,
+                        "\n<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n<!--Copyright (C) 2007 Stratus Technologies Bermuda Ltd. All rights reserved-->\n<!--Confidential and proprietary.-->",
+                        insertIndex);
+        insertIndex = originStr.indexOf(XML_PROPERTIES_NODE) + XML_PROPERTIES_NODE.length();
+        originStr = insert(originStr, "\n\t<!-- Note, AUTHORIZATION_FAILED is not an AuditType -->", insertIndex);
+        return originStr;
     }
 
     public static String toStringFromDoc(Document document) {
@@ -163,8 +182,8 @@ public class Convert {
             StringWriter strWtr = new StringWriter();
             StreamResult strResult = new StreamResult(strWtr);
             TransformerFactory tfac = TransformerFactory.newInstance();
-            try {   
-                javax.xml.transform.Transformer t = tfac.newTransformer();
+            try {
+                Transformer t = tfac.newTransformer();
                 t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
                 t.setOutputProperty(OutputKeys.INDENT, "yes");
                 t.setOutputProperty(OutputKeys.METHOD, "xml");
