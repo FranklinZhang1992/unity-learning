@@ -1,18 +1,21 @@
 class Demo
-  def self.test(par1, par2)
+  def self.test
     puts "self.test"
   end
-  def test(par1)
+  def test
     puts "test"
   end
+  def Demo.test
+    puts "Demo.test"
+  end
   def send1
-    Demo.test("a", "b")
+    Demo.test
   end
   def send2
-    self.test("a", "b")
+    self.test
   end
   def send3
-    test("a")
+    test
   end
 end
 
@@ -20,3 +23,5 @@ demo = Demo.new
 demo.send1
 demo.send2
 demo.send3
+Demo.test
+demo.test

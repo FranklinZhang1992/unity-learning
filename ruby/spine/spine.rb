@@ -105,9 +105,11 @@ class Main
 
     def boot_services
         begin
+            SuperNova.gatekeeper.boot
             SuperNova.pons.boot
-            SuperNova.domains.boot
             SuperNova.nodes.boot
+
+            SuperNova.domains.boot
             logDebug {"=== Services booted ==="}
         rescue Exception => e
             logWarning {"Exception[boot_services] => #{e}"}
@@ -139,14 +141,52 @@ class Main
 
     def start
         load_sysconfig
+        logDebug {"STARTUP: boot services"}
         boot_services
+        logDebug {"STARTUP: start local services"}
         start_local_services
         trap("HUP")  { restart('HUP') }
         trap("QUIT") { restart('QUIT') }
         trap("INT") { shutdown('INT')}
         trap("TERM") { shutdown('TERM')}
-
         logDebug {"STARTUP: traps initialized"}
+
+        logDebug {"STARTUP: joining a cell"}
+        while !SuperNova.node.config.cell_uuid
+            logNotice {"waiting to join a cell..."}
+            sleep 3
+
+            SuperNova.node.primary? and
+                logError { "How could this node be primary?!  It hasn\'t joined a cluster yet?!" }
+
+            SuperNova.nodes.config.each do |config|
+                next if config.uuid == $UUID or config.locked or config.cell_uuid.nil?
+                begin
+                    services = SuperNova::PhantomServices.new(config)
+                    invitation = services['GateKeeper'].introduce($UUID)
+                    SuperNova.node.accept_invitation(invitation)
+                rescue Exception => err
+                    case err
+                    when Errno::ECONNREFUSED, Errno::ECONNRESET
+                        logInfo {"unable to connect to spine on #{config.hostname}, #{err}"}
+                    when Errno::EHOSTUNREACH, Errno::ENETUNREACH
+                        logInfo {"unable to connect to node #{config.hostname}, #{err}"}
+                    when SuperNova::NodeUnreachable
+                        logNotice {"node #{config.hostname} is unreachable"}
+                    when Errno::EAGAIN
+                        logNotice {"introduce failed, retry later: #{err}"}
+                    when Timeout::Error
+                        logNotice {"introduce request to #{config.hostname} timed out, #{err}"}
+                    else
+                        logException("introduce request to #{config.hostname} failed", err)
+                    end
+                else
+                    logNotice {"successfully joined a cell/cluster, sleeping while my hostname change to #{SuperNova.node.hostname} takes effect"}
+                    sleep 45
+                end
+            end
+        end
+
         start_shared_services
 
         logNotice {"====== SPINE STARTUP COMPLETE ======"}

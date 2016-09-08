@@ -52,6 +52,19 @@ module SuperNova
         end
         def bootstrap
             @hoard = Hoard.new(self, 'cells', Cell)
+            if File.exists? SuperNova::SysConfig::FILENAME
+                begin
+                    # Create a Cell for an initial cluster install
+                    config = SuperNova::SysConfig.new.read
+                    logNotice {"creating a cell #{config.cluster_uuid} from the Unity install sysconfig file (#{SuperNova::SysConfig::FILENAME})"}
+                    cell = @hoard[config.cluster_uuid]
+                    unless cell
+                        cell = Cell.new(config)
+                        @hoard.add(cell)
+                        cell.load_hook  # Hook should be called at add() time, but is not
+                    end
+                end
+            end
         end
     end
 end

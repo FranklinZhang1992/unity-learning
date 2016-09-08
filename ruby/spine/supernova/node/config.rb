@@ -6,8 +6,8 @@ module SuperNova
         artifact
         property :hostname
         property :pm_uuid
-        # property :cell_uuid
-        # property :locked
+        property :cell_uuid
+        property :locked
         property :public_v6
         property :private_v6
 
@@ -32,6 +32,11 @@ module SuperNova
             @uuid = uuid
             hn = self.hostname || 'UNKNOWN'
             logDebug {"new NodeConfig created for #{hn} #{self.uuid}"}
+        end
+        def is_local?() uuid == SuperNova.node.config.cell_uuid rescue false end
+
+        def load_hook
+            return unless $upgrade_from
         end
     end
 end
