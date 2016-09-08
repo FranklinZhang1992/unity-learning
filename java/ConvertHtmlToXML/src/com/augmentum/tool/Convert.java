@@ -136,6 +136,9 @@ public class Convert {
                 } catch (Exception e) {
                 }
                 value = value.replaceAll("[\n\t]{1,}", " ");
+                if (this.htmlMap.get(key) != null) {
+                    System.out.println("duplicate node " + key + " found");
+                }
                 this.htmlMap.put(key, value);
                 key = null;
             }
@@ -171,16 +174,17 @@ public class Convert {
 
     private String insert(String origStr, String insertStr, int index) {
         int totalLength = origStr.length();
-        return origStr.substring(0, index) + insertStr + origStr.substring(index + 1, totalLength - 1);
+        String insertedStr = origStr.substring(0, index) + insertStr + origStr.substring(index, totalLength - 1);
+        return insertedStr;
     }
 
     private String format(String originStr) {
         originStr = originStr.replaceAll("\n<entry", "\n\t<entry");
         int insertIndex = originStr.indexOf(XML_TITLE_COMMENTS) + XML_TITLE_COMMENTS.length();
         originStr = insert(
-                        originStr,
-                        "\n<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n<!--Copyright (C) 2007 Stratus Technologies Bermuda Ltd. All rights reserved-->\n<!--Confidential and proprietary.-->",
-                        insertIndex);
+                originStr,
+                "\n<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n<!--Copyright (C) 2007 Stratus Technologies Bermuda Ltd. All rights reserved-->\n<!--Confidential and proprietary.-->\n",
+                insertIndex);
         insertIndex = originStr.indexOf(XML_PROPERTIES_NODE) + XML_PROPERTIES_NODE.length();
         originStr = insert(originStr, "\n\t<!-- Note, AUTHORIZATION_FAILED is not an AuditType -->", insertIndex);
         return originStr;
