@@ -73,7 +73,7 @@ class HtmlToXml
     raise "#{file} is not a HTML file" unless HTML_REGEXP.match(file)
   end
   def xml?(file)
-    raise "XML file #{file} is required" if file.nil? || !File.exists?(file)
+    raise "XML file #{file} is required" if file.nil?
     raise "#{file} is not a XML file" unless XML_REGEXP.match(file)
   end
   def parse_html_str(orig_html_str)
@@ -98,11 +98,22 @@ class HtmlToXml
   def load_xml
     log_debug {"======Load XML begin======"}
     xml_str = ""
-    File.open(self.xml_file) { |f|
-      while line = f.gets
-        xml_str += "#{line}"
-      end
-    }
+    if File.exist?(self.xml_file)
+      File.open(self.xml_file) { |f|
+        while line = f.gets
+          xml_str += "#{line}"
+        end
+      }
+    else
+      xml_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      xml_str += "<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n"
+      xml_str += "<!--Copyright (C) 2007 Stratus Technologies Bermuda Ltd. All rights reserved-->\n"
+      xml_str += "<!--Confidential and proprietary.-->\n"
+      xml_str += "<properties>\n"
+      xml_str += "\t<!-- Note, AUTHORIZATION_FAILED is not an AuditType -->\n"
+      xml_str += "</properties>"
+    end
+
     self.xml_content = begin Document.new(xml_str) rescue nil end
     self.xml_content.context[:attribute_quote] = :quote # Make sure all attributes are with double quotation marks
     raise "Failed to load XML from #{self.xml_file}" if self.xml_content.nil?
@@ -167,13 +178,16 @@ class HtmlToXml
       output_str.insert(properties_end_index, "\n")
     end
     output_str = output_str.gsub(/\n<entry/, "\n\t<entry")
+    output_str = output_str.gsub(/><entry/, ">\n\t<entry")
+    output_str = output_str.gsub("&quot;", "\"")
+    output_str = output_str.gsub("&apos;", "'")
     output_str
   end
   def write
     log_debug {"Begin to write final XML to XML file..."}
     final_xml = format(self.xml_content)
     log_debug {"Final XML =>\n#{final_xml}"}
-    file = File.new("/home/franklin/workspace/temp/test.xml", "w+")
+    file = File.new(self.xml_file, "w+")
     file.puts final_xml
     file.close
     log_debug {"Write to XML file finished"}
