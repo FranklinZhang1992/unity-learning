@@ -36,6 +36,7 @@ def parse_cmd(params)
       key_detected = nil
     end
   end
+  raise "value if required for key #{key_detected}" if key_detected
   cmd_hash
 end
 
@@ -82,7 +83,6 @@ class HtmlToXml
     return orig_html_str[begin_index, end_index - begin_index + 5]
   end
   def load_html
-    log_debug {"======Load HTML begin======"}
     html_str = ""
     File.open(self.html_file) { |f|
       while line = f.gets
@@ -92,11 +92,8 @@ class HtmlToXml
     html_str = parse_html_str(html_str)
     self.html_content = begin Document.new(html_str) rescue nil end
     raise "Failed to load HTML from #{self.html_file}" if self.html_content.nil?
-    log_debug {"HTML =>\n#{self.html_content}"}
-    log_debug {"======Load HTML finished======"}
   end
   def load_xml
-    log_debug {"======Load XML begin======"}
     xml_str = ""
     if File.exist?(self.xml_file)
       File.open(self.xml_file) { |f|
@@ -117,15 +114,12 @@ class HtmlToXml
     self.xml_content = begin Document.new(xml_str) rescue nil end
     self.xml_content.context[:attribute_quote] = :quote # Make sure all attributes are with double quotation marks
     raise "Failed to load XML from #{self.xml_file}" if self.xml_content.nil?
-    log_debug {"XML =>\n#{self.xml_content}"}
-    log_debug {"======Load XML finished======"}
   end
   def load
     load_html
     load_xml
   end
   def analyse_html
-    log_debug {"======Analyse HTML begin======"}
     key_detected = nil
     nodes = self.html_content.root
     nodes.elements.each do |node|
@@ -133,6 +127,7 @@ class HtmlToXml
       when "dt"
         key = begin node.text rescue nil end
         log_warn {"value expected for key #{key_detected}"} if key_detected
+        log_warn {"duplicate key #{key} found"} unless self.html_hash[key].nil?
         self.html_hash[key] = nil
         key_detected = key
       when "dd"
@@ -143,11 +138,8 @@ class HtmlToXml
         key_detected = nil
       end
     end
-    log_debug {"HTML hashed =>\n#{self.html_hash}"}
-    log_debug {"======Analyse HTML finished======"}
   end
   def analyse_xml
-    log_debug {"======Analyse XML begin======"}
     nodes = self.xml_content.root
     # Change the original XML if the value is not the same as what it is in HTML
     nodes.elements.each do |node|
@@ -164,8 +156,6 @@ class HtmlToXml
       entry.add_text("#{self.html_hash[key]}")
       nodes.add_element(entry)
     end
-    log_debug {"XML modified =>\n#{self.xml_content}"}
-    log_debug {"======Analyse XML finished======"}
   end
   def analysis
     analyse_html
@@ -179,18 +169,17 @@ class HtmlToXml
     end
     output_str = output_str.gsub(/\n<entry/, "\n\t<entry")
     output_str = output_str.gsub(/><entry/, ">\n\t<entry")
+    output_str = output_str.gsub("><", ">\n<")
     output_str = output_str.gsub("&quot;", "\"")
     output_str = output_str.gsub("&apos;", "'")
+    output_str = output_str.gsub("<?xml version='1.0' encoding='UTF-8'?>", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
     output_str
   end
   def write
-    log_debug {"Begin to write final XML to XML file..."}
     final_xml = format(self.xml_content)
-    log_debug {"Final XML =>\n#{final_xml}"}
     file = File.new(self.xml_file, "w+")
     file.puts final_xml
     file.close
-    log_debug {"Write to XML file finished"}
   end
 end
 
