@@ -5,7 +5,7 @@ require 'rexml/document'
 
 $stdout.sync = true
 
-CMD_KEYS_WITH_VALUE = %w{-input -output}
+CMD_KEYS_WITH_VALUE = %w{-input -output -auto-detect}
 CMD_KEYS_WITHOUT_VALUE = %w{-v}
 
 def key_with_value?(param)
@@ -38,6 +38,13 @@ def parse_cmd(params)
   end
   raise "value if required for key #{key_detected}" if key_detected
   cmd_hash
+end
+
+def do_html_to_xml(input, output, verbose = true)
+    html_to_xml = HtmlToXml.new(input, output, verbose)
+    html_to_xml.load
+    html_to_xml.analysis
+    html_to_xml.write
 end
 
 class HtmlToXml
@@ -183,13 +190,52 @@ class HtmlToXml
   end
 end
 
+class SourceHtmlLoader
+  attr_accessor :root_path
+  BUNDLE_PREFIX_REGEXP = Regexp.new('StringBundles_([a-z\-_]{1,})')
+
+  def initialize(root_path)
+    self.root_path = "#{root_path}/unity-help/help/FlareSources"
+  end
+
+  def get_bundle(bundle_folder)
+    matched_str = BUNDLE_PREFIX_REGEXP.match(bundle_folder)
+    return matched_str.nil? ? "UNKNOWN" : matched_str[1]
+  end
+
+  def load_htmls
+    audit_htmls = Hash.new
+    bundle_folders = Dir.glob("#{self.root_path}/*")
+    bundle_folders.each do |bundle_folder|
+      if File.directory?(bundle_folder) 
+        audit_html_file = "#{bundle_folder}/audit.html"
+        if File.exists?(audit_html_file)
+          bundle = get_bundle(bundle_folder)
+          bundle = "en" if bundle == "en-us"
+          puts "find source HTML file #{audit_html_file} for language bundle #{bundle}"
+          audit_htmls[bundle] = audit_html_file
+        end
+      end
+    end # end of bundle_folders block
+    audit_htmls
+  end
+end
+
 begin
   params = ARGV
   cmd_hash = parse_cmd(params)
-  html_to_xml = HtmlToXml.new(cmd_hash["-input"], cmd_hash["-output"], cmd_hash["-v"])
-  html_to_xml.load
-  html_to_xml.analysis
-  html_to_xml.write
+  if (cmd_hash["-auto-detect"])
+    root_path = cmd_hash["-auto-detect"]
+    source_html_loader = SourceHtmlLoader.new(root_path)
+    audit_htmls = source_html_loader.load_htmls
+    audit_htmls.each_key do |bundle|
+      input_file = audit_htmls[bundle]
+      output_file = "#{root_path}/unity-mgmt/sm/java/smd-main/i18n/audit_#{bundle}.xml"
+      do_html_to_xml(input_file, output_file)
+    end # end of audit_htmls block
+  else
+    do_html_to_xml(cmd_hash["-input"], cmd_hash["-output"], cmd_hash["-v"])
+  end
 rescue Exception => e
   raise
 end
