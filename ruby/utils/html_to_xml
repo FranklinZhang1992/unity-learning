@@ -4,6 +4,7 @@ require 'set'
 require 'rexml/document'
 
 $stdout.sync = true
+$verbose = false
 
 CMD_KEYS_WITH_VALUE = %w{-input -output -auto-detect}
 CMD_KEYS_WITHOUT_VALUE = %w{-v}
@@ -14,6 +15,22 @@ end
 
 def key_without_value?(param)
   return CMD_KEYS_WITHOUT_VALUE.to_set.include?(param)
+end
+
+def log
+  puts yield if $verbose
+end
+def log_warn
+  msg = "WARN #{yield}"
+  log {msg}
+end
+def log_debug
+  msg = "DEBUG #{yield}"
+  log {msg}
+end
+def log_error
+  msg = "ERROR #{yield}"
+  log {msg}
 end
 
 def parse_cmd(params)
@@ -40,8 +57,8 @@ def parse_cmd(params)
   cmd_hash
 end
 
-def do_html_to_xml(input, output, verbose = true)
-    html_to_xml = HtmlToXml.new(input, output, verbose)
+def do_html_to_xml(input, output)
+    html_to_xml = HtmlToXml.new(input, output)
     html_to_xml.load
     html_to_xml.analysis
     html_to_xml.write
@@ -49,7 +66,6 @@ end
 
 class HtmlToXml
   include REXML
-  attr_accessor :verbose
   attr_accessor :html_file
   attr_accessor :xml_file
   attr_accessor :html_content
@@ -57,25 +73,14 @@ class HtmlToXml
   attr_accessor :html_hash
   HTML_REGEXP = Regexp.new('\S*[.]html', true)
   XML_REGEXP = Regexp.new('\S*[.]xml', true)
-  def initialize(input, output, v)
+  def initialize(input, output)
     html?(input)
     xml?(output)
     self.html_file = input
     self.xml_file = output
-    self.verbose = v
     self.html_hash = Hash.new
   end
-  def log
-    puts yield if self.verbose
-  end
-  def log_warn
-    msg = "WARN #{yield}"
-    log {msg}
-  end
-  def log_debug
-    msg = "DEBUG #{yield}"
-    log {msg}
-  end
+
   def html?(file)
     raise "HTML file #{file} is required" if file.nil? || !File.exists?(file)
     raise "#{file} is not a HTML file" unless HTML_REGEXP.match(file)
@@ -134,7 +139,7 @@ class HtmlToXml
       when "dt"
         key = begin node.text rescue nil end
         log_warn {"value expected for key #{key_detected}"} if key_detected
-        log_warn {"duplicate key #{key} found"} unless self.html_hash[key].nil?
+        log_warn {"duplicate key #{key} found in source HTML #{self.html_file}"} unless self.html_hash[key].nil?
         self.html_hash[key] = nil
         key_detected = key
       when "dd"
@@ -212,7 +217,7 @@ class SourceHtmlLoader
         if File.exists?(audit_html_file)
           bundle = get_bundle(bundle_folder)
           bundle = "en" if bundle == "en-us"
-          puts "find source HTML file #{audit_html_file} for language bundle #{bundle}"
+          log_debug {"find source HTML file #{audit_html_file} for language bundle #{bundle}"}
           audit_htmls[bundle] = audit_html_file
         end
       end
@@ -224,6 +229,7 @@ end
 begin
   params = ARGV
   cmd_hash = parse_cmd(params)
+  $verbose = cmd_hash["-v"].nil? ? false : true
   if (cmd_hash["-auto-detect"])
     root_path = cmd_hash["-auto-detect"]
     source_html_loader = SourceHtmlLoader.new(root_path)
@@ -234,8 +240,9 @@ begin
       do_html_to_xml(input_file, output_file)
     end # end of audit_htmls block
   else
-    do_html_to_xml(cmd_hash["-input"], cmd_hash["-output"], cmd_hash["-v"])
+    do_html_to_xml(cmd_hash["-input"], cmd_hash["-output"])
   end
 rescue Exception => e
+  log_error {"#{e}"}
   raise
 end
