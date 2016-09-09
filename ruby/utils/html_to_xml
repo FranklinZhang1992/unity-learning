@@ -200,6 +200,7 @@ class SourceHtmlLoader
   BUNDLE_PREFIX_REGEXP = Regexp.new('StringBundles_([a-z\-_]{1,})')
 
   def initialize(root_path)
+    raise "not a valid root path #{root_path}" unless File.exists?(root_path)
     self.root_path = "#{root_path}/unity-help/help/FlareSources"
   end
 
