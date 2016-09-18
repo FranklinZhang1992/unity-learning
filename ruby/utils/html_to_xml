@@ -67,6 +67,13 @@ def parse_cmd(params)
   cmd_hash
 end
 
+def get_root_path(path)
+  unity_build_re = Regexp.new('\S*unity-build')
+  unity_stratus_re = Regexp.new('\S*unity-stratus')
+  matched_str = "#{unity_build_re.match(path) || unity_stratus_re.match(path)}"
+  matched_str
+end
+
 def do_html_to_xml(input, output, config = nil)
     html_to_xml = HtmlToXml.new(input, output)
     html_to_xml.load_config(config)
@@ -181,7 +188,7 @@ class HtmlToXml
     end # end of nodes block
   end
 
-  def convert_html_str_to_hash
+  def convert_html_to_hash
     cached_key = nil
     nodes = self.html_content.root
     nodes.elements.each do |node|
@@ -189,7 +196,7 @@ class HtmlToXml
       when "dt"
         key = begin node.text rescue nil end
         log_warn {"Value expected for key #{cached_key}"} if cached_key
-        log_warn {"Duplicate key #{key} found in source HTML #{self.html_file}"} unless self.html_hash[key].nil?
+        log_warn {"Duplicate key #{key} found in source HTML #{self.html_file}"} if self.html_hash.has_key?(key)
         cached_key = key
       when "dd"
         value = begin node.elements['code'].text rescue nil end
@@ -224,7 +231,7 @@ class HtmlToXml
     nodes.elements.each do |node|
       key = begin node.attributes['key'] rescue nil end
       value = begin node.text rescue nil end
-      if self.html_hash[key] && self.html_hash[key] != value
+      if self.html_hash[key]
         node.text = self.html_hash[key] if self.config[:overwrite]
         self.html_hash.delete(key)
       end
@@ -238,7 +245,7 @@ class HtmlToXml
   end
 
   def convert
-    convert_html_str_to_hash
+    convert_html_to_hash
     convert_xml_to_hash
     check_html_and_xml_before_merge
     merge_html_to_xml
@@ -305,7 +312,7 @@ begin
   cmd_hash = parse_cmd(params)
   $verbose = cmd_hash["-v"].nil? ? false : true
   if (cmd_hash["-auto-detect"])
-    root_path = cmd_hash["-auto-detect"]
+    root_path = get_root_path(cmd_hash["-auto-detect"].chomp)
     bundle_html_scanner = BundleHtmlScanner.new(root_path)
     audit_htmls = bundle_html_scanner.detect_htmls
     audit_htmls.each_key do |bundle|

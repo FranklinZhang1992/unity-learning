@@ -40,6 +40,8 @@ class Commands
   EVERRUN_74_VERSION_REGEXP = Regexp.new('7[.]4[.][0-9][.][0-9]-([0-9]{1,})')
   DOH_USERNAME = "admin"
   DOH_PASSWORD = "admin"
+  VALIE_LUN_TYPE = %w{INTERNAL ISCSI FC MIXED INCONSISTENT EXTERNAL}
+  EXTERNAL_LUN_TYPE = %w{ISCSI FC MIXED INCONSISTENT}
 
   def win2k12_re() WIN_2K12_REGEXP end
   def win_re() WIN_REGEXP end
@@ -64,6 +66,15 @@ class Commands
   end
   private :valid_build_num?
 
+  def valid_lun_type?(lun_type)
+    return VALIE_LUN_TYPE.to_set.include?(lun_type)
+  end
+  private :valid_lun_type?
+  def external_lun_type?(lun_type)
+    return EXTERNAL_LUN_TYPE.to_set.include?(lun_type)
+  end
+  private :external_lun_type?
+
   def help(*args)
     command = args.shift
     if command.nil?
@@ -80,6 +91,7 @@ class Commands
       msg += "    9. available_versions <count> <build_version>                                search for available everRun build versions.\n"
       msg += "    10. prepare_fttest_folder <build_version>                                    auto generate a folder to run fttest.\n"
       msg += "    11. reserved_dut <count> <reserver>                                          find a DUT reserved by a specified people(default is yourself).\n"
+      msg += "    12. find_dut_by_lun_type <lun_type> <count> <scope>                          find a DUT contains Logical Disks with specified lun type.\n"
       msg += "Use \" help <command>\" to show the detail information. (e.g. help duts).\n"
       msg += "quit   --->   exit\n\n"
       puts msg
@@ -219,6 +231,19 @@ class Commands
         msg += "Arguments\n"
         msg += "    count                      The count of DUT you want to list.\n"
         msg += "    reserver                   The owner of the DUT.\n\n"
+        msg += "Examples\n"
+        msg += "    Find 3 DUTs which is reserved by yourself.\n"
+        msg += "    > reserved_dut 3\n\n"
+        puts msg
+      when "find_dut_by_lun_type" #12
+        msg = "Usage\n"
+        msg += "    find_dut_by_lun_type <lun_type> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    You can use this command to find a DUT which contains Logical Disks with specfied LUN type.\n\n"
+        msg += "Arguments\n"
+        msg += "    lun_type                   The LUN type of the Logical Disk, valid LUN types are \"INTERNAL\", \"ISCSI\", \"FC\", \"MIXED\", \"INCONSISTENT\", \"EXTERNAL\".\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
         msg += "Examples\n"
         msg += "    Find 3 DUTs which is reserved by yourself.\n"
         msg += "    > reserved_dut 3\n\n"
@@ -811,6 +836,50 @@ class Commands
     else
       puts "[Result] No DUT is reserved by #{reserver}"
     end
+  end
+  def find_dut_by_lun_type(*args)
+    lun_type = args.shift
+    raise "not a valid lun type" unless valid_lun_type?(lun_type)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "find DUT by lun type begin, this may take a few minutes..."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      lds = []
+      find_lds = false
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = begin root.elements['response'].elements['output'] rescue empty end
+      outputs_xml.elements.each do |output_xml|
+        next unless output_xml.name == 'disk'
+        disk_lun_type = begin output_xml.elements['lun-type'].text rescue nil end
+        disk_name = begin output_xml.elements['name'].text rescue nil end
+        if lun_type == "EXTERNAL"
+          if external_lun_type?(disk_lun_type)
+            lds << disk_name
+            find_lds = true
+          end
+        else
+          if lun_type == disk_lun_type
+            lds << disk_name
+            find_lds = true
+          end
+        end
+      end # end of outputs_xml block
+      if find_lds
+        puts "[Result] DUT #{dut} contains #{lun_type} type Logical Disks"
+        got_count += 1
+        find_lds = false
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
   end
   def pci_info(*args)
     keyword = args.shift

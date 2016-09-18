@@ -1,0 +1,86 @@
+#!/usr/bin/ruby
+
+$stdout.sync = true
+$verbose = false
+
+CMD_VALUE_REQUIRED_KEYS = %w{-source -target}
+CMD_SINGLE_KEYS = %w{-v -help -overwrite}
+
+def value_required_key?(param)
+  return CMD_VALUE_REQUIRED_KEYS.to_set.include?(param)
+end
+
+def single_key?(param)
+  return CMD_SINGLE_KEYS.to_set.include?(param)
+end
+
+def key?(param)
+  return value_required_key?(param) || single_key?(param)
+end
+
+def log
+  puts yield if $verbose
+end
+
+def log_warn
+  msg = "[WARN] #{yield}"
+  log {msg}
+end
+
+def log_debug
+  msg = "[DEBUG] #{yield}"
+  log {msg}
+end
+
+def log_error
+  msg = "[ERROR] #{yield}"
+  log {msg}
+end
+
+def show_help
+  puts "help"
+end
+
+#
+# Parse command arguments into a key-value map
+#
+def parse_cmd(params)
+  cmd_hash = Hash.new
+  cached_key = nil
+  params.each do |param|
+    current_param = param.chomp
+    if cached_key
+      if key?(current_param)
+        raise "value if required for key #{cached_key}"
+      else
+        cmd_hash[cached_key] = current_param
+        cached_key = nil
+      end
+    else
+      if value_required_key?(current_param)
+        cached_key = current_param
+      elsif single_key?(current_param)
+        cmd_hash[current_param] = true
+      end
+    end
+  end # end of params block
+  raise "value if required for key #{cached_key}" if cached_key
+  cmd_hash
+end
+
+class FilePorter
+  
+end
+
+begin
+  params = ARGV
+  cmd_hash = parse_cmd(params)
+  $verbose = cmd_hash["-v"].nil? ? false : true
+  if cmd_hash["-help"]
+    show_help
+  elsif 
+  end
+rescue Exception => e
+  raise
+end
+
