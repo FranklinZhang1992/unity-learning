@@ -290,5 +290,12 @@ end
 # match_version("lrwxrwxrwx  1 untriage user   11 Apr  7 20:31 current -> 7.4.0.0-145")
 # match_version("lrwxrwxrwx  1 untriage user   1")
 
-match_virtual_size("image: win7_pro_convertvda_1b915685-012d-4c3d-8002-30f4bab0ca6c_c0a45da1-a06c-4837-a278-b3be2eb9e4e7\nfile format: raw\nvirtual size: 1.0T (1088292913152 bytes)\ndisk size: 0\n")
-match_virtual_size("file format: qcow2\nvirtual size: 20G (21054357504 bytes)\ndisk size: 9.4G\ncluster_size: 65536\nFormat specific information:\n    compat: 0.10\n")
+# match_virtual_size("image: win7_pro_convertvda_1b915685-012d-4c3d-8002-30f4bab0ca6c_c0a45da1-a06c-4837-a278-b3be2eb9e4e7\nfile format: raw\nvirtual size: 1.0T (1088292913152 bytes)\ndisk size: 0\n")
+# match_virtual_size("file format: qcow2\nvirtual size: 20G (21054357504 bytes)\ndisk size: 9.4G\ncluster_size: 65536\nFormat specific information:\n    compat: 0.10\n")
+
+SCHEDULE_ID_REGEXP = Regexp.new('id = ([a-zA-z0-9\-]{36})')
+line = "* * * * * echo \"id = c2539a76-3f8a-4767-a87c-d4e8c0ab59f7\" >> /tmp/test.out"
+matched = SCHEDULE_ID_REGEXP.match(line)
+if matched
+  puts matched[1]
+end
