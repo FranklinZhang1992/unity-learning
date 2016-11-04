@@ -232,67 +232,6 @@ def match_virtual_size(str)
   end
 end
 
-# match_linux_folder("/tmp")
-# match_windows_folder("E:\\")
-# match_folder("c【2】")
-# match_folder("c")
-
-# format_folder_name("c", 1)
-# format_folder_name("c【2】", 2)
-# format_folder_name("c【2】", 3)
-# p iso?("abc.iso")
-# p iso?("abciso")
-# p iso?("//134.111.31.228/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.iso")
-# fetch_remote_iso("//134.111.31.228/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.iso")
-
-# match_nfs_folder("134.111.24.224:/developer/fzhang/my-pool")
-# match_nfs_folder("134.111.24.224/developer/fzhang/my-pool")
-# match_nfs_folder("//134.111.24.224:/developer/fzhang/my-pool")
-
-# match_samba_file("//134.111.31.228/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.iso")
-# match_samba_file("//134.111.31.228/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.ISO")
-# match_samba_file("134.111.31.228/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.iso")
-# match_samba_file("134.111.31.228:/Users/TEST/p2v/en_windows_server_2008_with_sp2_x64_dvd_342336.iso")
-# match_nfs_file("134.111.24.224:/developer/fzhang/my-pool/en_windows_7_home_premium_with_sp1_x64_dvd_u_676549.iso")
-# match_nfs_file("134.111.24.224:/developer/fzhang/my-pool/en_windows_7_home_premium_with_sp1_x64_dvd_u_676549.ISO")
-# match_nfs_file("134.111.24.224/developer/fzhang/my-pool/en_windows_7_home_premium_with_sp1_x64_dvd_u_676549.iso")
-# match_nfs_file("//134.111.24.224/developer/fzhang/my-pool/en_windows_7_home_premium_with_sp1_x64_dvd_u_676549.iso")
-
-# match_domain_name("github.com")
-# match_domain_name("wwww.baidu.com")
-# match_domain_name("www.firefox.com.cn")
-# match_domain_name("a.b.c.d.e")
-# match_domain_name("//a.b.c.d.e/abc")
-# match_domain_name("//a.b.c.中国.e.f:8080/abc")
-# match_domain_name("//a.b&.c.d.e.f:80/abc/123")
-
-# check_make_finished
-
-# check_dut_reserve
-
-# check_for_win2k12("en_windows_server_2012_r2_x64_dvd_2707946")
-# check_for_win2k12("windows2012")
-# check_for_win2k12("win2k12")
-
-# match_os("CentOS Linux release 7.2.1511 (Core)")
-
-# match_version("7.4")
-# match_version("74")
-
-# match_release_num("1")
-# match_release_num("12")
-# match_release_num("123")
-
-# divide_dut_ver("7.4.0-119")
-# divide_dut_ver("7.4.0-1")
-# divide_dut_ver("7.4.0-")
-
-# match_version("lrwxrwxrwx  1 untriage user   11 Apr  7 20:31 current -> 7.4.0.0-145")
-# match_version("lrwxrwxrwx  1 untriage user   1")
-
-# match_virtual_size("image: win7_pro_convertvda_1b915685-012d-4c3d-8002-30f4bab0ca6c_c0a45da1-a06c-4837-a278-b3be2eb9e4e7\nfile format: raw\nvirtual size: 1.0T (1088292913152 bytes)\ndisk size: 0\n")
-# match_virtual_size("file format: qcow2\nvirtual size: 20G (21054357504 bytes)\ndisk size: 9.4G\ncluster_size: 65536\nFormat specific information:\n    compat: 0.10\n")
-
 SCHEDULE_ID_REGEXP = Regexp.new('id = ([a-zA-z0-9\-]{36})')
 line = "* * * * * echo \"id = c2539a76-3f8a-4767-a87c-d4e8c0ab59f7\" >> /tmp/test.out"
 matched = SCHEDULE_ID_REGEXP.match(line)

@@ -148,15 +148,18 @@ class CronManager
 end
 
 
-begin
-    a = "c2539a76-3f8a-4767-a87c-d4e8c0ab59f7"
-    puts a.length
-    cron_manager = CronManager.instance
-    test_body1 = Document.new("<?xml version='1.0'?><create_crontab><id>1</id><schedule>* * * * *</schedule><command>echo \"id = c2539a76-3f8a-4767-a87c-d4e8c0ab59f7\" >> /tmp/test.out</command></create_crontab>").root
-    test_body2 = Document.new("<?xml version='1.0'?><create_crontab><id>2</id><schedule>* * * * *</schedule><command>echo \"id = cfb03470-343d-4a5e-be66-50ab94a54a1f\" >> /tmp/test.out</command></create_crontab>").root
-    result1 = cron_manager.create(test_body1)
-    result2 = cron_manager.create(test_body2)
-    puts result2
-rescue Exception => e
-    raise
-end
+# begin
+#     a = "c2539a76-3f8a-4767-a87c-d4e8c0ab59f7"
+#     puts a.length
+#     cron_manager = CronManager.instance
+#     test_body1 = Document.new("<?xml version='1.0'?><create_crontab><id>1</id><schedule>* * * * *</schedule><command>echo \"id = c2539a76-3f8a-4767-a87c-d4e8c0ab59f7\" >> /tmp/test.out</command></create_crontab>").root
+#     test_body2 = Document.new("<?xml version='1.0'?><create_crontab><id>2</id><schedule>* * * * *</schedule><command>echo \"id = cfb03470-343d-4a5e-be66-50ab94a54a1f\" >> /tmp/test.out</command></create_crontab>").root
+#     result1 = cron_manager.create(test_body1)
+#     result2 = cron_manager.create(test_body2)
+#     puts result2
+# rescue Exception => e
+#     raise
+# end
+
+arr = []
+puts arr.empty?

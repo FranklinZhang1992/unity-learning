@@ -1,8 +1,0 @@
-require 'supernova/service'
-require 'hoard'
-require 'supernova/node/errors'
-require 'supernova/node/service'
-require 'supernova/node/config'
-require 'supernova/node/node'
-require 'supernova/node/local'
-require 'supernova/node/phantom'

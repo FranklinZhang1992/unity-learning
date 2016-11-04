@@ -155,12 +155,6 @@ class HtmlToXml
       }
     else
       xml_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      xml_str += "<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">\n"
-      xml_str += "<!--Copyright (C) 2007 Stratus Technologies Bermuda Ltd. All rights reserved-->\n"
-      xml_str += "<!--Confidential and proprietary.-->\n"
-      xml_str += "<properties>\n"
-      xml_str += "\t<!-- Note, AUTHORIZATION_FAILED is not an AuditType -->\n"
-      xml_str += "</properties>"
     end
 
     self.xml_content = begin Document.new(xml_str) rescue nil end

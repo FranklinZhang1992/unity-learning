@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ROOT_PATH=/tmp/spine
-$ROOT_PATH/sbin/setup.rb

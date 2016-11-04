@@ -1,5 +1,0 @@
-#!/bin/bash
-
-ROOT_PATH=/tmp/spine
-rm -rf $ROOT_PATH
-echo "clean spine finished"
