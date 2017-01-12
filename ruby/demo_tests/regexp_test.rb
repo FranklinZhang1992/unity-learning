@@ -232,9 +232,10 @@ def match_virtual_size(str)
   end
 end
 
-SCHEDULE_ID_REGEXP = Regexp.new('id = ([a-zA-z0-9\-]{36})')
-line = "* * * * * echo \"id = c2539a76-3f8a-4767-a87c-d4e8c0ab59f7\" >> /tmp/test.out"
-matched = SCHEDULE_ID_REGEXP.match(line)
-if matched
-  puts matched[1]
+def ignore_case
+  pattern = Regexp.new('abc', true)
+  p pattern.match("abc")
+  p pattern.match("ABC")
 end
+
+ignore_case
