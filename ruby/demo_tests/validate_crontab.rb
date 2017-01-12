@@ -110,53 +110,55 @@ class CrontabChecker < CrontabCheckerBase
             else
                 raise InvalidCrontabError, "unknown type for asterisk validate"
             end
-            raise InvalidCrontabError, "#{type} step field must not be smaller than #{min}" if step.to_i < min
-            raise InvalidCrontabError, "#{type} step field must not be greater than #{max}" if step.to_i > max
+            step = step.to_i
+            min = min <= 0 ? 1 : min
+            raise InvalidCrontabError, "#{type} step field must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "#{type} step field must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:minute] = lambda do |start, stop, step|
             puts "crontab field check for minute => start = #{start}, stop = #{stop}, step = #{step}"
             min = MINUTE_RANGE[:min]
             max = MINUTE_RANGE[:max]
-            raise InvalidCrontabError, "minute field #{start} must not be smaller than #{min}" if start.to_i < min
-            raise InvalidCrontabError, "minute field #{stop} must not be greater than #{max}" if stop.to_i > max unless stop.nil?
-            raise InvalidCrontabError, "minute field #{step} must not be smaller than #{min}" if step.to_i < min unless step.nil?
-            raise InvalidCrontabError, "minute field #{step} must not be greater than #{max}" if step.to_i > max unless step.nil?
+            raise InvalidCrontabError, "minute field #{start} must not be smaller than #{min}" if start < min
+            raise InvalidCrontabError, "minute field #{stop} must not be greater than #{max}" if stop > max
+            raise InvalidCrontabError, "minute field #{step} must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "minute field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:hour] = lambda do |start, stop, step|
             puts "crontab field check for hour => start = #{start}, stop = #{stop}, step = #{step}"
             min = HOUR_RANGE[:min]
             max = HOUR_RANGE[:max]
-            raise InvalidCrontabError, "hour field #{start} must not be smaller than #{min}" if start.to_i < min
-            raise InvalidCrontabError, "hour field #{stop} must not be greater than #{max}" if stop.to_i > max unless stop.nil?
-            raise InvalidCrontabError, "hour field #{step} must not be smaller than #{min}" if step.to_i < min unless step.nil?
-            raise InvalidCrontabError, "hour field #{step} must not be greater than #{max}" if step.to_i > max unless step.nil?
+            raise InvalidCrontabError, "hour field #{start} must not be smaller than #{min}" if start < min
+            raise InvalidCrontabError, "hour field #{stop} must not be greater than #{max}" if stop > max
+            raise InvalidCrontabError, "hour field #{step} must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "hour field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:day] = lambda do |start, stop, step|
             puts "crontab field check for day => start = #{start}, stop = #{stop}, step = #{step}"
             min = DAY_RANGE[:min]
             max = DAY_RANGE[:max]
-            raise InvalidCrontabError, "day of month field #{start} must not be smaller than #{min}" if start.to_i < min
-            raise InvalidCrontabError, "day of month field #{stop} must not be greater than #{max}" if stop.to_i > max unless stop.nil?
-            raise InvalidCrontabError, "day of month field #{step} must not be smaller than #{min}" if step.to_i < min unless step.nil?
-            raise InvalidCrontabError, "day of month field #{step} must not be greater than #{max}" if step.to_i > max unless step.nil?
+            raise InvalidCrontabError, "day of month field #{start} must not be smaller than #{min}" if start < min
+            raise InvalidCrontabError, "day of month field #{stop} must not be greater than #{max}" if stop > max
+            raise InvalidCrontabError, "day of month field #{step} must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "day of month field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:month] = lambda do |start, stop, step|
             puts "crontab field check for month => start = #{start}, stop = #{stop}, step = #{step}"
             min = MONTH_RANGE[:min]
             max = MONTH_RANGE[:max]
-            raise InvalidCrontabError, "month field #{start} must not be smaller than #{min}" if start.to_i < min
-            raise InvalidCrontabError, "month field #{stop} must not be greater than #{max}" if stop.to_i > max unless stop.nil?
-            raise InvalidCrontabError, "month field #{step} must not be smaller than #{min}" if step.to_i < min unless step.nil?
-            raise InvalidCrontabError, "month field #{step} must not be greater than #{max}" if step.to_i > max unless step.nil?
+            raise InvalidCrontabError, "month field #{start} must not be smaller than #{min}" if start < min
+            raise InvalidCrontabError, "month field #{stop} must not be greater than #{max}" if stop > max
+            raise InvalidCrontabError, "month field #{step} must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "month field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:weekday] = lambda do |start, stop, step|
             puts "crontab field check for weekday => start = #{start}, stop = #{stop}, step = #{step}"
             min = WEEKDAY_RANGE[:min]
             max = WEEKDAY_RANGE[:max]
-            raise InvalidCrontabError, "day of week field #{start} must not be smaller than #{min}" if start.to_i < min
-            raise InvalidCrontabError, "day of week field #{stop} must not be greater than #{max}" if stop.to_i > max unless stop.nil?
-            raise InvalidCrontabError, "day of week field #{step} must not be smaller than #{min}" if step.to_i < min unless step.nil?
-            raise InvalidCrontabError, "day of week field #{step} must not be greater than #{max}" if step.to_i > max unless step.nil?
+            raise InvalidCrontabError, "day of week field #{start} must not be smaller than #{min}" if start < min
+            raise InvalidCrontabError, "day of week field #{stop} must not be greater than #{max}" if stop > max
+            raise InvalidCrontabError, "day of week field #{step} must not be smaller than #{min}" if step < min
+            raise InvalidCrontabError, "day of week field #{step} must not be greater than #{max}" if step > max
         end
     end
 
@@ -175,6 +177,10 @@ class CrontabChecker < CrontabCheckerBase
                 start = matched[CRONTAB_FIELD_START_GROUP_NUM]
                 stop = matched[CRONTAB_FIELD_STOP_GROUP_NUM]
                 step = matched[CRONTAB_FIELD_STEP_GROUP_NUM]
+                start = start.to_i
+                stop = stop.nil? ? start : stop.to_i
+                step = step.nil? ? 1 : step.to_i
+                raise InvalidCrontabError, "#{symbol} stepping must be used with ranges or asterisk only" if step > 1 && start == stop
                 @crontab_field_checker_table[symbol].call(start, stop, step)
             else
                 raise InvalidCrontabError, "#{value} does not match #{symbol} pattern"
@@ -212,19 +218,23 @@ class CrontabChecker < CrontabCheckerBase
     end
 end
 
-begin
-    line = "* 1-12 1-31/5 * *" # correct
-    checker = CrontabChecker.new(line)
-    checker.show
-
-    line2 = "* 1-30 1-31/5 * *" # wrong
-    checker2 = CrontabChecker.new(line2)
-    checker2.show
-rescue Exception => err
-    case err
-    when RuntimeError
-        puts "[ERROR] #{err.message}"
-    else
-        raise
+test_crontab_str = lambda do |str|
+    begin
+        puts "====== test for #{str} ======"
+        checker = CrontabChecker.new(str)
+        checker.show
+    rescue Exception => err
+        case err
+        when RuntimeError
+            puts "[ERROR] #{err.message}"
+        else
+            detail = err.backtrace.join("\n")
+            puts "[ERROR] #{err.message} =>\n#{detail}"
+        end
+    ensure
+        puts "====== end ======"
     end
 end
+
+test_crontab_str.call("* 1-12 1-31/5 * *") # correct
+test_crontab_str.call("* 1-30 1-31/5 * *") # wrong
