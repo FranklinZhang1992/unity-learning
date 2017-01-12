@@ -36,6 +36,7 @@ class CrontabChecker < CrontabCheckerBase
     VALID_WEEKDAY = %w{sun mon tue wed thu fri sat}
     VALID_MONTH = %w{jan feb mar apr may jun jul aug sep oct nov dec}
     CRONTAB_ASTERISK_FIELD_REGEXP = Regexp.new('^(\*)(/(\d+))?$')
+    CRONTAB_COMMA_FIELD_REGEXP = Regexp.new('^(\d+,)+\d+$')
     CRONTAB_FIELD_REGEXP = Regexp.new('^(\d+)(-(\d+))?(/(\d+))?$')
     ASTERISK_FIELD_STEP_GROUP_NUM = 3
     CRONTAB_FIELD_START_GROUP_NUM = 1
@@ -87,7 +88,7 @@ class CrontabChecker < CrontabCheckerBase
     def init_crontab_field_checker
         @crontab_field_checker_table = Hash.new
         @crontab_field_checker_table[:asterisk] = lambda do |type, step|
-            puts "asterisk field check for #{type} => step = #{step}"
+            # puts "asterisk field check for #{type} => step = #{step}"
             return if step.nil?
             min = 0
             max = 0
@@ -116,7 +117,7 @@ class CrontabChecker < CrontabCheckerBase
             raise InvalidCrontabError, "#{type} step field must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:minute] = lambda do |start, stop, step|
-            puts "crontab field check for minute => start = #{start}, stop = #{stop}, step = #{step}"
+            # puts "crontab field check for minute => start = #{start}, stop = #{stop}, step = #{step}"
             min = MINUTE_RANGE[:min]
             max = MINUTE_RANGE[:max]
             raise InvalidCrontabError, "minute field #{start} must not be smaller than #{min}" if start < min
@@ -125,7 +126,7 @@ class CrontabChecker < CrontabCheckerBase
             raise InvalidCrontabError, "minute field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:hour] = lambda do |start, stop, step|
-            puts "crontab field check for hour => start = #{start}, stop = #{stop}, step = #{step}"
+            # puts "crontab field check for hour => start = #{start}, stop = #{stop}, step = #{step}"
             min = HOUR_RANGE[:min]
             max = HOUR_RANGE[:max]
             raise InvalidCrontabError, "hour field #{start} must not be smaller than #{min}" if start < min
@@ -134,7 +135,7 @@ class CrontabChecker < CrontabCheckerBase
             raise InvalidCrontabError, "hour field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:day] = lambda do |start, stop, step|
-            puts "crontab field check for day => start = #{start}, stop = #{stop}, step = #{step}"
+            # puts "crontab field check for day => start = #{start}, stop = #{stop}, step = #{step}"
             min = DAY_RANGE[:min]
             max = DAY_RANGE[:max]
             raise InvalidCrontabError, "day of month field #{start} must not be smaller than #{min}" if start < min
@@ -143,7 +144,7 @@ class CrontabChecker < CrontabCheckerBase
             raise InvalidCrontabError, "day of month field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:month] = lambda do |start, stop, step|
-            puts "crontab field check for month => start = #{start}, stop = #{stop}, step = #{step}"
+            # puts "crontab field check for month => start = #{start}, stop = #{stop}, step = #{step}"
             min = MONTH_RANGE[:min]
             max = MONTH_RANGE[:max]
             raise InvalidCrontabError, "month field #{start} must not be smaller than #{min}" if start < min
@@ -152,7 +153,7 @@ class CrontabChecker < CrontabCheckerBase
             raise InvalidCrontabError, "month field #{step} must not be greater than #{max}" if step > max
         end
         @crontab_field_checker_table[:weekday] = lambda do |start, stop, step|
-            puts "crontab field check for weekday => start = #{start}, stop = #{stop}, step = #{step}"
+            # puts "crontab field check for weekday => start = #{start}, stop = #{stop}, step = #{step}"
             min = WEEKDAY_RANGE[:min]
             max = WEEKDAY_RANGE[:max]
             raise InvalidCrontabError, "day of week field #{start} must not be smaller than #{min}" if start < min
@@ -163,11 +164,22 @@ class CrontabChecker < CrontabCheckerBase
     end
 
     def property_setter(symbol, value)
-        if value =~ /\*/
+        if value =~ /\*/ # Contains *
             matched = CRONTAB_ASTERISK_FIELD_REGEXP.match(value)
             if matched
                 step = matched[ASTERISK_FIELD_STEP_GROUP_NUM]
                 @crontab_field_checker_table[:asterisk].call(symbol, step)
+            else
+                raise InvalidCrontabError, "#{value} does not match #{symbol} pattern"
+            end
+        elsif value =~ /,/ # Contains ,
+            matched = CRONTAB_COMMA_FIELD_REGEXP.match(value)
+            if matched
+                field_strs = value.split(',')
+                field_strs.each do |field_str|
+                    num = field_str.to_i
+                    @crontab_field_checker_table[symbol].call(num, num, 1)
+                end
             else
                 raise InvalidCrontabError, "#{value} does not match #{symbol} pattern"
             end
@@ -220,7 +232,7 @@ end
 
 test_crontab_str = lambda do |str|
     begin
-        puts "====== test for #{str} ======"
+        puts "========================== test for #{str} ============================"
         checker = CrontabChecker.new(str)
         checker.show
     rescue Exception => err
@@ -232,9 +244,11 @@ test_crontab_str = lambda do |str|
             puts "[ERROR] #{err.message} =>\n#{detail}"
         end
     ensure
-        puts "====== end ======"
+        puts "================================= end ================================="
     end
 end
 
 test_crontab_str.call("* 1-12 1-31/5 * *") # correct
 test_crontab_str.call("* 1-30 1-31/5 * *") # wrong
+test_crontab_str.call("* 22,23 1-31/5 * *") # correct
+test_crontab_str.call("* 22,24 1-31/5 * *") # wrong
