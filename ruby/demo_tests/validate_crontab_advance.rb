@@ -217,7 +217,7 @@ test_crontab_str = lambda do |str, expect|
         checker.check_crontab_str(str)
     rescue Exception => err
         case err
-        when RuntimeError
+        when InvalidCrontabError
             puts "[ERROR] #{err.message}"
         else
             detail = err.backtrace.join("\n")
