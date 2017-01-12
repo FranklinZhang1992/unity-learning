@@ -252,3 +252,12 @@ test_crontab_str.call("* 1-12 1-31/5 * *") # correct
 test_crontab_str.call("* 1-30 1-31/5 * *") # wrong
 test_crontab_str.call("* 22,23 1-31/5 * *") # correct
 test_crontab_str.call("* 22,24 1-31/5 * *") # wrong
+test_crontab_str.call("-1 * * * *")        # wrong, out of range
+test_crontab_str.call("5/2 * * * *")       # correct
+test_crontab_str.call("0-30/10 * * * *")   # correct
+test_crontab_str.call("0-30-/10 * * * *")  # wrong
+test_crontab_str.call("0-30//10 * * * *")  # wrong
+test_crontab_str.call("0-30/2-10 * * * *")  # wrong
+test_crontab_str.call("0-30/2,10 * * * *")  # wrong
+test_crontab_str.call("0-30/2,10/5 * * * *")  # wrong
+test_crontab_str.call("10,4,8, * * * *")   # wrong
