@@ -355,7 +355,7 @@ class CommandHandler
 
     def handle(options)
         options = options.nil? ? {} : options
-        xml = Element.new('result', nil, {:raw => :all})
+        xml = Element.new('result')
         begin
             @trigger = options[:trigger]
             raise ArgumentError, "trigger is not specified" if @trigger.nil?
