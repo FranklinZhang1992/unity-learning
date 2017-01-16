@@ -2,7 +2,8 @@
 
 require 'set'
 require 'date'
-require 'optparse' 
+require 'optparse'
+require 'rexml/document'
 
 $options = {}
 
@@ -10,15 +11,15 @@ class InvalidCrontabError < RuntimeError ; end
 
 class AbstractCrontabField
     attr :field_str
-    attr :field_set
+    attr :field_arr
 
-    def initialize(field_str, field_set)
+    def initialize(field_str, field_arr)
         @field_str = field_str
-        case field_set
-        when Set
-            @field_set = field_set
+        case field_arr
+        when Array
+            @field_arr = field_arr
         else
-            raise ArgumentError, "invalid set is received"
+            raise ArgumentError, "invalid array is received"
         end
     end
 
@@ -31,8 +32,8 @@ class CrontabMinuteField < AbstractCrontabField
     MIN = 0
     MAX = 59
     FIELD = "minute"
-    def initialize(field_str, field_set)
-        super(field_str, field_set)
+    def initialize(field_str, field_arr)
+        super(field_str, field_arr)
     end
 end
 
@@ -40,8 +41,8 @@ class CrontabHourField < AbstractCrontabField
     MIN = 0
     MAX = 23
     FIELD = "hour"
-    def initialize(field_str, field_set)
-        super(field_str, field_set)
+    def initialize(field_str, field_arr)
+        super(field_str, field_arr)
     end
 end
 
@@ -49,8 +50,8 @@ class CrontabDayField < AbstractCrontabField
     MIN = 1
     MAX = 31
     FIELD = "day of month"
-    def initialize(field_str, field_set)
-        super(field_str, field_set)
+    def initialize(field_str, field_arr)
+        super(field_str, field_arr)
     end
 end
 
@@ -58,8 +59,8 @@ class CrontabMonthField < AbstractCrontabField
     MIN = 1
     MAX = 12
     FIELD = "month"
-    def initialize(field_str, field_set)
-        super(field_str, field_set)
+    def initialize(field_str, field_arr)
+        super(field_str, field_arr)
     end
 end
 
@@ -67,8 +68,8 @@ class CrontabWeekdayField < AbstractCrontabField
     MIN = 0
     MAX = 7
     FIELD = "day of week"
-    def initialize(field_str, field_set)
-        super(field_str, field_set)
+    def initialize(field_str, field_arr)
+        super(field_str, field_arr)
     end
 end
 
@@ -110,11 +111,7 @@ end
 
 class CrontabParser < CrontabParserBase
 
-    cron_attr :minute
-    cron_attr :hour
-    cron_attr :day
-    cron_attr :month
-    cron_attr :weekday
+    cron_attr :minute, :hour, :day, :month, :weekday
 
     MINUTE_INDEX = 0
     HOUR_INDEX = 1
@@ -157,12 +154,11 @@ class CrontabParser < CrontabParserBase
     end
 
     def property_setter(symbol, value)
-        puts "symbol = #{symbol}"
         min = get_field_class(symbol)::MIN
         max = get_field_class(symbol)::MAX
         max_range = min..max
         converted_value = value.gsub(/^\*/, "#{min}-#{max}")
-        field_set = converted_value.split(',').map do |sub_val|
+        field_arr = converted_value.split(',').map do |sub_val|
             matched = CRONTAB_FIELD_REGEXP.match(sub_val)
             if matched
                 start = matched[CRONTAB_FIELD_START_GROUP_NUM]
@@ -178,10 +174,9 @@ class CrontabParser < CrontabParserBase
             else
                 raise InvalidCrontabError, "invalid #{symbol} field => #{value}"
             end
-        end.flatten.sort.to_set
+        end.flatten.to_set.to_a.sort
 
-        p field_set
-        instance_variable_set("@#{symbol}", get_field_class(symbol).new(value, field_set))
+        instance_variable_set("@#{symbol}", get_field_class(symbol).new(value, field_arr))
     end
 
     def range_check(start, stop, step, max_range)
@@ -205,7 +200,7 @@ class CrontabParser < CrontabParserBase
     def next
         t = InternalTime.new(Time.now)
 
-        unless self.month.field_set.include?(t.month)
+        unless self.month.field_arr.include?(t.month)
             nudge_month(t)
             t.day = 0
         end
@@ -215,7 +210,7 @@ class CrontabParser < CrontabParserBase
             t.hour = -1
         end
 
-        unless self.hour.field_set.include?(t.hour)
+        unless self.hour.field_arr.include?(t.hour)
             nudge_hour(t)
             t.min = -1
         end
@@ -229,7 +224,7 @@ class CrontabParser < CrontabParserBase
     def last
         t = InternalTime.new(Time.now)
 
-        unless self.month.field_set.include?(t.month)
+        unless self.month.field_arr.include?(t.month)
             nudge_month(t, :last)
             t.day = 32
         end
@@ -239,7 +234,7 @@ class CrontabParser < CrontabParserBase
             t.hour = 24
         end
 
-        unless self.hour.field_set.include?(t.hour)
+        unless self.hour.field_arr.include?(t.hour)
             nudge_hour(t, :last)
             t.min = 60
         end
@@ -258,8 +253,8 @@ class CrontabParser < CrontabParserBase
 
     def interpolate_weekdays_without_cache(year, month)
         t = Date.new(year, month, 1)
-        valid_mday = self.day.field_set
-        valid_wday = self.weekday.field_set
+        valid_mday = self.day.field_arr
+        valid_wday = self.weekday.field_arr
 
         # Careful: crontabs may use either 0 or 7 for Sunday:
         valid_wday << 0 if valid_wday.include?(7)
@@ -278,9 +273,9 @@ class CrontabParser < CrontabParserBase
     end
 
     def nudge_month(t, dir = :next)
-        field_set = self.month.field_set
-        next_value = find_best_next(t.month, field_set, dir)
-        t.month = next_value || (dir == :next ? field_set.first : field_set.last)
+        field_arr = self.month.field_arr
+        next_value = find_best_next(t.month, field_arr, dir)
+        t.month = next_value || (dir == :next ? field_arr.first : field_arr.last)
 
         nudge_year(t, dir) if next_value.nil?
 
@@ -294,25 +289,25 @@ class CrontabParser < CrontabParserBase
     end
 
     def nudge_date(t, dir = :next, can_nudge_month = true)
-        field_set = interpolate_weekdays(t.year, t.month)
-        next_value = find_best_next(t.day, field_set, dir)
-        t.day = next_value || (dir == :next ? field_set.first : field_set.last)
+        field_arr = interpolate_weekdays(t.year, t.month)
+        next_value = find_best_next(t.day, field_arr, dir)
+        t.day = next_value || (dir == :next ? field_arr.first : field_arr.last)
 
         nudge_month(t, dir) if next_value.nil? && can_nudge_month
     end
 
     def nudge_hour(t, dir = :next)
-        field_set = self.hour.field_set
-        next_value = find_best_next(t.hour, field_set, dir)
-        t.hour = next_value || (dir == :next ? field_set.first : field_set.last)
+        field_arr = self.hour.field_arr
+        next_value = find_best_next(t.hour, field_arr, dir)
+        t.hour = next_value || (dir == :next ? field_arr.first : field_arr.last)
 
         nudge_date(t, dir) if next_value.nil?
     end
 
     def nudge_minute(t, dir = :next)
-        field_set = self.minute.field_set
-        next_value = find_best_next(t.min, field_set, dir)
-        t.min = next_value || (dir == :next ? field_set.first : field_set.last)
+        field_arr = self.minute.field_arr
+        next_value = find_best_next(t.min, field_arr, dir)
+        t.min = next_value || (dir == :next ? field_arr.first : field_arr.last)
 
         nudge_hour(t, dir) if next_value.nil?
     end
@@ -326,10 +321,68 @@ class CrontabParser < CrontabParserBase
             allowed.sort.reverse.find { |val| val < current }
         end
     end
+end
 
-    def show
-        puts "verify success"
-        # puts "minute = #{self.minute}, hour = #{self.hour}, day = #{self.day}, month = #{self.month}, weekday = #{self.weekday}"
+class CommandHandler
+    include REXML
+
+    def ignore_options
+        o = []
+        o << :trigger
+        o
+    end
+    private :ignore_options
+
+    def crontab_parser
+        @parser ||= CrontabParser.new(@trigger)
+    end
+    private :crontab_parser
+
+    def validate
+        crontab_parser
+        return "success"
+    rescue
+        raise
+    end
+
+    def next_run_time
+        crontab_parser.next
+    end
+
+    def last_run_time
+        crontab_parser.last
+    end
+
+    def handle(options)
+        options = options.nil? ? {} : options
+        xml = Element.new('result', nil, {:raw => :all})
+        begin
+            @trigger = options[:trigger]
+            raise ArgumentError, "trigger is not specified" if @trigger.nil?
+            options.each do |key, value|
+                next if ignore_options.include?(key)
+                raise ArgumentError, "no handler for #{key}" unless self.respond_to?(key)
+                result = nil
+                if value == true
+                    result = self.send(key)
+                else
+                    result = self.send(key, value)
+                end
+                xml.add_element("#{key}").add_text("#{result}")
+            end # end of options each
+            xml.attributes['status'] = "ok"
+        rescue Exception => err
+            xml.attributes['status'] = "error"
+            case err
+            when InvalidCrontabError
+                xml.add_element("message").add_text("#{err.message}")
+            else
+                detail = err.backtrace.join("\n")
+                xml.add_element("message").add_text("Internal error")
+                xml.add_element("detail").add_text("#{err.message}\n#{detail}")
+            end
+        end
+        xml
     end
 end
 
@@ -341,8 +394,8 @@ def init_opt_parser
     option_parser.separator ""
     option_parser.separator "Specific options:"
 
-    option_parser.on('--validate-only', 'only do the validation') do
-        $options[:validate_only] = true
+    option_parser.on('--validate', 'only do the validation') do
+        $options[:validate] = true
     end
 
     option_parser.on('--next-run-time', 'show next run time') do
@@ -370,18 +423,6 @@ end
 
 begin
     init_opt_parser
-    raise ArgumentError, "--trigger is not specified" if $options[:trigger].nil?
-    parser = nil
-    case
-    when $options[:validate_only]
-        parser = CrontabParser.new($options[:trigger])
-    when $options[:next_run_time]
-        parser = CrontabParser.new($options[:trigger])
-        puts parser.next
-    when $options[:last_run_time]
-        parser = CrontabParser.new($options[:trigger])
-        puts parser.last
-    end
-rescue Exception => e
-    raise
+    handler = CommandHandler.new
+    puts handler.handle($options)
 end
