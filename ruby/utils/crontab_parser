@@ -327,9 +327,9 @@ class CommandHandler
     include REXML
 
     def ignore_options
-        o = []
-        o << :trigger
-        o
+        options = []
+        options << :trigger
+        options
     end
     private :ignore_options
 
