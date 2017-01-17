@@ -19,3 +19,7 @@ p arr
 str = "0 1 2"
 arr = str.split(' ')
 p arr
+
+arr = ["1", "a", "c", 2, "a"]
+p arr
+p arr.uniq
