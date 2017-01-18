@@ -23,3 +23,9 @@ p arr
 arr = ["1", "a", "c", 2, "a"]
 p arr
 p arr.uniq
+
+arr1 = ["1", "a", "3"].sort
+arr2 = ["3", "1", "a"].sort
+
+eql = arr1.eql?(arr2)
+puts "arr1 == arr2 ? => #{eql}"
