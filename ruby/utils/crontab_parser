@@ -69,6 +69,13 @@ class CrontabWeekdayField < AbstractCrontabField
     MAX = 7
     FIELD = "day of week"
     def initialize(field_str, field_arr)
+        if field_arr.include?(7)
+            field_arr.delete(7)
+            unless field_arr.include?(0)
+                field_arr << 0
+                field_arr.sort!
+            end
+        end
         super(field_str, field_arr)
     end
 end
@@ -168,7 +175,7 @@ class CrontabParser < CrontabParserBase
                 stop = stop.nil? ? start : stop.to_i
                 step = step.nil? ? 1 : step.to_i
                 unless range_check(start, stop, step, max_range)
-                    raise raise InvalidCrontabError, "invalid #{symbol} field => #{value}"
+                    raise InvalidCrontabError, "invalid #{symbol} field => #{value}"
                 end
                 stepped_range(start..stop, step)
             else
@@ -221,30 +228,6 @@ class CrontabParser < CrontabParserBase
         t
     end
 
-    def last
-        t = InternalTime.new(Time.now)
-
-        unless self.month.field_arr.include?(t.month)
-            nudge_month(t, :last)
-            t.day = 32
-        end
-
-        if t.day == 32 || !interpolate_weekdays(t.year, t.month).include?(t.day)
-            nudge_date(t, :last)
-            t.hour = 24
-        end
-
-        unless self.hour.field_arr.include?(t.hour)
-            nudge_hour(t, :last)
-            t.min = 60
-        end
-
-        # always nudge the minute
-        nudge_minute(t, :last)
-        t = t.to_time
-        t
-    end
-
     # returns a list of days which do both match self.day or self.weekday
     def interpolate_weekdays(year, month)
         @_interpolate_weekdays_cache ||= {}
@@ -256,70 +239,59 @@ class CrontabParser < CrontabParserBase
         valid_mday = self.day.field_arr
         valid_wday = self.weekday.field_arr
 
-        # Careful: crontabs may use either 0 or 7 for Sunday:
-        valid_wday << 0 if valid_wday.include?(7)
-
         result = []
         while t.month == month
-            result << t.mday if valid_mday.include?(t.mday) || valid_wday.include?(t.wday)
+            result << t.mday if valid_mday.include?(t.mday) && valid_wday.include?(t.wday)
             t = t.succ
         end
 
-        result.to_set
+        result.uniq.sort
     end
 
-    def nudge_year(t, dir = :next)
-        t.year = t.year + (dir == :next ? 1 : -1)
+    def nudge_year(t)
+        t.year = t.year + 1
     end
 
-    def nudge_month(t, dir = :next)
+    def nudge_month(t, can_nudge_date=false)
+        orin_month = t.month
         field_arr = self.month.field_arr
-        next_value = find_best_next(t.month, field_arr, dir)
-        t.month = next_value || (dir == :next ? field_arr.first : field_arr.last)
+        next_value = find_best_next(t.month, field_arr)
 
-        nudge_year(t, dir) if next_value.nil?
+        t.month = next_value || field_arr.first
+        nudge_year(t) if next_value.nil?
 
         # we changed the month, so its likely that the date is incorrect now
-        valid_days = interpolate_weekdays(t.year, t.month)
-        t.day = dir == :next ? valid_days.first : valid_days.last
+        nudge_date(t) if can_nudge_date && orin_month != t.month
     end
 
-    def date_valid?(t, dir = :next)
-        interpolate_weekdays(t.year, t.month).include?(t.day)
-    end
-
-    def nudge_date(t, dir = :next, can_nudge_month = true)
+    def nudge_date(t)
         field_arr = interpolate_weekdays(t.year, t.month)
-        next_value = find_best_next(t.day, field_arr, dir)
-        t.day = next_value || (dir == :next ? field_arr.first : field_arr.last)
+        next_value = find_best_next(t.day, field_arr)
 
-        nudge_month(t, dir) if next_value.nil? && can_nudge_month
+        t.day = next_value || field_arr.first || t.day
+        nudge_month(t, true) if next_value.nil?
     end
 
-    def nudge_hour(t, dir = :next)
+    def nudge_hour(t)
         field_arr = self.hour.field_arr
-        next_value = find_best_next(t.hour, field_arr, dir)
-        t.hour = next_value || (dir == :next ? field_arr.first : field_arr.last)
+        next_value = find_best_next(t.hour, field_arr)
 
-        nudge_date(t, dir) if next_value.nil?
+        t.hour = next_value || field_arr.first
+        nudge_date(t) if next_value.nil?
     end
 
-    def nudge_minute(t, dir = :next)
+    def nudge_minute(t)
         field_arr = self.minute.field_arr
-        next_value = find_best_next(t.min, field_arr, dir)
-        t.min = next_value || (dir == :next ? field_arr.first : field_arr.last)
+        next_value = find_best_next(t.min, field_arr)
 
-        nudge_hour(t, dir) if next_value.nil?
+        t.min = next_value || field_arr.first
+        nudge_hour(t) if next_value.nil?
     end
 
     # returns the smallest element from allowed which is greater than current
     # returns nil if no matching value was found
-    def find_best_next(current, allowed, dir)
-        if dir == :next
-            allowed.sort.find { |val| val > current }
-        else
-            allowed.sort.reverse.find { |val| val < current }
-        end
+    def find_best_next(current, allowed)
+        allowed.sort.find { |val| val > current }
     end
 end
 
@@ -338,19 +310,21 @@ class CommandHandler
     end
     private :crontab_parser
 
-    def validate
-        crontab_parser
-        return "success"
-    rescue
-        raise
+    [:minute, :hour, :day, :month, :weekday].each do |param|
+        define_method("#{param}_handler") { crontab_parser.send("#{param}") }
     end
 
-    def next_run_time
+    def validate_handler
+        crontab_parser
+        return "success"
+    end
+
+    def next_run_time_handler
         crontab_parser.next
     end
 
-    def last_run_time
-        crontab_parser.last
+    def inspect_handler
+        "#{crontab_parser.minute} #{crontab_parser.hour} #{crontab_parser.day} #{crontab_parser.month} #{crontab_parser.weekday}"
     end
 
     def handle(options)
@@ -361,12 +335,13 @@ class CommandHandler
             raise ArgumentError, "trigger is not specified" if @trigger.nil?
             options.each do |key, value|
                 next if ignore_options.include?(key)
-                raise ArgumentError, "no handler for #{key}" unless self.respond_to?(key)
+                handler = "#{key}_handler"
+                raise ArgumentError, "no handler for #{key}" unless self.respond_to?(handler)
                 result = nil
-                if value == true
-                    result = self.send(key)
-                else
-                    result = self.send(key, value)
+                if value == true # this is a flag
+                    result = self.send(handler)
+                else # this is a option with value
+                    result = self.send(handler, value)
                 end
                 xml.add_element("#{key}").add_text("#{result}")
             end # end of options each
@@ -386,43 +361,61 @@ class CommandHandler
     end
 end
 
-def init_opt_parser
+def parse_args(argv)
+    options = {}
+
     option_parser = OptionParser.new
-    glb_help_msg = "This script is able to validate crontab and calc next run time and last run time\n"
+    glb_help_msg = "This script is able to validate crontab and calc next run time\n"
   
     option_parser.banner = glb_help_msg # Global help message
     option_parser.separator ""
     option_parser.separator "Specific options:"
 
     option_parser.on('--validate', 'only do the validation') do
-        $options[:validate] = true
+        options[:validate] = true
     end
 
     option_parser.on('--next-run-time', 'show next run time') do
-        $options[:next_run_time] = true
+        options[:next_run_time] = true
     end
 
-    option_parser.on('--last-run-time', 'show lst run time') do
-        $options[:last_run_time] = true
+    option_parser.on('--inspect', 'show trigger') do
+        options[:inspect] = true
+    end
+    option_parser.on('--minute', 'show minute part of the trigger') do
+        options[:minute] = true
+    end
+    option_parser.on('--hour', 'show hour part of the trigger') do
+        options[:hour] = true
+    end
+    option_parser.on('--day', 'show day part of the trigger') do
+        options[:day] = true
+    end
+    option_parser.on('--month', 'show month part of the trigger') do
+        options[:month] = true
+    end
+    option_parser.on('--weekday', 'show weekday part of the trigger') do
+        options[:weekday] = true
     end
 
-    option_parser.on('--trigger [trigger]', 'the crontab trigger') do |value|
-        $options[:trigger] = value
+    option_parser.on('--trigger=TRIGGER', 'the crontab trigger') do |value|
+        options[:trigger] = value
     end
 
     option_parser.separator ""
     option_parser.separator "Common options:"
   
-    option_parser.on('-h', '--help', '') do
+    option_parser.on('-h', '--help', 'show this help message and exit') do
         puts option_parser
         exit
     end
 
-    option_parser.parse(ARGV)
+    option_parser.parse(argv)
+    options
 end
 
 begin
-    init_opt_parser
+    options = parse_args(ARGV)
     handler = CommandHandler.new
-    puts handler.handle($options)
+    puts handler.handle(options)
 end
