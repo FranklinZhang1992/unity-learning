@@ -5,9 +5,17 @@ require 'date'
 require 'optparse'
 require 'rexml/document'
 
-$options = {}
+include REXML
 
-class InvalidCrontabError < RuntimeError ; end
+class InvalidCrontabError < RuntimeError
+    attr :key, :params
+
+    def initialize(default_msg, key, params=[])
+        super(default_msg)
+        @key = key
+        @params = params.nil? ? [] : params
+    end
+end
 
 class AbstractCrontabField
     attr :field_str
@@ -131,20 +139,21 @@ class CrontabParser < CrontabParserBase
     CRONTAB_FIELD_STOP_GROUP_NUM = 3
     CRONTAB_FIELD_STEP_GROUP_NUM = 5
 
-
     def initialize(str)
         case str
         when String
             fields = str.split(/\s+/)
             length = fields.length
-            raise InvalidCrontabError, "#{str} does not match crontab trigger pattern" unless length == 5
+            unless length == 5
+                raise InvalidCrontabError.new("#{str} is not a valid trigger", "INVALID_TRIGGER", [str])
+            end
             self.minute = fields[MINUTE_INDEX]
             self.hour = fields[HOUR_INDEX]
             self.day = fields[DAY_INDEX]
             self.month = fields[MONTH_INDEX]
             self.weekday = fields[WEEKDAY_INDEX]
         else
-            raise ArgumentError, "invalid string is received"
+            raise ArgumentError, "unknown type for CrontabParser"
         end
     end
 
@@ -175,11 +184,11 @@ class CrontabParser < CrontabParserBase
                 stop = stop.nil? ? start : stop.to_i
                 step = step.nil? ? 1 : step.to_i
                 unless range_check(start, stop, step, max_range)
-                    raise InvalidCrontabError, "invalid #{symbol} field => #{value}"
+                    raise InvalidCrontabError.new("invalid #{symbol} field => #{value}", "INVALID_FIELD", ["#{symbol}", "#{value}"])
                 end
                 stepped_range(start..stop, step)
             else
-                raise InvalidCrontabError, "invalid #{symbol} field => #{value}"
+                raise InvalidCrontabError.new("invalid #{symbol} field => #{value}", "INVALID_FIELD", ["#{symbol}", "#{value}"])
             end
         end.flatten.to_set.to_a.sort
 
@@ -252,24 +261,23 @@ class CrontabParser < CrontabParserBase
         t.year = t.year + 1
     end
 
-    def nudge_month(t, can_nudge_date=false)
-        orin_month = t.month
+    def nudge_month(t)
         field_arr = self.month.field_arr
         next_value = find_best_next(t.month, field_arr)
 
         t.month = next_value || field_arr.first
         nudge_year(t) if next_value.nil?
-
-        # we changed the month, so its likely that the date is incorrect now
-        nudge_date(t) if can_nudge_date && orin_month != t.month
     end
 
     def nudge_date(t)
         field_arr = interpolate_weekdays(t.year, t.month)
+        while field_arr.empty?
+            nudge_month(t)
+            field_arr = interpolate_weekdays(t.year, t.month)
+        end
         next_value = find_best_next(t.day, field_arr)
 
-        t.day = next_value || field_arr.first || t.day
-        nudge_month(t, true) if next_value.nil?
+        t.day = next_value || field_arr.first
     end
 
     def nudge_hour(t)
@@ -296,7 +304,6 @@ class CrontabParser < CrontabParserBase
 end
 
 class CommandHandler
-    include REXML
 
     def ignore_options
         options = []
@@ -330,33 +337,21 @@ class CommandHandler
     def handle(options)
         options = options.nil? ? {} : options
         xml = Element.new('result')
-        begin
-            @trigger = options[:trigger]
-            raise ArgumentError, "trigger is not specified" if @trigger.nil?
-            options.each do |key, value|
-                next if ignore_options.include?(key)
-                handler = "#{key}_handler"
-                raise ArgumentError, "no handler for #{key}" unless self.respond_to?(handler)
-                result = nil
-                if value == true # this is a flag
-                    result = self.send(handler)
-                else # this is a option with value
-                    result = self.send(handler, value)
-                end
-                xml.add_element("#{key}").add_text("#{result}")
-            end # end of options each
-            xml.attributes['status'] = "ok"
-        rescue Exception => err
-            xml.attributes['status'] = "error"
-            case err
-            when InvalidCrontabError
-                xml.add_element("message").add_text("#{err.message}")
-            else
-                detail = err.backtrace.join("\n")
-                xml.add_element("message").add_text("Internal error")
-                xml.add_element("detail").add_text("#{err.message}\n#{detail}")
+        @trigger = options[:trigger]
+        raise ArgumentError, "trigger is not specified" if @trigger.nil?
+        options.each do |key, value|
+            next if ignore_options.include?(key)
+            handler = "#{key}_handler"
+            raise ArgumentError, "no handler for #{key}" unless self.respond_to?(handler)
+            result = nil
+            if value == true # this is a flag
+                result = self.send(handler)
+            else # this is a option with value
+                result = self.send(handler, value)
             end
-        end
+            xml.add_element("#{key}").add_text("#{result}")
+        end # end of options each
+        xml.attributes['status'] = "ok"
         xml
     end
 end
@@ -418,4 +413,25 @@ begin
     options = parse_args(ARGV)
     handler = CommandHandler.new
     puts handler.handle(options)
+rescue => err
+    xml = Element.new('result')
+    xml.attributes['status'] = "error"
+    case err
+    when InvalidCrontabError
+        message = err.message
+        key = err.key
+        params = err.params
+        xml.add_element("message").add_text("#{message}")
+        xml.add_element("key").add_text("#{key}")
+        params_ele = Element.new('params')
+        params.each do |param|
+            params_ele.add_element("param").add_text("#{param}")
+        end
+        xml << params_ele
+    else
+        detail = err.backtrace.join("\n")
+        xml.add_element("message").add_text("Internal error")
+        xml.add_element("detail").add_text("#{err.message}\n#{detail}")
+    end
+    puts xml
 end
