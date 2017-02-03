@@ -285,7 +285,6 @@ class CrontabParser < CrontabParserBase
         else
             t.day = next_value
         end
-        # t.day = next_value || field_arr.first
     end
 
     def nudge_hour(t)
