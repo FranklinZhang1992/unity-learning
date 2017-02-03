@@ -77,6 +77,7 @@ class CrontabWeekdayField < AbstractCrontabField
     MAX = 7
     FIELD = "day of week"
     def initialize(field_str, field_arr)
+        super(field_str, field_arr)
         if field_arr.include?(7)
             field_arr.delete(7)
             unless field_arr.include?(0)
@@ -84,7 +85,6 @@ class CrontabWeekdayField < AbstractCrontabField
                 field_arr.sort!
             end
         end
-        super(field_str, field_arr)
     end
 end
 
@@ -273,11 +273,19 @@ class CrontabParser < CrontabParserBase
         field_arr = interpolate_weekdays(t.year, t.month)
         while field_arr.empty?
             nudge_month(t)
+            t.day = 0
             field_arr = interpolate_weekdays(t.year, t.month)
         end
         next_value = find_best_next(t.day, field_arr)
 
-        t.day = next_value || field_arr.first
+        if next_value.nil?
+            nudge_month(t)
+            t.day = 0
+            nudge_date(t)
+        else
+            t.day = next_value
+        end
+        # t.day = next_value || field_arr.first
     end
 
     def nudge_hour(t)
