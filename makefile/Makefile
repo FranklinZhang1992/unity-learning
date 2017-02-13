@@ -4,8 +4,8 @@ PROJECT_FOLDER := $(shell pwd)
 edit:
 	echo "base foler is $(PROJECT_FOLDER)"
 	scripts/test
-ifeq ($(JAVA_VERSION),'')
+  ifeq ($(JAVA_VERSION),'')
 	echo "not java-1.8"
-else
+  else
 	echo "java 1.8"
-endif
+  endif
