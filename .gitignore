@@ -11,7 +11,6 @@
 *.diff
 *.eml
 *.hi
-*.jar
 *.la
 *.lo
 *.o
