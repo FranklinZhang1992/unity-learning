@@ -1,0 +1,136 @@
+#!/usr/bin/ruby
+
+require 'logger'
+require 'optparse'
+require 'singleton'
+require 'digest/md5'
+require 'pathname'
+require 'fileutils'
+
+class CommandError < RuntimeError ; end
+
+class FileManager
+    include Singleton
+
+    def handle(options)
+        command = options[:command]
+        method = "command_#{command}"
+        self.send(method, options)
+    end
+
+    def get_md5(path)
+        return "#{Digest::MD5.hexdigest(File.read(path))}"
+    end
+
+    def command_install(options)
+        target = options[:target]
+        source = options[:file]
+        raise CommandError, "#{target} is not a file" unless File.file?(target)
+        raise CommandError, "#{source} is not a file" unless File.file?(source)
+        found_dir = nil
+        Pathname.new(target).ascend do |dir|
+            if File.directory?(dir)
+                found_dir = dir
+                break
+            end
+        end
+
+        bk_file = "#{found_dir}/#{File.basename(target)}.bk"
+        puts "backup #{target} to #{bk_file}"
+        FileUtils.cp(target, bk_file)
+        puts "replace #{target} with #{source}"
+        FileUtils.cp(source, target)
+    end
+
+    def command_recover(options)
+        type = options[:type]
+        recover_file = options[:file]
+        if recover_file
+            puts "recover with file #{recover_file}"
+        else
+            puts "recover with type #{type}"
+        end
+    end
+
+end
+
+class CommandHandler
+    include Singleton
+    attr :cmd_name
+
+    def initialize
+        @options = {}
+        @cmd_name = "file_replacer"
+    end
+
+    def define_file_option(opts)
+        opts.on("-f", "--file=FILE", "Specify the custom file path") do |value|
+            @options[:file] = value
+        end
+    end
+
+    def define_target_option(opts)
+        opts.on("-t", "--target=TARGET", "Specify the target file path") do |value|
+            @options[:target] = value
+        end
+    end
+
+    def parse(args)
+        return if args.nil? || args.empty?
+
+        global_help = "Usage: #{self.cmd_name} COMMAND [options]\n"
+        sub_help = "List of Commands:\n\n"
+        sub_help << "install:        Install file to target location and backup at the same folder\n"
+        sub_help << "recover:        Change file back to previous one\n"
+        sub_help << "\nSee '#{self.cmd_name} COMMAND --help' for more information on a specific command\n"
+
+        global = OptionParser.new do |opts|
+            opts.banner = global_help
+            opts.separator ""
+            opts.separator sub_help
+        end
+
+        sub_commands = {
+            "install" => OptionParser.new do |opts|
+                opts.banner = "Usage: install [options]"
+                define_file_option(opts)
+                define_target_option(opts)
+            end,
+            "recover" => OptionParser.new do |opts|
+                opts.banner = "Usage: recover [options]"
+                opts.on("-t", "--type=TYPE", "Specify the recover type (previous or default)") do |value|
+                    @options[:type] = value
+                end
+                define_file_option(opts)
+            end,
+        }
+
+        global.order!
+        command = args.shift
+        sub_cmd = sub_commands[command]
+        if sub_cmd.nil?
+            raise CommandError, "No such command: #{command}. Please use '#{self.cmd_name} --help'"
+        else
+            sub_cmd.order!
+        end
+
+        @options[:command] = command
+        @options
+    end
+end
+
+if __FILE__ == $0
+    begin
+        options = CommandHandler.instance.parse(ARGV)
+        FileManager.instance.handle(options)
+    rescue SystemExit => err
+        exit 0
+    rescue CommandError => err
+        puts "#{err}"
+        exit 1
+    rescue Exception => err
+        puts "Internal Error"
+        raise
+        exit 2
+    end
+end
