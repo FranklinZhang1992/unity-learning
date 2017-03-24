@@ -18,7 +18,11 @@ begin
 
     pkey = OpenSSL::PKey::RSA.new File.read key_file5
     cert = OpenSSL::X509::Certificate.new File.read cert_file5
-
+    puts pkey.inspect
+    puts "==============================="
+    puts cert.inspect
+    puts "==============================="
+    puts cert.to_text
 
     cmd1 = "openssl x509 -noout -modulus -in #{cert_file5} | openssl md5"
     cmd2 = "openssl rsa -noout -modulus -in #{key_file5} | openssl md5"
@@ -27,17 +31,17 @@ begin
     result1 = %x{#{cmd1}}
     result2 = %x{#{cmd2}}
     # result3 = %x{#{cmd3}}
-    puts "result1 => #{result1}"
-    puts "result2 => #{result2}"
+    # puts "result1 => #{result1}"
+    # puts "result2 => #{result2}"
     # puts "result3 => #{result3}"
 
     # puts "public?: #{pkey.public?}"
     # puts "private?: #{pkey.private?}"
-    if cert.verify pkey
-        puts "certificate verify succeed"
-    else
-        puts "certificate verify failed"
-    end
+    # if cert.verify pkey
+    #     puts "certificate verify succeed"
+    # else
+    #     puts "certificate verify failed"
+    # end
 rescue Exception => e
     raise
 end
