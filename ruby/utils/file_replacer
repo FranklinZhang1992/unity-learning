@@ -15,6 +15,7 @@ class FileManager
     def handle(options)
         command = options[:command]
         method = "command_#{command}"
+        raise CommandError, "no implementation for command #{command}" unless self.respond_to?(method.to_sym)
         self.send(method, options)
     end
 
@@ -22,11 +23,7 @@ class FileManager
         return "#{Digest::MD5.hexdigest(File.read(path))}"
     end
 
-    def command_install(options)
-        target = options[:target]
-        source = options[:file]
-        raise CommandError, "#{target} is not a file" unless File.file?(target)
-        raise CommandError, "#{source} is not a file" unless File.file?(source)
+    def bakcup(file)
         found_dir = nil
         Pathname.new(target).ascend do |dir|
             if File.directory?(dir)
@@ -34,6 +31,17 @@ class FileManager
                 break
             end
         end
+        bk_folder = "#{found_dir}/backup"
+        FileUtils.mkdir_p(bk_folder)
+        pattern = Regexp.new("#{bk_folder}/*.bk*")
+    end
+
+    def command_install(options)
+        target = options[:target]
+        source = options[:file]
+        raise CommandError, "#{target} is not a file" unless File.file?(target)
+        raise CommandError, "#{source} is not a file" unless File.file?(source)
+
 
         bk_file = "#{found_dir}/#{File.basename(target)}.bk"
         puts "backup #{target} to #{bk_file}"
