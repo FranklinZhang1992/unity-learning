@@ -25,7 +25,7 @@ class FileManager
 
     def bakcup(file)
         found_dir = nil
-        Pathname.new(target).ascend do |dir|
+        Pathname.new(file).ascend do |dir|
             if File.directory?(dir)
                 found_dir = dir
                 break
@@ -34,6 +34,7 @@ class FileManager
         bk_folder = "#{found_dir}/backup"
         FileUtils.mkdir_p(bk_folder)
         pattern = Regexp.new("#{bk_folder}/*.bk*")
+        Dir.glob("dir/glob/*") { |file|  }
     end
 
     def command_install(options)
