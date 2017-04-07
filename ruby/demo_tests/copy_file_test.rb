@@ -37,10 +37,9 @@ end
 
 begin
     test_dir = "/developer/test_pool"
-    test_file = "/developer/test"
     $base_name = "test"
-    copy(test_dir, test_file)
-    # copy(test_dir, test_file)
+    # copy(test_dir, $base_name)
+    puts get_latest_suffix(test_dir)
 rescue Exception => e
     raise
 end
