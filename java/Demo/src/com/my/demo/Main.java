@@ -1,103 +1,63 @@
 package com.my.demo;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
-    public static void writeTest(final String guid, final String result, final String content, int index) {
-        String dataFileName = "/developer/test_pool/" + guid;
-        Date now = new Date();
-        String message = "# Crontab execution history pool, created on " + now.toString() + "\n";
 
-        File dataFile = new File(dataFileName);
-        FileWriter fw = null;
-        if (!dataFile.exists()) {
-            try {
-                fw = new FileWriter(dataFileName);
-                fw.write(message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    fw.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+	public static void commonTest() {
+		List<String> list = new ArrayList<String>();
+		list.add(null);
+		list.add(null);
+		System.out.println(list.size());
+	}
 
-        try {
-            fw = new FileWriter(dataFileName, true);
-            String lineChar = "####################################\n";
-            String writtenContent = index + ". result:" + result + "\n" + "content:" + content + "\n" + "timestamp:"
-                    + new Date().getTime() + "\n" + lineChar;
-            fw.write(writtenContent);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        } finally {
-            try {
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	public static void multiWriteTest() {
+		writeTest("1");
+		writeTest("2");
+		writeTest("3");
+	}
 
-    public static void readFileByLines(String fileName) {
-        File file = new File(fileName);
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(file));
-            String tempString = null;
-            while ((tempString = reader.readLine()) != null) {
-                System.out.println(tempString);
-            }
+	public static void writeTest(String guid) {
+		String result = "SUCCESS";
+		String errorCode = "500";
+		WriteService.init();
+		int count = 2;
+		long startTime = System.currentTimeMillis();
+		for (int i = 0; i < count; i++) {
+			String defaultMessage = "default" + i;
+			WriteService.getInstance().write(guid, result, errorCode, defaultMessage, "a", "b", "c");
+		}
+		long endTime = System.currentTimeMillis();
+		long interval = (endTime - startTime) / 1000;
+		System.out.println(interval + "s");
+	}
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e1) {
-                }
-            }
-        }
-    }
+	public static void readTest() {
+		readTest(null);
+	}
 
-    public static void writeTest() {
-        String guid = "1122333";
-        String result = "success";
-        String content = "xxx 111 bbb" + new Date().toString();
-        int count = 10000;
-        long startTime = System.currentTimeMillis();
-        for (int i = 0; i < count; i++) {
-            writeTest(guid, result, content, i);
-        }
-        long endTime = System.currentTimeMillis();
-        long inteval = (endTime - startTime) / 1000;
-        System.out.println(inteval + "s");
-    }
+	public static void readTest(String guid) {
+		ReadService.init();
+		Map<String, List<Message>> result = ReadService.getInstance().read(guid);
+		for (String key : result.keySet()) {
+			System.out.println("key: " + key);
+			for (Message msg : result.get(key)) {
+				System.out.println("  Time: " + msg.getTimestemp());
+				System.out.println("    Result: " + msg.getResult());
+				System.out.println("    ErrorCode: " + msg.getErrorCode());
+				System.out.println("    DefaultMsg: " + msg.getDefaultMessage());
+				System.out.println("    Args: " + msg.getArgs());
+			}
+		}
+	}
 
-    private static void readTest() {
-        String guid = "1122333";
-        String dataFileName = "/developer/test_pool/" + guid;
-        long startTime = System.currentTimeMillis();
-        readFileByLines(dataFileName);
-        long endTime = System.currentTimeMillis();
-        long inteval = (endTime - startTime) / 1000;
-        System.out.println(inteval + "s");
-    }
+	public static void main(String[] args) {
+		// multiWriteTest();
+		readTest();
+		// commonTest();
 
-    public static void main(String[] args) {
-        // writeTest();
-
-        readTest();
-
-    }
+	}
 
 }
