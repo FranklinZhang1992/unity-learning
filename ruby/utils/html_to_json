@@ -1,0 +1,140 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+require 'singleton'
+require 'logger'
+require 'json'
+require 'set'
+require 'rexml/document'
+
+$stdout.sync = true
+$verbose = false
+
+class Logger
+    class Formatter
+        def call(severity, time, progname, msg)
+            "%s\n" % [msg2str(msg)]
+        end
+    end
+end
+
+def log
+    $logger ||= begin
+        Logger.new(STDOUT)
+    end
+    $logger.level = $verbose ? Logger::DEBUG : Logger::INFO
+    $logger
+end
+
+class CommandError < RuntimeError ; end
+
+class BaseHandler
+    include REXML
+
+    def initialize(options)
+        @options = options.nil? ? {} : options
+    end
+
+    def handle
+        raise CommandError, "No implementation for this command."
+    end
+
+    def extract_xml_slice_from_html
+
+    end
+
+end
+
+class HtmlToJsonHandler < BaseHandler
+
+    def handle
+        puts "xxx"
+    end
+end
+
+class CommandHandler
+    include Singleton
+
+    MANDATORY_OPTIONS = %w{--input --output}
+
+    def initialize
+        @options = {}
+    end
+
+    def parse(args)
+        return @options if args.nil? || args.empty?
+
+        received_opts = []
+        opt_parser = OptionParser.new do |opts|
+
+            help_msg = "This is a script for converting HTML file to json file"
+
+            opts.banner = help_msg
+            opts.separator ""
+            opts.separator "Specific options:"
+
+            opts.on('-i', '--input INPUT_FILE', 'The file to be converted, should be in HTML format') do |value|
+                @options[:input] = value
+                received_opts << "--input"
+            end
+            opts.on('-o', '--output OUTPUT_FILE', 'The file to be written') do |value|
+                @options[:output] = value
+                received_opts << "--output"
+            end
+            opts.on('-f' '--output-format FORMAT', 'The output format (default is json)') do |value|
+                @options[:output_format] = value
+                received_opts << "--output-format"
+            end
+        end
+
+        opt_parser.order!
+        mandatory_options_check(received_opts)
+        @options
+    end
+
+    def mandatory_options_check(received_opts)
+        MANDATORY_OPTIONS.each do |mandatory_opt|
+            raise CommandError, "Missing mandatory option #{mandatory_opt}" unless received_opts.include?(mandatory_opt)
+        end
+    end
+
+    HANDLE_CLASS_HASH = {
+        "json" => HtmlToJsonHandler
+    }
+
+    def upper_case(str)
+        str.gsub(/\b\w/) { $&.upcase }
+    end
+
+    def get_handle_class(output_format)
+        output_format = "json" if output_format.nil?
+        handle_class_name = "HtmlTo#{upper_case(output_format)}Handler"
+        HANDLE_CLASS_HASH[output_format]
+    end
+
+    def handle(options)
+        handle_class = get_handle_class(options[:output_format])
+        if handle_class.nil?
+            raise CommandError, "Unsupported output format #{options[:output_format]}"
+        else
+            handle_class.new(options).handle
+        end
+    end
+end
+
+if __FILE__ == $0
+    begin
+        options = CommandHandler.instance.parse(ARGV)
+        CommandHandler.instance.handle(options)
+    rescue SystemExit => err
+        exit(0)
+    rescue CommandError => err
+        log.error("#{err}")
+        exit(1)
+    rescue Exception => err
+        log.error("#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}")
+        exit(2)
+    else
+        exit(0)
+    end
+end
