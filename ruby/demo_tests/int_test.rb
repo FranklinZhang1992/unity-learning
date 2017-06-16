@@ -8,3 +8,10 @@ p num
 
 puts "num2 = #{num2}"
 puts "num3 = #{num3}"
+
+str = nil
+puts str.to_i
+str = ""
+puts str.to_i
+str = " "
+puts str.to_i

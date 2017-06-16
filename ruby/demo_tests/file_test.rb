@@ -46,5 +46,11 @@ require "fileutils"
     end
   end
 
-exist?("/tmp/test")
-exist?("/tmp/test_file")
+# exist?("/tmp/test")
+# exist?("/tmp/test_file")
+
+target = "temp"
+p File.file?(target)
+%x{touch #{target}}
+p File.file?(target)
+%x{rm -f #{target}}
