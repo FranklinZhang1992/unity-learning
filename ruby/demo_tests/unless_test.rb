@@ -4,10 +4,18 @@
 # puts "hello [nil][abc]" unless nil || str
 # puts "hello [nil][nil]" unless nil || nil
 
-unless true
-  puts "true"
+def conditionA
+    puts "conditionA"
+    false
 end
 
-unless false
-  puts "false"
+def condifitonB
+    puts "condifitonB"
+    true
+end
+
+puts "conditionA && condifitonB = #{conditionA && condifitonB}"
+
+unless conditionA && condifitonB
+    puts "unless"
 end

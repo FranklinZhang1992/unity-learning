@@ -31,8 +31,16 @@ class CommandError < RuntimeError ; end
 class BaseHandler
     include REXML
 
+    HTML_SLICE_BEGIN_FLAG = "<body>"
+    HTML_SLICE_END_FLAG = "</body>"
+    XML_VERSION_ENCODING = "<?xml version='1.0' encoding='utf-8'?>\n"
+
     def initialize(options)
         @options = options.nil? ? {} : options
+        @input_file_name = @options[:input]
+        @output_file_name = @options[:output]
+        raise CommandError, "No such file or directory #{@input_file_name}." \
+          unless File::exist?(@input_file_name)
     end
 
     def handle
@@ -41,14 +49,76 @@ class BaseHandler
 
     def extract_xml_slice_from_html
 
-    end
+        html_string = IO.read(@input_file_name)
 
+        ns = html_string.slice(/<html.*?>/im)
+
+        html_slice_begin_index = html_string.index(HTML_SLICE_BEGIN_FLAG)
+        raise CommandError, "The flag #{HTML_SLICE_BEGIN_FLAG} is not found." \
+          if html_slice_begin_index.nil?
+
+        html_slice_end_index = html_string.index(HTML_SLICE_END_FLAG)
+        raise CommandError, "The flag #{HTML_SLICE_END_FLAG} is not found." \
+          if html_slice_begin_index.nil?
+
+        html_slice_end_index += HTML_SLICE_END_FLAG.length
+        xml_string = XML_VERSION_ENCODING + html_string[(html_slice_begin_index...html_slice_end_index)]
+        ns.gsub!("html", HTML_SLICE_BEGIN_FLAG.delete("<>")) unless ns.nil?
+        xml_string.gsub!(HTML_SLICE_BEGIN_FLAG, ns) unless ns.nil?
+        return xml_doc = Document.new(xml_string)
+    end
 end
 
 class HtmlToJsonHandler < BaseHandler
 
     def handle
-        puts "xxx"
+        xml_doc = extract_xml_slice_from_html
+        hash = parse_xml_to_hash(xml_doc)
+        writing_to_file(hash)
+    end
+
+    def parse_xml_to_hash(xmldoc)
+
+        raise CommandError, "The xml DOC is empty!" if xmldoc.nil?
+        #get root element
+        root = xmldoc.root
+        dt_elememts = root.get_elements("//dt")
+        raise CommandError, "The dt elememts is not found." if dt_elememts.nil?
+
+        hash = Hash.new
+        dt_elememts.each do |dt_elememt|
+            dt_elememt_text = dt_elememt.text
+            next if dt_elememt_text.nil?
+            if !hash.nil? && hash.has_key?(dt_elememt_text)
+               log.warn("The key \"#{dt_elememt_text}\" is repeated.")
+            end
+
+            temp_elememt = dt_elememt.next_element
+            code_elements = temp_elememt.get_elements("./code") \
+              if !temp_elememt.nil? && temp_elememt.name == "dd"
+            code_elememt_text = get_elememt_text(code_elements[0]) unless code_elements.nil?
+            if code_elememt_text.nil? || code_elememt_text.empty?
+               log.warn("The value of the key \"#{dt_elememt_text}\" is not found.")
+               next
+            end
+
+            hash[dt_elememt_text] = code_elememt_text
+        end
+        return hash
+    end
+
+    def get_elememt_text(elememt)
+
+        return if elememt.nil?
+        elememt_text = elememt.to_s
+        return elememt_text.gsub("<code>", "").gsub("</code>", "").gsub("<code/>", "")
+    end
+
+    def writing_to_file(hash)
+
+        File.open(@output_file_name, "w+") do |f|
+           f.write(hash.to_json)
+        end
     end
 end
 
@@ -62,12 +132,13 @@ class CommandHandler
     end
 
     def parse(args)
-        return @options if args.nil? || args.empty?
+        raise CommandError, "No option is specified" if args.nil? || args.empty?
 
         received_opts = []
         opt_parser = OptionParser.new do |opts|
 
-            help_msg = "This is a script for converting HTML file to json file"
+            help_msg = "This is a script for converting HTML file to json file\
+                        \nUsage: i18n_helper.rb --input INPUT_FILE --output OUTPUT_FILE"
 
             opts.banner = help_msg
             opts.separator ""
@@ -81,9 +152,13 @@ class CommandHandler
                 @options[:output] = value
                 received_opts << "--output"
             end
-            opts.on('-f' '--output-format FORMAT', 'The output format (default is json)') do |value|
+            opts.on('-f', '--output-format FORMAT', 'The output format (default is json)') do |value|
                 @options[:output_format] = value
                 received_opts << "--output-format"
+            end
+            opts.on("-h", "--help", "Prints this help") do
+                puts opts
+                exit
             end
         end
 
