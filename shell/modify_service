@@ -1,0 +1,7 @@
+#!/bin/bash
+
+path=$1
+
+[ -f $path ] && {
+    sed -e "s/^Restart=on-failure/Restart=no/" -i ${path}
+}
