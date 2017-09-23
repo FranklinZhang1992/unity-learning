@@ -1,0 +1,579 @@
+#!/usr/bin/ruby
+
+require 'logger'
+require 'optparse'
+require 'singleton'
+require 'fileutils'
+require 'set'
+require 'tempfile'
+require 'json'
+require 'rexml/document'
+
+$stdout.sync = true
+$break_line_length = 60 # If the string's length is over 70, then we need to print the string in a new line
+
+module Process
+    class Status
+        def describe
+            str = ''
+            if signaled?
+                str << 'signal ' << termsig.to_s
+            elsif success?
+                str << 'success'
+            else
+                str << 'exit ' << exitstatus.to_s
+            end
+            str << ' (with core)' if coredump?
+            str
+        end
+    end
+end
+
+class Logger
+    class Formatter
+        def timestamp(time)
+            time.strftime('%m/%d %H:%M:%S.') + ('%06d' % [time.usec.to_s])
+        end
+        def call(severity, time, progname, message)
+            "%s %s %s\n" % [severity[0..0], timestamp(time), message]
+        end
+    end
+end
+
+def log
+    $logger ||= begin
+        Logger.new(STDOUT)
+    end
+    $logger.level = Logger::DEBUG
+    $logger
+end
+
+def print(msg)
+    puts msg
+end
+
+def trap_exit
+    ['HUP', 'QUIT', 'INT', 'TERM'].each do |signal|
+        trap(signal) { raise SystemExit.new(signal) }
+    end
+end
+
+def quit(signal)
+    $logger.close unless $logger.nil?
+    exit(signal)
+end
+
+#
+# Execute command silently, no output during command execution
+#
+def exec_sys_cmd_silently(cmd)
+    log.debug(">> #{cmd}")
+    output = %x{#{cmd} 2>&1}
+    raise CommandError, "#{cmd} failed, #{$?.describe}, #{output.strip}" unless $?.success?
+end
+
+#
+# Execute command verbosely, print output during command execution
+#
+def exec_sys_cmd_verbosely(cmd)
+    log.debug(">> #{cmd}")
+    IO.popen("#{cmd} 2>&1") do |io|
+      while line = io.gets
+        log.debug(line.chomp)
+      end
+    end
+    raise CommandError, "#{cmd} failed, #{$?.describe}, #{output.strip}" unless $?.success?
+end
+
+#
+# Execute system command and log the command
+#
+def exec_sys_cmd(cmd, verbose=false)
+    verbose ? exec_sys_cmd_verbosely(cmd) : exec_sys_cmd_silently(cmd)
+end
+
+class BaseError < RuntimeError ; end
+class RecordError < RuntimeError; end
+class StorageEngineError < BaseError ; end
+class FileMergerError < BaseError ; end
+class MainControllerError < BaseError ; end
+class CommandError < BaseError ; end
+
+class Object
+    def standard_timetamp(time=nil)
+        time = Time.now if time.nil?
+        time.strftime("%Y%m%d%H%M%S")
+    end
+end
+
+class Module
+
+    def artifact
+        class << self
+            def properties() const_get(:RecordProperties).clone rescue Set.new end
+        end
+        define_method(:id) {
+            id = instance_variable_get("@id")
+            if id.nil?
+                id = standard_timetamp
+                instance_variable_set("@id", id)
+            end
+            id
+        }
+        define_method(:topology) {
+            topo = Hash.new
+            self.class.properties.each do |property|
+                value = self.instance_variable_get("@#{property}")
+                topo[property.to_sym] = value
+            end
+            topo
+        }
+
+    end
+    def property(*symbols)
+        symbols.each do |symbol|
+            property_cfg(symbol)
+        end
+    end
+
+    def property_cfg(symbol)
+        properties = Set.new
+        begin
+            properties = const_get(:RecordProperties)
+        rescue NameError
+            properties = Set.new
+        end
+        unless const_defined?(:RecordProperties)
+            const_set(:RecordProperties, properties)
+        end
+        properties << symbol.to_sym
+
+        define_method(symbol) {
+            instance_variable_get("@#{symbol}")
+        }
+
+        define_method("#{symbol}=") { |value|
+            instance_variable_set("@#{symbol}", value)
+        }
+    end
+end
+
+class Record
+
+    include REXML
+
+    artifact
+
+    property :whitelist
+    property :blacklist
+    property :auditor
+    property :qual # true for qualified and false for unqualified
+
+    def initialize
+        self.qual = false
+    end
+
+    def qualified?
+        return qual == "true"
+    end
+
+    def to_xml
+        xml = Element.new("Record")
+        xml.attributes["id"] = self.id
+        topology.each do |key, value|
+            xml << Element.new("#{key}").add_text("#{value}")
+        end
+        xml
+    end
+
+    def to_json
+        record_hash = topology.clone
+        record_hash[:id] = self.id
+        JSON.generate(record_hash)
+    end
+
+    def to_s
+        str = "Record id=#{self.id}\n"
+        topology.each do |key, value|
+            str << "  #{key}:"
+            if "#{value}".length > $break_line_length
+                str << "\n    #{value}\n"
+            else
+                str << " #{value}\n"
+            end
+        end
+        str
+    end
+end
+
+class StorageEngine
+
+    DEFAULT_POOL = "~/appsanner_pool"
+
+    attr :pool
+
+    def initialize(pool)
+        if pool.nil?
+            setup_pool(DEFAULT_POOL)
+        else
+            setup_pool(pool)
+        end
+        @pool = pool
+    end
+
+    def setup_pool(dir)
+        unless File.exist?(dir)
+            log.debug("Initializing storage pool")
+            exec_sys_cmd("mkdir -p #{dir}")
+        end
+    end
+
+    def absolute_path(path)
+        raise StorageEngineError, "path is nil" if path.nil?
+        raise StorageEngineError, "path is an empty string" if path.to_s.length == 0
+        File.join(self.pool, path)
+    end 
+
+    def rename(oldpath, newpath)
+        File.rename(absolute_path(oldpath), absolute_path(newpath))
+    end
+
+    def store_property(object, property, dir)
+        value = object.instance_variable_get("@#{property}")
+        path = "#{dir}/#{property}"
+        temp_file = Tempfile.open("#{property}", absolute_path(dir))
+        begin
+            temp_file.puts value
+            temp_file.flush
+            FileUtils.cp(temp_file.path, absolute_path(path))
+        ensure
+            temp_file.close!
+        end
+    end
+
+    def load_property(object, property)
+        path = absolute_path("#{object.id}/#{property}")
+        old_value = object.instance_variable_get("@#{property}")
+        value = IO.read(path).chomp
+        object.instance_variable_set("@#{property}", value)
+    end
+
+    def record_exist?(id)
+        !id.nil? && File.exist?(absolute_path(id))
+    end
+
+    def inspect(id)
+        record = get_by_id(id)
+        raise StorageEngineError, "Failed to inspect, no record found by id #{id}" if record.nil?
+        print(record.to_s)
+    end
+
+    def inspect_all
+        records = get_all
+        records.each do |record|
+            print(record.to_s)
+        end
+    end
+
+    def get_by_id(id)
+        return nil if id.nil?
+
+        record = nil
+        if record_exist?(id)
+            record = Record.new
+            record.instance_variable_set("@id", id)
+            record.class.properties.each do |property|
+                load_property(record, property)
+            end
+        end
+        record
+    end
+
+    def get_all
+        records = []
+        Dir.glob(File.join(self.pool, "*")) do |dir|
+            next unless File.directory?(dir)
+            next if /\.TMP/ =~ dir
+            id = File.basename(dir)
+            record = get_by_id(id)
+            records << record unless record.nil?
+        end
+        records
+    end
+
+    def create(record)
+        log.debug("Creating directory for storing the record #{record.id}")
+
+        tmp_dir = "#{record.id}.TMP"
+        # Create a temp folder for the new record
+        FileUtils.mkdir_p(absolute_path(tmp_dir))
+
+        record.class.properties.each do |property|
+            store_property(record, property, tmp_dir)
+        end
+
+        # Rename the temp folder to its real name
+        rename(tmp_dir, record.id)
+
+        record
+    rescue
+        tmp_dir_abs_path = absolute_path(tmp_dir)
+        FileUtils.rm_rf(tmp_dir_abs_path) if File.exist?(tmp_dir_abs_path)
+        raise
+    end
+
+    def update(record)
+        raise StorageEngineError, "Cannot update a nil record" if record.nil?
+        old_record = get_by_id(record.id)
+        raise StorageEngineError, "No record found by id #{record.id}" if old_record.nil?
+        old_record.class.properties.each do |property|
+            next if old_record.instance_variable_get("@#{property}") == record.instance_variable_get("@#{property}")
+            store_property(record, property, record.id)
+        end
+        record
+    end
+
+    def delete(id)
+        abs_path = absolute_path(id)
+        FileUtils.rm_rf(abs_path) if File.exist?(abs_path)
+    end
+end
+
+class FileMerger
+
+    DEFAULT_IGNORE_LINE_NUM = 1
+
+    attr :base_content
+
+    def initialize
+        @base_content = Set.new
+    end
+
+    def push(content)
+        @base_content << content
+    end
+
+    def include?(content)
+        self.base_content.include?(content)
+    end
+
+    def cook_line(raw_line)
+        return nil if raw_line.nil?
+        cooked_line = raw_line.lstrip.rstrip
+        return nil if cooked_line.empty?
+        cooked_line
+    end
+
+    def load(file, ignore_line_num=DEFAULT_IGNORE_LINE_NUM)
+        raise FileMergerError, "Cannot load a non-exist file #{file}" unless !file.nil? && File.exist?(file)
+        line_num = 0
+        File.open(file, 'r') do |f|
+            while line = f.gets
+                line_num += 1
+                next unless line_num > ignore_line_num
+                cooked_line = cook_line(line)
+                next if cooked_line.nil? || include?(cooked_line)
+                push(cooked_line)
+            end
+        end
+    end
+
+    def inspect
+        base_content.to_a.join("\n")
+    end
+end
+
+class MainController
+
+    attr :config
+    def initialize(config)
+        init_config(config)
+
+        @auditor = self.config[:auditor]
+        @output_format = self.config[:output_format]
+        @output_location = self.config[:output_location]
+        @storage_engine = StorageEngine.new(self.config[:storage_pool])
+    end
+
+    def output_format_validation(output_format)
+        ["raw", "xml", "json"].include?(output_format) or raise MainControllerError, "Unsupported output format: #{output_format}"
+    end
+
+    def output_location_validation(output)
+        raise MainControllerError, "Output location #{output} does not exist" unless !output.nil? && File.exist?(output)
+    end
+
+    def init_config(config)
+        @config = config.nil? ? {} : config
+        self.config.each do |key, value|
+            validation_method = "#{value}_validation"
+            self.send(validation_method, self.config[key.to_sym]) if self.respond_to?(validation_method)
+        end
+    end
+
+    def storage_engine() @storage_engine end
+
+    def auditor
+        @auditor.nil? ? %x{whoami} : @auditor
+    end
+
+    def print_handler
+        handler = "print_to_#{@output_format}"
+        if self.respond_to?(handler)
+            return handler
+        else
+            raise MainControllerError, "Unimplemented output format #{@output_format}"
+        end
+    end
+
+    def get_unqual_records
+        records = storage_engine.get_all
+        qual_records = []
+        records.each do |record|
+            qual_records << record unless record.qualified?
+        end
+        qual_records
+    end
+
+    def get_qual_records
+        records = storage_engine.get_all
+        qual_records = []
+        records.each do |record|
+            qual_records << record if record.qualified?
+        end
+        qual_records
+    end
+
+    def sort_records(raw_records)
+        records = raw_records.clone
+        return records if records.size < 2
+        (records.size - 2).downto(0) do |i|
+            (0 .. i).each do |j|
+                records[j], records[j + 1] = records[j + 1], records[j] if records[j].id.to_i < records[j + 1].id.to_i
+            end
+        end
+        records
+    end
+
+    def scan(dir)
+        raise MainControllerError, "Invalid dir #{dir}" if dir.nil?
+        raise MainControllerError, "Cannot scan #{dir} as it does not exist" unless File.exist?(dir)
+        file_list = []
+        Dir.glob(File.join(dir, "*")) do |file|
+            next unless File.file?(file)
+            file_list << file
+        end
+        file_list
+    end
+
+    def output_to_file?
+        !@output_location.nil?
+    end
+
+    def write_to_file(path, content)
+        File.open(path, "w+") do |f|
+            f.puts content
+        end
+    end
+
+    def print_in_xml_format(record)
+        print(record.to_xml)
+    end
+
+    def print_in_json_format(record)
+        print(record.to_json)
+    end
+
+    def print_in_raw_format(record)
+        print(record.to_s)
+    end
+
+    def output(record)
+        raise MainControllerError, "Cannot output a non-exist record" if record.nil?
+        if output_to_file?
+            path = "#{@output_location}/#{record.id}"
+            exec_sys_cmd("mkdir -p #{path}")
+            write_to_file("#{path}/whitelist", record.whitelist)
+            write_to_file("#{path}/blacklist", record.blacklist)
+        else
+            self.send(print_handler, record)
+        end
+    end
+
+    def print_latest_unqual_list
+        sort_records(get_unqual_records).each do |r|
+            puts r.id
+        end
+    end
+
+    def print_latest_qual_list
+    end
+
+    def import(src_dir)
+        file_list = scan(src_dir)
+        file_merger = FileMerger.new
+        file_list.each do |file|
+            file_merger.load(file)
+        end
+        record = Record.new
+        record.whitelist = file_merger.inspect
+        record.auditor = auditor
+        storage_engine.create(record)
+    end
+
+    def check(dest_dir)
+    end
+end
+
+class CommandHandler
+    include Singleton
+
+
+end
+
+# if __FILE__ == $0
+#     begin
+#         options = CommandHandler.instance.parse(ARGV)
+#         CommandHandler.instance.handle(options)
+#     rescue SystemExit => err
+#         quit(0)
+#     rescue CommandError => err
+#         puts "#{err}"
+#         quit(1)
+#     rescue Exception => err
+#         if $verbose
+#             puts "#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}"
+#         else
+#             puts "#{err}"
+#         end
+#         quit(2)
+#     else
+#         quit(0)
+#     end
+# end
+
+def test
+    config = Hash.new
+    config[:storage_pool] = "/tmp/test_pool"
+    mc = MainController.new(config)
+    mc.import("/tmp/temp_files")
+end
+
+def test2
+    config = Hash.new
+    config[:storage_pool] = "/tmp/test_pool"
+    mc = MainController.new(config)
+    mc.print_latest_unqual_list
+
+end
+
+def test3
+    record = Record.new
+    record.whitelist = "white88888888888888888888888888888888888888888888888888888888888888888"
+    record.blacklist = "black"
+    record.auditor = "me"
+    # puts record.to_s
+    puts record.to_json
+end
+
+test3
