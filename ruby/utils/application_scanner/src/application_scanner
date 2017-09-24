@@ -659,10 +659,10 @@ class MainController
         end
 
         unless blacklist_apps.empty?
-            log.warn("#{File.basename(file)} contains blacklist application(s):\n  #{blacklist_apps.join(", ")}")
+            log.warn("[#{File.basename(file)}] contains blacklist application(s):\n  #{blacklist_apps.join(", ")}")
         end
         unless unqual_apps.empty?
-            log.warn("#{File.basename(file)} contains unqualified application(s):\n  #{unqual_apps.join(", ")}")
+            log.warn("[#{File.basename(file)}] contains unqualified application(s):\n  #{unqual_apps.join(", ")}")
         end
     end
 
