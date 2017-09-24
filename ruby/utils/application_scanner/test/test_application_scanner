@@ -4,6 +4,23 @@ SCRIPT_LOCATION = ARGV.shift
 
 class TestError < RuntimeError ; end
 
+module Process
+    class Status
+        def describe
+            str = ''
+            if signaled?
+                str << 'signal ' << termsig.to_s
+            elsif success?
+                str << 'success'
+            else
+                str << 'exit ' << exitstatus.to_s
+            end
+            str << ' (with core)' if coredump?
+            str
+        end
+    end
+end
+
 def trap_exit
     ['HUP', 'QUIT', 'INT', 'TERM'].each do |signal|
         trap(signal) { raise SystemExit.new(signal) }
@@ -18,6 +35,16 @@ class Test
     IMPORT_EXPORT_DIR = "#{TEST_BASE_DIR}/ix_dir"
     CHECK_DIR = "#{TEST_BASE_DIR}/check_dir"
 
+    def exec_sys_cmd(cmd)
+        puts ">> #{cmd}"
+        IO.popen("#{cmd} 2>&1") do |io|
+          while line = io.gets
+            puts line.chomp
+          end
+        end
+        raise TestError, "#{cmd} failed, #{$?.describe}" unless $?.success?
+    end
+
     def write_to_file(path, content)
         File.open(path, "w+") do |f|
             f.puts content
@@ -29,10 +56,41 @@ class Test
         %x{mkdir -p #{SCAN_DIR}}
         %x{mkdir -p #{IMPORT_EXPORT_DIR}}
         %x{mkdir -p #{CHECK_DIR}}
+
+        prepare_files_for_scan
+    end
+
+    def prepare_files_for_scan
+        content = <<EOT
+Name
+photoshop
+xxx
+
+poperpoint
+
+EOT
+        write_to_file("#{SCAN_DIR}/hostA", content)
+
+        content = <<EOT
+Name
+sublime
+word
+
+EOT
+        write_to_file("#{SCAN_DIR}/hostB", content)
+
+        content = <<EOT
+chrome
+sqlserver
+windows
+
+EOT
+        write_to_file("#{SCAN_DIR}/hostC", content)
     end
 
     def test_scan
-        puts "test_scan"
+        exec_sys_cmd("#{SCRIPT_LOCATION} scan --pool=#{STORAGE_POOL} --location=#{SCAN_DIR} -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} export --pool=#{STORAGE_POOL} -v")
     end
     def after
         %x{rm -rf #{TEST_BASE_DIR}}

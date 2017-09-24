@@ -1,5 +1,20 @@
 #!/usr/bin/ruby
 
+#
+# Examples:
+# 1) Scan a specified folder
+#   application_scanner scan --location=/tmp/scan_dir -v
+#
+# 2) Export the latest unqualified record to a directory
+#   application_scanner export --output-format=raw --output-type=file --output-location=/tmp -v
+#
+# 3) Import an edited record
+#   application_scanner import --location=/tmp/20170924215208 -v
+#
+# 4) Check a specified folder
+#   application_scanner check --location=/tmp/check_dir -v
+#
+
 require 'logger'
 require 'optparse'
 require 'singleton'
@@ -10,7 +25,6 @@ require 'json'
 require 'rexml/document'
 
 $stdout.sync = true
-$break_line_length = 60 # If the string's length is over 70, then we need to print the string in a new line
 $verbose = false
 
 module Process
@@ -78,32 +92,12 @@ def quit(signal)
 end
 
 #
-# Execute command silently, no output during command execution
+# Execute system command and log the command
 #
-def exec_sys_cmd_silently(cmd)
+def exec_sys_cmd(cmd)
     log.debug(">> #{cmd}")
     output = %x{#{cmd} 2>&1}
     raise CommandError, "#{cmd} failed, #{$?.describe}, #{output.strip}" unless $?.success?
-end
-
-#
-# Execute command verbosely, print output during command execution
-#
-def exec_sys_cmd_verbosely(cmd)
-    log.debug(">> #{cmd}")
-    IO.popen("#{cmd} 2>&1") do |io|
-      while line = io.gets
-        log.debug(line.chomp)
-      end
-    end
-    raise CommandError, "#{cmd} failed, #{$?.describe}, #{output.strip}" unless $?.success?
-end
-
-#
-# Execute system command and log the command
-#
-def exec_sys_cmd(cmd, verbose=false)
-    verbose ? exec_sys_cmd_verbosely(cmd) : exec_sys_cmd_silently(cmd)
 end
 
 class BaseError < RuntimeError ; end
@@ -192,13 +186,13 @@ class Record
     end
 
     def whitelist_array
-        self.whitelist.split('\n')
+        self.whitelist.split("\n")
     rescue
         []
     end
 
     def blacklist_array
-        self.blacklist.split('\n')
+        self.blacklist.split("\n")
     rescue
         []
     end
@@ -221,11 +215,10 @@ class Record
     def to_s
         str = "Record id=#{self.id}\n"
         topology.each do |key, value|
-            str << "  #{key}:"
-            if "#{value}".length > $break_line_length
-                str << "\n    #{value}\n"
-            else
-                str << " #{value}\n"
+            str << "  #{key}:\n"
+            value_array = begin value.split("\n") rescue [] end
+            value_array.each do |v|
+                str << "    #{v}\n"
             end
         end
         str
@@ -234,7 +227,7 @@ end
 
 class StorageEngine
 
-    DEFAULT_POOL = "~/appsanner_pool"
+    DEFAULT_POOL = "/tmp/appsanner_pool"
 
     attr :pool
 
@@ -377,7 +370,7 @@ class FileMerger
         if old_base.nil?
             @base_content = Set.new
         else
-            @base_content = Set.new(old_base.split('\n'))
+            @base_content = Set.new(old_base.split("\n"))
         end
     end
 
@@ -449,7 +442,7 @@ class MainController
         self.config[:export_latest] = true if self.config[:export_latest].nil?
         self.config[:output_type] = "stdout" if self.config[:output_type].nil?
         self.config[:output_format] = "raw" if self.config[:output_format].nil?
-        self.config[:auditor] = %{whoami}.chomp if self.config[:auditor].nil?
+        self.config[:auditor] = %x{whoami}.chomp if self.config[:auditor].nil?
 
         # Validate for each of the configurations
         self.config.each do |key, value|
@@ -528,7 +521,7 @@ class MainController
             while line = f.gets
                 cooked_line = cook_line(line)
                 next if cooked_line.nil?
-                content << cooked_line
+                content << line
             end
         end
         content
@@ -602,7 +595,11 @@ class MainController
     end
 
     def export
-        log.debug("Exporting to #{@output_location} in #{@output_format} format through #{@output_type}")
+        if @output_type == "stdout"
+            log.debug("Exporting to stdout in #{@output_format} format")
+        else
+            log.debug("Exporting to #{@output_location} in #{@output_format} format through #{@output_type}")
+        end
         if @export_qual
             export_qual_record
         else
@@ -645,13 +642,13 @@ class MainController
     end
 
     def judge_file(file, whitelist, blacklist)
-        file_content_array = begin IO.read(file).chomp.split('\n') rescue [] end
+        file_content_array = begin IO.read(file).chomp.split("\n") rescue [] end
         blacklist_apps = []
         unqual_apps = []
         line_num = 0
         file_content_array.each do |content_line|
             line_num += 1
-            cooked_line = cooked_line(content_line)
+            cooked_line = cook_line(content_line)
             next if cooked_line.nil? || line_num == 1 # Ignore the first line (The first line is the column name) and empty line
             next if whitelist.include?(cooked_line)
             if blacklist.include?(cooked_line)
@@ -714,7 +711,7 @@ class CommandHandler
                 opts.on("-a", "--auditor=AUDITOR", "Specify the auditor (default is your login username)") do |value|
                     @options[:auditor] = value
                 end
-                opts.on("-p", "--pool=POOL", "Specify the storage pool for all records (default is ~/appsanner_pool)") do |value|
+                opts.on("-p", "--pool=POOL", "Specify the storage pool for all records (default is /tmp/appsanner_pool)") do |value|
                     @options[:storage_pool] = value
                 end
                 opts.on("-v", "--[no-]verbose", "Run verbosely") do |value|
@@ -736,13 +733,13 @@ class CommandHandler
             end,
             "export" => common_options do |opts|
                 opts.banner = "Usage: export [options]"
-                opts.on("--output-format=OUTPUTFORMAT", "Specify the output format (default is raw)") do |value|
+                opts.on("--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
                     @options[:output_format] = value
                 end
-                opts.on("--output-type=OUTPUTTYPE", "Specify the output type (default is stdout)") do |value|
+                opts.on("--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
                     @options[:output_type] = value
                 end
-                opts.on("--output-location=OUTPUTLOCATION", "Specify the output location, the latest") do |value|
+                opts.on("--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
                     @options[:output_location] = value
                 end
                 opts.on("-q", "--[no-]qual", "Only export the qualified record (default is false)") do |value|
