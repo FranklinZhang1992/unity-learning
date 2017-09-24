@@ -43,7 +43,13 @@ end
 
 def log
     $logger ||= begin
-        Logger.new(STDOUT)
+        if $logfile
+            dir = File.dirname($logfile)
+            FileUtils.mkdir_p(dir)
+            Logger.new($logfile)
+        else
+            Logger.new(STDOUT)
+        end
     end
     $logger.level = $verbose ? Logger::DEBUG : Logger::INFO
     $logger
