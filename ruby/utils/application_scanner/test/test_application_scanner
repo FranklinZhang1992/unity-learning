@@ -1,0 +1,66 @@
+#!/usr/bin/ruby
+
+SCRIPT_LOCATION = ARGV.shift
+
+class TestError < RuntimeError ; end
+
+def trap_exit
+    ['HUP', 'QUIT', 'INT', 'TERM'].each do |signal|
+        trap(signal) { raise SystemExit.new(signal) }
+    end
+end
+
+class Test
+
+    TEST_BASE_DIR = "/tmp/test_app_scanner"
+    STORAGE_POOL = "#{TEST_BASE_DIR}/test_storage_pool"
+    SCAN_DIR = "#{TEST_BASE_DIR}/scan_dir"
+    IMPORT_EXPORT_DIR = "#{TEST_BASE_DIR}/ix_dir"
+    CHECK_DIR = "#{TEST_BASE_DIR}/check_dir"
+
+    def write_to_file(path, content)
+        File.open(path, "w+") do |f|
+            f.puts content
+        end
+    end
+
+    def before
+        %x{mkdir -p #{STORAGE_POOL}}
+        %x{mkdir -p #{SCAN_DIR}}
+        %x{mkdir -p #{IMPORT_EXPORT_DIR}}
+        %x{mkdir -p #{CHECK_DIR}}
+    end
+
+    def test_scan
+        puts "test_scan"
+    end
+    def after
+        %x{rm -rf #{TEST_BASE_DIR}}
+    end
+end
+
+if __FILE__ == $0
+    test = Test.new
+    begin
+        trap_exit
+        methods = test.methods
+        test.before if test.respond_to?(:before)
+        methods.each do |method|
+            next unless /test_/ =~ method
+            begin
+                test.send(method)
+            rescue TestError => err
+                puts "[Test fail] #{err}"
+            end
+        end
+    rescue SystemExit => err
+        exit 0
+    rescue Exception => err
+        puts "#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}"
+        exit 1
+    else
+        exit 0
+    ensure
+        test.after if test.respond_to?(:after)
+    end
+end
