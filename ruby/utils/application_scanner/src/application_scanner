@@ -926,13 +926,13 @@ class CommandHandler
             end,
             "export" => common_options do |opts|
                 opts.banner = "Usage: export [options]"
-                opts.on("--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
+                opts.on("-F", "--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
                     @options[:output_format] = value
                 end
-                opts.on("--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
+                opts.on("-T", "--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
                     @options[:output_type] = value
                 end
-                opts.on("--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
+                opts.on("-L", "--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
                     @options[:output_location] = value
                 end
                 opts.on("-q", "--[no-]qual", "Only export the qualified record (default is false)") do |value|
@@ -956,13 +956,13 @@ class CommandHandler
                 opts.on("-l", "--location=LOCATION", "Specify the check location") do |value|
                     @options[:location] = value
                 end
-                opts.on("--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
+                opts.on("-F", "--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
                     @options[:output_format] = value
                 end
-                opts.on("--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
+                opts.on("-T", "--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
                     @options[:output_type] = value
                 end
-                opts.on("--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
+                opts.on("-L", "--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
                     @options[:output_location] = value
                 end
             end,
