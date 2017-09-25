@@ -508,10 +508,6 @@ class MainController
         ["raw", "xml", "json"].include?(output_format) or raise MainControllerError, "Unsupported output format: #{output_format}"
     end
 
-    def output_location_validation(output_location)
-        raise MainControllerError, "Output location #{output} does not exist" unless !output_location.nil? && File.exist?(output_location)
-    end
-
     def output_type_validation(output_type)
         ["stdout", "file"].include?(output_type) or raise MainControllerError, "Unsupported output type: #{output_type}"
     end
@@ -533,6 +529,9 @@ class MainController
             validation_method = "#{value}_validation"
             self.send(validation_method, self.config[key.to_sym]) if self.respond_to?(validation_method)
         end
+
+        # Create output dir if the specified dir does not exist
+        exec_sys_cmd("mkdir -p #{self.config[:output_location]}") unless File.exist?(self.config[:output_location])
     end
 
     def storage_engine() @storage_engine end
