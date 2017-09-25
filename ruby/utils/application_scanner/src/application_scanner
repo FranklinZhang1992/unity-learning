@@ -102,6 +102,7 @@ end
 
 class BaseError < RuntimeError ; end
 class RecordError < BaseError; end
+class CheckResultError < BaseError; end
 class StorageEngineError < BaseError ; end
 class FileMergerError < BaseError ; end
 class MainControllerError < BaseError ; end
@@ -220,6 +221,84 @@ class Record
             value_array.each do |v|
                 str << "    #{v}\n"
             end
+        end
+        str
+    end
+end
+
+class CheckResult
+
+    include REXML
+
+    attr :fname
+    attr :blacklist_app_list
+    attr :unqual_app_list
+
+    def initialize(fname)
+        @fname = fname
+        @blacklist_app_list = []
+        @unqual_app_list = []
+    end
+
+    def push_to_blacklist_app_list(app)
+        @blacklist_app_list << app unless app.nil?
+    end
+
+    def push_to_unqual_app_list(app)
+        @unqual_app_list << app unless app.nil?
+    end
+
+    def blacklist_app_list
+        @blacklist_app_list.nil? ? [] : @blacklist_app_list
+    end
+
+    def blacklist_app_list=(value)
+        raise CheckResultError, "Only array is accepted" unless !value.nil? and value.is_a? Array
+        @blacklist_app_list = value
+    end
+
+    def unqual_app_list
+        @unqual_app_list.nil? ? [] : @unqual_app_list
+    end
+
+    def unqual_app_list=(value)
+        raise CheckResultError, "Only array is accepted" unless !value.nil? and value.is_a? Array
+        @unqual_app_list = value
+    end
+
+    def to_xml
+        xml = Element.new("CheckResult")
+        xml.attributes["file-name"] = self.fname
+        blacklist_app_xml = Element.new("blacklist-application")
+        blacklist_app_list.each do |blacklist_app|
+            blacklist_app_xml << Element.new("application").add_text(blacklist_app)
+        end
+        xml << blacklist_app_xml
+        unqual_app_xml = Element.new("unqualified-application")
+        unqual_app_list.each do |unqual_app|
+            unqual_app_xml << Element.new("application").add_text(unqual_app)
+        end
+        xml << unqual_app_xml
+        xml
+    end
+
+    def to_json
+        result_hash = Hash.new
+        result_hash["file-name"] = self.fname
+        result_hash["blacklist-application"] = blacklist_app_list
+        result_hash["unqualified-application"] = unqual_app_list
+        JSON.generate(result_hash)
+    end
+
+    def to_s
+        str = "File: #{self.fname}\n"
+        str << "  Blacklist application:\n" unless blacklist_app_list.empty?
+        blacklist_app_list.each do |blacklist_app|
+            str << "    #{blacklist_app}\n"
+        end
+        str << "  Unqualified application:\n" unless unqual_app_list.empty?
+        unqual_app_list.each do |unqual_app|
+            str << "    #{unqual_app}\n"
         end
         str
     end
@@ -411,9 +490,12 @@ class MainController
         @location = self.config[:location] # Used for import/scan
         @export_qual = self.config[:export_qual]
         @export_latest = self.config[:export_latest]
+        @show_qual = self.config[:show_qual]
+        @show_latest = self.config[:show_latest]
         @output_format = self.config[:output_format]
         @output_type = self.config[:output_type]
         @output_location = self.config[:output_location]
+        @record_id = self.config[:record_id]
         @storage_engine = StorageEngine.new(self.config[:storage_pool])
     end
 
@@ -440,6 +522,8 @@ class MainController
         # Set default values
         self.config[:export_qual] = false if self.config[:export_qual].nil?
         self.config[:export_latest] = true if self.config[:export_latest].nil?
+        self.config[:show_qual] = false if self.config[:show_qual].nil?
+        self.config[:show_latest] = true if self.config[:show_latest].nil?
         self.config[:output_type] = "stdout" if self.config[:output_type].nil?
         self.config[:output_format] = "raw" if self.config[:output_format].nil?
         self.config[:auditor] = %x{whoami}.chomp if self.config[:auditor].nil?
@@ -453,8 +537,8 @@ class MainController
 
     def storage_engine() @storage_engine end
 
-    def print_handler
-        handler = "print_in_#{@output_format}_format"
+    def print_record_handler
+        handler = "print_record_in_#{@output_format}_format"
         if self.respond_to?(handler)
             return handler
         else
@@ -462,8 +546,8 @@ class MainController
         end
     end
 
-    def write_handler
-        handler = "write_in_#{@output_format}_format"
+    def write_record_handler
+        handler = "write_record_in_#{@output_format}_format"
         if self.respond_to?(handler)
             return handler
         else
@@ -471,8 +555,8 @@ class MainController
         end
     end
 
-    def output_type_handler
-        handler = "output_to_#{@output_type}"
+    def output_record_to_type_handler
+        handler = "output_record_to_#{@output_type}"
         if self.respond_to?(handler)
             return handler
         else
@@ -527,27 +611,27 @@ class MainController
         content
     end
 
-    def output_to_stdout(record)
-        self.send(print_handler, record)
+    def output_record_to_stdout(record)
+        self.send(print_record_handler, record)
     end
 
-    def output_to_file(record)
-        self.send(write_handler, record)
+    def output_record_to_file(record)
+        self.send(write_record_handler, record)
     end
 
-    def write_in_xml_format(record)
+    def write_record_in_xml_format(record)
         path = "#{@output_location}/#{record.id}"
         write_to_file(path, record.to_xml)
         log.info("Record has been written to #{path}")
     end
 
-    def write_in_json_format(record)
+    def write_record_in_json_format(record)
         path = "#{@output_location}/#{record.id}"
         write_to_file(path, record.to_json)
         log.info("Record has been written to #{path}")
     end
 
-    def write_in_raw_format(record)
+    def write_record_in_raw_format(record)
         path = "#{@output_location}/#{record.id}"
         exec_sys_cmd("mkdir -p #{path}")
         write_to_file("#{path}/whitelist", record.whitelist)
@@ -555,30 +639,30 @@ class MainController
         log.info("Record has been written to #{path}")
     end
 
-    def print_in_xml_format(record)
+    def print_record_in_xml_format(record)
         print(record.to_xml)
     end
 
-    def print_in_json_format(record)
+    def print_record_in_json_format(record)
         print(record.to_json)
     end
 
-    def print_in_raw_format(record)
+    def print_record_in_raw_format(record)
         print(record.to_s)
     end
 
-    def output(record)
+    def output_record(record)
         raise MainControllerError, "Cannot output a non-exist record" if record.nil?
-        self.send(output_type_handler, record)
+        self.send(output_record_to_type_handler, record)
     end
 
     def export_unqual_record
         records = sort_records(get_unqual_records)
         if @export_latest
-            output(records.shift)
+            output_record(records.shift)
         else
             records.each do |record|
-                output(record)
+                output_record(record)
             end
         end
     end
@@ -586,10 +670,10 @@ class MainController
     def export_qual_record
         records = sort_records(get_qual_records)
         if @export_latest
-            output(records.shift)
+            output_record(records.shift)
         else
             records.each do |record|
-                output(record)
+                output_record(record)
             end
         end
     end
@@ -637,32 +721,29 @@ class MainController
         record.whitelist = read_file("#{@location}/whitelist")
         record.blacklist = read_file("#{@location}/blacklist")
         record.qual = "true"
+        record.auditor = @auditor
         storage_engine.update(record)
         log.info("Qualified record #{id} has been successfully imported")
     end
 
     def judge_file(file, whitelist, blacklist)
         file_content_array = begin IO.read(file).chomp.split("\n") rescue [] end
-        blacklist_apps = []
-        unqual_apps = []
+        check_result = CheckResult.new(File.basename(file))
         line_num = 0
         file_content_array.each do |content_line|
             line_num += 1
             cooked_line = cook_line(content_line)
-            next if cooked_line.nil? || line_num == 1 # Ignore the first line (The first line is the column name) and empty line
+            next if cooked_line.nil? || line_num <= 1 # Ignore the first line (The first line is the column name) and empty line
             next if whitelist.include?(cooked_line)
             if blacklist.include?(cooked_line)
-                blacklist_apps << cooked_line
+                check_result.push_to_blacklist_app_list(cooked_line)
             else
-                unqual_apps << cooked_line
+                check_result.push_to_unqual_app_list(cooked_line)
             end
         end
 
-        unless blacklist_apps.empty?
-            log.warn("[#{File.basename(file)}] contains blacklist application(s):\n  #{blacklist_apps.join(", ")}")
-        end
-        unless unqual_apps.empty?
-            log.warn("[#{File.basename(file)}] contains unqualified application(s):\n  #{unqual_apps.join(", ")}")
+        unless check_result.blacklist_app_list.empty? && check_result.unqual_app_list.empty?
+            output_check_result(check_result)
         end
     end
 
@@ -677,6 +758,117 @@ class MainController
             judge_file(file, whitelist, blacklist)
         end
         log.info("All files under #{@location} has been checked")
+    end
+
+    def output_check_result_to_type_handler
+        handler = "output_check_result_to_#{@output_type}"
+        if self.respond_to?(handler)
+            return handler
+        else
+            raise MainControllerError, "Unimplemented output type #{@output_type}"
+        end
+    end
+
+    def print_check_result_handler
+        handler = "print_check_result_in_#{@output_format}_format"
+        if self.respond_to?(handler)
+            return handler
+        else
+            raise MainControllerError, "Unimplemented output format #{@output_format}"
+        end
+    end
+
+    def write_check_result_handler
+        handler = "write_check_result_in_#{@output_format}_format"
+        if self.respond_to?(handler)
+            return handler
+        else
+            raise MainControllerError, "Unimplemented output format #{@output_format}"
+        end
+    end
+
+    def output_check_result(check_result)
+        self.send(output_check_result_to_type_handler, check_result)
+    end
+
+    def output_check_result_to_file(check_result)
+        self.send(write_check_result_handler, check_result)
+    end
+
+    def output_check_result_to_stdout(check_result)
+        self.send(print_check_result_handler, check_result)
+    end
+
+    def print_check_result_in_xml_format(check_result)
+        print(check_result.to_xml)
+    end
+
+    def print_check_result_in_json_format(check_result)
+        print(check_result.to_json)
+    end
+
+    def print_check_result_in_raw_format(check_result)
+        print(check_result.to_s)
+    end
+
+    def write_check_result_in_xml_format(check_result)
+        path = "#{@output_location}/#{check_result.fname}"
+        write_to_file(path, check_result.to_xml)
+        log.info("Check result has been written to #{path}")
+    end
+
+    def write_check_result_in_json_format(check_result)
+        path = "#{@output_location}/#{check_result.fname}"
+        write_to_file(path, check_result.to_json)
+        log.info("Check result has been written to #{path}")
+    end
+
+    def write_check_result_in_raw_format(check_result)
+        path = "#{@output_location}/#{check_result.fname}"
+        write_to_file(path, check_result.to_s)
+        log.info("Check result has been written to #{path}")
+    end
+
+    def show
+        if @show_qual
+            show_qual_record
+        else
+            show_unqual_record
+        end
+    end
+
+    def show_qual_record
+        records = sort_records(get_qual_records)
+        if @show_latest
+            latest_record = records.shift
+            unless latest_record.nil?
+                print(latest_record.id)
+            end
+        else
+            records.each do |record|
+                print(latest_record.id)
+            end
+        end
+    end
+
+    def show_unqual_record
+        records = sort_records(get_unqual_records)
+        if @show_latest
+            latest_record = records.shift
+            unless latest_record.nil?
+                print(latest_record.id)
+            end
+        else
+            records.each do |record|
+                print(latest_record.id)
+            end
+        end
+    end
+
+    def delete
+        log.debug("Deleting record #{@record_id}")
+        storage_engine.delete(@record_id)
+        log.info("Record #{@record_id} has been deleted")
     end
 end
 
@@ -698,6 +890,8 @@ class CommandHandler
         sub_help << "export:        Export record to a specified location for editing\n"
         sub_help << "scan:          Scan a specified directory and create a new record with both old and delta content\n"
         sub_help << "check:         Check a specified directory to find if there are invalid applications\n"
+        sub_help << "show:          Show stored record\n"
+        sub_help << "delete:        Delete a specified record\n"
         sub_help << "\nSee '#{self.cmd_name} COMMAND --help' for more information on a specific command\n"
 
         global = OptionParser.new do |opts|
@@ -708,9 +902,6 @@ class CommandHandler
 
         def common_options(&blk)
             OptionParser.new do |opts|
-                opts.on("-a", "--auditor=AUDITOR", "Specify the auditor (default is your login username)") do |value|
-                    @options[:auditor] = value
-                end
                 opts.on("-p", "--pool=POOL", "Specify the storage pool for all records (default is /tmp/appsanner_pool)") do |value|
                     @options[:storage_pool] = value
                 end
@@ -729,6 +920,9 @@ class CommandHandler
                 opts.banner = "Usage: import [options]"
                 opts.on("-l", "--location=LOCATION", "Specify the import location") do |value|
                     @options[:location] = value
+                end
+                opts.on("-a", "--auditor=AUDITOR", "Specify the auditor (default is your login username)") do |value|
+                    @options[:auditor] = value
                 end
             end,
             "export" => common_options do |opts|
@@ -754,11 +948,38 @@ class CommandHandler
                 opts.on("-l", "--location=LOCATION", "Specify the scan location") do |value|
                     @options[:location] = value
                 end
+                opts.on("-a", "--auditor=AUDITOR", "Specify the auditor (default is your login username)") do |value|
+                    @options[:auditor] = value
+                end
             end,
             "check" => common_options do |opts|
                 opts.banner = "Usage: check [options]"
                 opts.on("-l", "--location=LOCATION", "Specify the check location") do |value|
                     @options[:location] = value
+                end
+                opts.on("--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
+                    @options[:output_format] = value
+                end
+                opts.on("--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
+                    @options[:output_type] = value
+                end
+                opts.on("--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
+                    @options[:output_location] = value
+                end
+            end,
+            "show" => common_options do |opts|
+                opts.banner = "Usage: show [options]"
+                opts.on("-q", "--[no-]qual", "Only show the qualified record (default is false)") do |value|
+                    @options[:show_qual] = value
+                end
+                opts.on("-l", "--[no-]latest", "Only show the latest record (default is true)") do |value|
+                    @options[:show_latest] = value
+                end
+            end,
+            "delete" => common_options do |opts|
+                opts.banner = "Usage: delete [options]"
+                opts.on("-i", "--id=ID", "Specify the id of a record") do |value|
+                    @options[:record_id] = value
                 end
             end
         }
@@ -792,12 +1013,15 @@ if __FILE__ == $0
         CommandHandler.instance.handle(options)
     rescue SystemExit => err
         quit(0)
-    rescue BaseError => err
+    rescue OptionParser::InvalidOption => err
         log.error("#{err}")
         quit(1)
+    rescue BaseError => err
+        log.error("#{err}")
+        quit(2)
     rescue Exception => err
         log.error("#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}")
-        quit(2)
+        quit(3)
     else
         quit(0)
     end
