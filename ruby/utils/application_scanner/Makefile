@@ -9,7 +9,7 @@ default: build
 build:
 
 install:
-	cp SCRIPT_LOCATION /usr/bin/
+	cp $(SCRIPT_LOCATION) /usr/bin/
 
 test:
 	$(TEST_SCRIPT_LOCATION) $(SCRIPT_LOCATION)
