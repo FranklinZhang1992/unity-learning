@@ -73,6 +73,24 @@ def print(msg)
     puts msg
 end
 
+def get_file_encoding(file)
+    output = %x{file --mime-encoding #{file}}.chomp
+    regexp = Regexp.new("#{file}: (\\S+)")
+    matched = output.match(regexp)
+    encoding = matched[1] if matched
+end
+
+def read_file_with_encoding(file)
+    content = ""
+    File.open(file, "rb:#{get_file_encoding(file)}") do |f|
+        while line = f.gets
+            line = line.nil? ? nil : line.encode("UTF-8")
+            content << line
+        end
+    end
+    content
+end
+
 def cook_line(raw_line)
     return nil if raw_line.nil?
     cooked_line = raw_line.lstrip.rstrip
@@ -341,7 +359,7 @@ class StorageEngine
     def store_property(object, property, dir)
         value = object.instance_variable_get("@#{property}")
         path = "#{dir}/#{property}"
-        temp_file = Tempfile.open("#{property}", absolute_path(dir))
+        temp_file = Tempfile.new("#{property}", absolute_path(dir), :encoding => 'UTF-8')
         begin
             temp_file.puts value
             temp_file.flush
@@ -354,7 +372,7 @@ class StorageEngine
     def load_property(object, property)
         path = absolute_path("#{object.id}/#{property}")
         old_value = object.instance_variable_get("@#{property}")
-        value = begin IO.read(path).chomp rescue nil end
+        value = begin read_file_with_encoding(path).chomp rescue nil end
         object.instance_variable_set("@#{property}", value)
     end
 
@@ -464,8 +482,9 @@ class FileMerger
     def load(file, ignore_line_num=DEFAULT_IGNORE_LINE_NUM)
         raise FileMergerError, "Cannot load a non-exist file #{file}" unless !file.nil? && File.exist?(file)
         line_num = 0
-        File.open(file, 'r') do |f|
+        File.open(file, "rb:#{get_file_encoding(file)}") do |f|
             while line = f.gets
+                line = line.nil? ? nil : line.encode("UTF-8")
                 line_num += 1
                 next unless line_num > ignore_line_num
                 cooked_line = cook_line(line)
@@ -531,7 +550,8 @@ class MainController
         end
 
         # Create output dir if the specified dir does not exist
-        exec_sys_cmd("mkdir -p #{self.config[:output_location]}") unless File.exist?(self.config[:output_location])
+        output_location = self.config[:output_location]
+        exec_sys_cmd("mkdir -p #{output_location}") unless output_location.nil? || File.exist?(output_location)
     end
 
     def storage_engine() @storage_engine end
@@ -600,8 +620,9 @@ class MainController
 
     def read_file(path)
         content = ""
-        File.open(path, "r") do |f|
+        File.open(path, "rb:#{get_file_encoding(path)}") do |f|
             while line = f.gets
+                line = line.nil? ? nil : line.encode("UTF-8")
                 cooked_line = cook_line(line)
                 next if cooked_line.nil?
                 content << line
@@ -726,7 +747,7 @@ class MainController
     end
 
     def judge_file(file, whitelist, blacklist)
-        file_content_array = begin IO.read(file).chomp.split("\n") rescue [] end
+        file_content_array = begin read_file_with_encoding(file).chomp.split("\n") rescue [] end
         check_result = CheckResult.new(File.basename(file))
         line_num = 0
         file_content_array.each do |content_line|
@@ -926,13 +947,13 @@ class CommandHandler
             end,
             "export" => common_options do |opts|
                 opts.banner = "Usage: export [options]"
-                opts.on("-F", "--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
+                opts.on("-F", "--output-format=FORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
                     @options[:output_format] = value
                 end
-                opts.on("-T", "--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
+                opts.on("-T", "--output-type=TYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
                     @options[:output_type] = value
                 end
-                opts.on("-L", "--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
+                opts.on("-L", "--output-location=LOCATION", "Specify the output location") do |value|
                     @options[:output_location] = value
                 end
                 opts.on("-q", "--[no-]qual", "Only export the qualified record (default is false)") do |value|
@@ -956,13 +977,13 @@ class CommandHandler
                 opts.on("-l", "--location=LOCATION", "Specify the check location") do |value|
                     @options[:location] = value
                 end
-                opts.on("-F", "--output-format=OUTPUTFORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
+                opts.on("-F", "--output-format=FORMAT", "Specify the output format [raw, json, xml] (default is raw)") do |value|
                     @options[:output_format] = value
                 end
-                opts.on("-T", "--output-type=OUTPUTTYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
+                opts.on("-T", "--output-type=TYPE", "Specify the output type [stdout, file] (default is stdout)") do |value|
                     @options[:output_type] = value
                 end
-                opts.on("-L", "--output-location=OUTPUTLOCATION", "Specify the output location") do |value|
+                opts.on("-L", "--output-location=LOCATION", "Specify the output location") do |value|
                     @options[:output_location] = value
                 end
             end,
