@@ -435,7 +435,6 @@ class StorageEngine
 
     def load_property(record, property)
         path = absolute_path("#{record.id}/#{property}")
-        old_value = record.instance_variable_get("@#{property}")
         value = begin file_rw_manager.read(path).chomp rescue nil end
         record.instance_variable_set("@#{property}", value)
     end
