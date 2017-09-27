@@ -1,6 +1,30 @@
 #!/usr/bin/ruby
 
 #
+# This script aims to scan multi files under a specified folder and find if some files contain
+# blacklist applications or unqualified applications. If you want to check a plenty of files under a
+# specified directory, you need to make sure if current storage poll contains at least one qualified
+# record. Below is a complete check process:
+#
+# 1) Use the 'scan' sub-command to scan a directory to generate an unqualified record in storage pool.
+#
+# 2) Use the 'export' sub-command to export this record to a directory (A folder named as 201709271352
+#    will appear under the folder you specified).
+#
+# 3) Manually modify the whitelist file under the exported directory to delete some applications which
+#    you think does not meet your requiredment and paste them to the blacklist file.
+#    (Notice: The parent folder's name 201709271352 must not be changed)
+#
+# 4) Use the 'import' sub-command to import the 201709271352 folder into storage pool, this command will
+#    update the whitelist and blacklist of the record and mark this record as qualified. Now you have 
+#    one qualified record and you can use it as a standard and check other files.
+#
+# 5) Use the 'check' sub-command to check multi files under another specified folder, thie command will
+#    show you which file contain blacklist applications or unqualifed applications.
+#    (Notice: If you find unqualified applications in the check result, this means you need to re-do the
+#    steps from #1 to genrate a new qualified record for checking)
+#
+#
 # Examples:
 # 1) Scan a specified folder
 #   application_scanner scan --location=/tmp/scan_dir -v
@@ -35,8 +59,6 @@ class CheckResultError < BaseError; end
 class StorageEngineError < BaseError ; end
 class FileMergerError < BaseError ; end
 class OutputHandlerBaseError < BaseError ; end
-class RecordOutputHandlerError < BaseError ; end
-class CheckResultOutputHandlerError < BaseError ; end
 class MainControllerError < BaseError ; end
 class CommandError < BaseError ; end
 
@@ -739,10 +761,14 @@ class MainController
         end
 
         if check_result.has_blacklist_app? || check_result.has_unqual_app?
-            check_result_output_handler = CheckResultOutputHandlerError.new(@output_type, @output_format, @output_location)
+            check_result_output_handler = CheckResultOutputHandler.new(@output_type, @output_format, @output_location)
             check_result_output_handler.output(check_result)
         end
     end
+
+    ###########################
+    # Command handler methods #
+    ###########################
 
     #
     # Command handler: import
@@ -994,7 +1020,7 @@ if __FILE__ == $0
         log.error("#{err}")
         quit(1)
     rescue BaseError => err
-        log.error("#{err}")
+        log.error("[#{err.class}] #{err}")
         quit(2)
     rescue Exception => err
         log.error("#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}")
