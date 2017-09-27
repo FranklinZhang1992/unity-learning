@@ -1,5 +1,9 @@
 #!/usr/bin/ruby
 
+require 'pathname'
+require 'tempfile'
+require 'set'
+
 SCRIPT_LOCATION = ARGV.shift
 
 class TestError < RuntimeError ; end
@@ -27,6 +31,84 @@ def trap_exit
     end
 end
 
+#
+# Copied from application_scanner
+#
+class FileRWManager
+
+    DEFAULT_ENCODING = "UTF-8"
+
+    def initialize(encoding=nil)
+        if encoding.nil?
+            @encoding = DEFAULT_ENCODING
+        else
+            Encoding.find(encoding)
+            @encoding = encoding
+        end
+    end
+
+    #
+    # # Lstrip, Rstrip for the line, return nil if this is an empty line
+    #
+    def cook_line(raw_line)
+        return nil if raw_line.nil?
+        cooked_line = raw_line.lstrip.rstrip
+        return nil if cooked_line.empty?
+        cooked_line
+    end
+
+    #
+    # Return the file's encoding
+    #
+    def file_encoding(file)
+        output = %x{file --mime-encoding #{file} 2>&1}.chomp
+        regexp = Regexp.new("#{file}: (\\S+)")
+        matched = output.match(regexp)
+        encoding = matched[1] if matched
+        encoding = begin Encoding.find(encoding) rescue nil end
+    end
+
+    #
+    # Open a file and read it line by line (non-empty line's encoding will be converted to UTF-8)
+    #
+    def open(file, &blk)
+        encoding = file_encoding(file)
+        mode = encoding.nil? ? "r" : "rb:#{encoding}"
+        File.open(file, "#{mode}") do |f|
+            while line = f.gets
+                line = line.nil? ? nil : cook_line(line.encode(@encoding))
+                blk.call(line)
+            end
+        end
+    end
+
+    #
+    # Read whole file (Empty line and duplicate line will be ignored automatically)
+    #
+    def read(file)
+        content_set = Set.new
+        open(file) do |line|
+            next if line.nil?
+            content_set << "#{line}"
+        end
+        content_set.to_a.join("\n")
+    end
+
+    #
+    # Write content to a file with encoding UTF-8
+    #
+    def write(file, content)
+        temp_file = Tempfile.new("#{File.basename(file)}", Pathname.new(File.dirname(file)).realpath, :encoding => @encoding)
+        begin
+            temp_file.puts content
+            temp_file.flush
+            FileUtils.cp(temp_file.path, file)
+        ensure
+            temp_file.close!
+        end
+    end
+end
+
 class Test
 
     TEST_BASE_DIR = "/tmp/test_app_scanner"
@@ -34,6 +116,10 @@ class Test
     SCAN_DIR = "#{TEST_BASE_DIR}/scan_dir"
     IMPORT_EXPORT_DIR = "#{TEST_BASE_DIR}/ix_dir"
     CHECK_DIR = "#{TEST_BASE_DIR}/check_dir"
+
+    def initialize
+        @file_rw_manager = FileRWManager.new
+    end
 
     def exec_sys_cmd(cmd)
         puts ">> #{cmd}"
@@ -45,13 +131,8 @@ class Test
         raise TestError, "#{cmd} failed, #{$?.describe}" unless $?.success?
     end
 
-    def write_to_file(path, content)
-        File.open(path, "w+") do |f|
-            f.puts content
-        end
-    end
-
     def before
+        %x{rm -rf #{TEST_BASE_DIR}} if File.exist?(TEST_BASE_DIR)
         %x{mkdir -p #{STORAGE_POOL}}
         %x{mkdir -p #{SCAN_DIR}}
         %x{mkdir -p #{IMPORT_EXPORT_DIR}}
@@ -63,35 +144,121 @@ class Test
     def prepare_files_for_scan
         content = <<EOT
 Name
-photoshop
-xxx
+Cisco ASDM Launcher
+Skype for Business Web App Plug-in
+Windows Live 软件包
+Windows Live Messenger
+Apple 应用程序支持
 
-poperpoint
+照片库
+微软设备健康助手
+ASUS Power4Gear Hybrid
+7-Zip 9.20Windows Live UX Platform
+ASUS VivoBook
 
+Windows Live UX Platform
+ASUS VivoBook
+Adobe Reader X (10.1.16) MUI
+ASUS Smart Gesture
+Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161
+Skype(TM) 7.16
 EOT
-        write_to_file("#{SCAN_DIR}/hostA", content)
+        @file_rw_manager.write("#{SCAN_DIR}/hostA", content)
 
         content = <<EOT
 Name
-sublime
-word
+Cisco ASDM Launcher
+Skype for Business Web App Plug-in
+Windows Live 软件包
+Windows Live Messenger
+Apple 应用程序支持
+照片库
+微软设备健康助手
+ASUS Power4Gear Hybrid
 
+Skype(TM) 7.16
 EOT
-        write_to_file("#{SCAN_DIR}/hostB", content)
+        @file_rw_manager.write("#{SCAN_DIR}/hostB", content)
 
         content = <<EOT
-chrome
-sqlserver
-windows
-
+Name
+Cisco ASDM Launcher
+ASUS Smart Gesture
+Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161
+照片库
 EOT
-        write_to_file("#{SCAN_DIR}/hostC", content)
+        @file_rw_manager.write("#{SCAN_DIR}/hostC", content)
     end
 
-    def test_scan
-        exec_sys_cmd("#{SCRIPT_LOCATION} scan --pool=#{STORAGE_POOL} --location=#{SCAN_DIR} -v")
-        exec_sys_cmd("#{SCRIPT_LOCATION} export --pool=#{STORAGE_POOL} -v")
+    def whitelist_apps
+        content = <<EOT
+Cisco ASDM Launcher
+Skype for Business Web App Plug-in
+Windows Live 软件包
+Windows Live Messenger
+Apple 应用程序支持
+照片库
+
+ASUS Power4Gear Hybrid
+7-Zip 9.20Windows Live UX Platform
+
+Windows Live UX Platform
+Adobe Reader X (10.1.16) MUI
+Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161
+EOT
+    content
     end
+
+    def blacklist_apps
+        content = <<EOT
+ASUS VivoBook
+ASUS Smart Gesture
+微软设备健康助手
+EOT
+    content
+    end
+
+    def find_record(dir)
+        record = nil
+        Dir.glob(File.join(IMPORT_EXPORT_DIR, "*")).each do |f|
+            if /[0-9]{14}/ =~ File.basename(f)
+                record = f
+                break
+            end
+        end
+        record
+    end
+
+    def test_complte_process
+        puts "==================== Test Complete process begin ====================="
+        exec_sys_cmd("#{SCRIPT_LOCATION} scan --pool=#{STORAGE_POOL} -l #{SCAN_DIR} -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} export --pool=#{STORAGE_POOL} -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} export --pool=#{STORAGE_POOL} -T file -L #{IMPORT_EXPORT_DIR} -v")
+        record_file = find_record(IMPORT_EXPORT_DIR)
+        raise TestError, "No record is exported" if record_file.nil?
+        @file_rw_manager.write("#{record_file}/whitelist", whitelist_apps)
+        @file_rw_manager.write("#{record_file}/blacklist", blacklist_apps)
+        exec_sys_cmd("#{SCRIPT_LOCATION} import --pool=#{STORAGE_POOL} -l #{record_file} -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} export --pool=#{STORAGE_POOL} -q -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} check --pool=#{STORAGE_POOL} -l #{SCAN_DIR} -v")
+        exec_sys_cmd("#{SCRIPT_LOCATION} check --pool=#{STORAGE_POOL} -l #{SCAN_DIR} -T file -L #{CHECK_DIR} -v")
+        puts "Below files contain the check result:"
+        Dir.glob(File.join(CHECK_DIR, "*")).each do |f|
+            puts "  #{File.basename(f)}"
+        end
+        puts "Below are details:"
+        Dir.glob(File.join(CHECK_DIR, "*")).each do |f|
+            puts "##### #{File.basename(f)} ################################"
+            puts @file_rw_manager.read(f).chomp
+            end_mark = ""
+            for i in 0..."#{File.basename(f)}".length do
+                end_mark << "#"
+            end
+            puts "##### #{end_mark} ################################"
+        end
+        puts "============================== Test end =============================="
+    end
+
     def after
         %x{rm -rf #{TEST_BASE_DIR}}
     end
@@ -113,9 +280,12 @@ if __FILE__ == $0
         end
     rescue SystemExit => err
         exit 0
+    rescue TestError => err
+        puts "[#{err.class}] #{err}"
+        exit 1
     rescue Exception => err
         puts "#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}"
-        exit 1
+        exit 2
     else
         exit 0
     ensure

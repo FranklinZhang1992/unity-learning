@@ -6,7 +6,7 @@ TEST_SCRIPT_LOCATION=$(CURRENT_DIR)/test/test_application_scanner
 
 default: build
 
-build:
+build: test
 
 install:
 	cp $(SCRIPT_LOCATION) /usr/bin/

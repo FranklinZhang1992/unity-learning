@@ -8,14 +8,14 @@
 #
 # 1) Use the 'scan' sub-command to scan a directory to generate an unqualified record in storage pool.
 #
-# 2) Use the 'export' sub-command to export this record to a directory (A folder named as 201709271352
+# 2) Use the 'export' sub-command to export this record to a directory (A folder named as 20170926150520
 #    will appear under the folder you specified).
 #
 # 3) Manually modify the whitelist file under the exported directory to delete some applications which
 #    you think does not meet your requiredment and paste them to the blacklist file.
-#    (Notice: The parent folder's name 201709271352 must not be changed)
+#    (Notice: The parent folder's name 20170926150520 must not be changed)
 #
-# 4) Use the 'import' sub-command to import the 201709271352 folder into storage pool, this command will
+# 4) Use the 'import' sub-command to import the 20170926150520 folder into storage pool, this command will
 #    update the whitelist and blacklist of the record and mark this record as qualified. Now you have 
 #    one qualified record and you can use it as a standard and check other files.
 #
@@ -111,16 +111,6 @@ class Object
     end
 
     #
-    # # Lstrip, Rstrip for the line, return nil if this is an empty line
-    #
-    def cook_line(raw_line)
-        return nil if raw_line.nil?
-        cooked_line = raw_line.lstrip.rstrip
-        return nil if cooked_line.empty?
-        cooked_line
-    end
-
-    #
     # Execute system command and log the command
     #
     def exec_sys_cmd(cmd)
@@ -152,31 +142,56 @@ class FileRWManager
         end
     end
 
+    #
+    # # Lstrip, Rstrip for the line, return nil if this is an empty line
+    #
+    def cook_line(raw_line)
+        return nil if raw_line.nil?
+        cooked_line = raw_line.lstrip.rstrip
+        return nil if cooked_line.empty?
+        cooked_line
+    end
+
+    #
+    # Return the file's encoding
+    #
     def file_encoding(file)
-        output = %x{file --mime-encoding #{file}}.chomp
+        output = %x{file --mime-encoding #{file} 2>&1}.chomp
         regexp = Regexp.new("#{file}: (\\S+)")
         matched = output.match(regexp)
         encoding = matched[1] if matched
+        encoding = begin Encoding.find(encoding) rescue nil end
     end
 
+    #
+    # Open a file and read it line by line (non-empty line's encoding will be converted to UTF-8)
+    #
     def open(file, &blk)
-        File.open(file, "rb:#{file_encoding(file)}") do |f|
+        encoding = file_encoding(file)
+        mode = encoding.nil? ? "r" : "rb:#{encoding}"
+        File.open(file, "#{mode}") do |f|
             while line = f.gets
-                line = line.nil? ? nil : line.encode(@encoding)
+                line = line.nil? ? nil : cook_line(line.encode(@encoding))
                 blk.call(line)
             end
         end
     end
 
+    #
+    # Read whole file (Empty line and duplicate line will be ignored automatically)
+    #
     def read(file)
-        content = ""
+        content_set = Set.new
         open(file) do |line|
-            cooked_line = cook_line(line)
-            content << cooked_line << "\n"
+            next if line.nil?
+            content_set << "#{line}"
         end
-        content
+        content_set.to_a.join("\n")
     end
 
+    #
+    # Write content to a file with encoding UTF-8
+    #
     def write(file, content)
         temp_file = Tempfile.new("#{File.basename(file)}", Pathname.new(File.dirname(file)).realpath, :encoding => @encoding)
         begin
@@ -540,9 +555,8 @@ class FileMerger
         file_rw_manager.open(file) do |line|
             line_num += 1
             next unless line_num > ignore_line_num
-            cooked_line = cook_line(line) # Ltrim, Rtrim for the line
-            next if cooked_line.nil? || include?(cooked_line)
-            push(cooked_line) # Only push non-nil and non-exist line into the base set
+            next if line.nil? || include?(line)
+            push(line) # Only push non-nil and non-exist line into the base set
         end
     end
 
@@ -570,11 +584,11 @@ class OutputHandlerBase
     end
 
     def output_generic
-        method = "#{OUTPUT_TYPE_HANDLER_HASH[@output_type.to_sym]}_in_#{@output_format}"
+        method = "#{OUTPUT_TYPE_HANDLER_HASH[@output_type.to_sym]}_in_#{@output_format}_format"
         if self.respond_to?(method)
             return method
         else
-            raise OutputHandlerBaseError, "Unimplemented output handler for output type: #{@output_type}, output format: #{@output_format}"
+            raise OutputHandlerBaseError, "Unimplemented output handler #{method}"
         end
     end
 end
@@ -746,8 +760,16 @@ class MainController
     # Judge file, check if it contains blacklist apps or unqualified apps
     #
     def judge_file(file, whitelist, blacklist)
-        file_content_array = begin file_rw_manager.read(file).chomp.split("\n") rescue [] end
-        check_result = CheckResult.new(File.basename(file))
+        file_basename = File.basename(file)
+        log.debug("Judging file #{file_basename}")
+        file_content_array = begin
+            file_rw_manager.read(file).chomp.split("\n")
+        rescue => err
+            log.warn("Failed to read #{file_basename} => #{err}")
+            []
+        end
+
+        check_result = CheckResult.new(file_basename)
         line_num = 0
         file_content_array.each do |content_line|
             line_num += 1
@@ -893,7 +915,7 @@ class CommandHandler
         sub_help << "export:        Export record to a specified location for editing\n"
         sub_help << "scan:          Scan a specified directory and create a new record with both old and delta content\n"
         sub_help << "check:         Check a specified directory to find if there are invalid applications\n"
-        sub_help << "show:          Show stored record\n"
+        sub_help << "show:          Show stored record id(s)\n"
         sub_help << "delete:        Delete a specified record\n"
         sub_help << "\nSee '#{self.cmd_name} COMMAND --help' for more information on a specific command\n"
 
