@@ -54,8 +54,6 @@ $verbose = false
 
 # Custom exceptions
 class BaseError < RuntimeError ; end
-class RecordError < BaseError; end
-class CheckResultError < BaseError; end
 class StorageEngineError < BaseError ; end
 class FileMergerError < BaseError ; end
 class OutputHandlerBaseError < BaseError ; end
