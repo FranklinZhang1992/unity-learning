@@ -15,13 +15,21 @@ class FileManager
         encoding = matched[1] if matched
     end
 
-    def read(file, &blk)
+    def open(file, &blk)
         File.open(file, "rb:#{file_encoding(file)}") do |f|
             while line = f.gets
                 line = line.nil? ? nil : line.encode(@encoding)
                 blk.call(line)
             end
         end
+    end
+
+    def read(file)
+        content = ""
+        open(file) do |line|
+            content << line
+        end
+        content
     end
 
     def write(file, content)
@@ -51,8 +59,14 @@ EOF
 file_manager.write(tmp_file, content)
 
 content = ""
-file_manager.read(tmp_file) do |line|
+file_manager.open(tmp_file) do |line|
     content << line
 end
-puts content
+puts "Open:\n#{content}"
 puts "content encoding is #{content.encoding}"
+
+content = file_manager.read(tmp_file).chomp
+puts "Read:\n#{content}"
+puts "content encoding is #{content.encoding}"
+
+%x{rm -f #{tmp_file}}
