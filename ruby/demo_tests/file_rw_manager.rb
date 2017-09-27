@@ -1,11 +1,24 @@
 require 'tempfile'
 require 'pathname'
 
-class FileManager
+def cook_line(raw_line)
+    return nil if raw_line.nil?
+    cooked_line = raw_line.lstrip.rstrip
+    return nil if cooked_line.empty?
+    cooked_line
+end
 
-    def initialize(encoding)
-        Encoding.find(encoding)
-        @encoding = encoding
+class FileRWManager
+
+    DEFAULT_ENCODING = "UTF-8"
+
+    def initialize(encoding=nil)
+        if encoding.nil?
+            @encoding = DEFAULT_ENCODING
+        else
+            Encoding.find(encoding)
+            @encoding = encoding
+        end
     end
 
     def file_encoding(file)
@@ -27,7 +40,8 @@ class FileManager
     def read(file)
         content = ""
         open(file) do |line|
-            content << line
+            cooked_line = cook_line(line)
+            content << cooked_line << "\n"
         end
         content
     end
@@ -44,7 +58,7 @@ class FileManager
     end
 end
 
-file_manager = FileManager.new("UTF-8")
+file_manager = FileRWManager.new
 tmp_file = "/tmp/test"
 
 content = <<EOF
