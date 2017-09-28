@@ -337,11 +337,7 @@ EOT
         Dir.glob(File.join(CHECK_OUTPUT_DIR, "*")).each do |f|
             puts "##### #{File.basename(f)} ################################"
             puts @file_rw_manager.read(f).chomp
-            end_mark = ""
-            for i in 0..."#{File.basename(f)}".length do
-                end_mark << "#"
-            end
-            puts "#######{end_mark}#################################"
+            puts "#######{File.basename(f).gsub(/\S/, "#")}#################################"
         end
         exec_sys_cmd("rm -rf #{CHECK_OUTPUT_DIR}")
         exec_sys_cmd("mkdir -p #{CHECK_OUTPUT_DIR}")
@@ -378,11 +374,7 @@ EOT
         Dir.glob(File.join(CHECK_OUTPUT_DIR, "*")).each do |f|
             puts "##### #{File.basename(f)} ################################"
             puts @file_rw_manager.read(f).chomp
-            end_mark = ""
-            for i in 0..."#{File.basename(f)}".length do
-                end_mark << "#"
-            end
-            puts "#######{end_mark}#################################"
+            puts "#######{File.basename(f).gsub(/\S/, "#")}#################################"
         end
         puts "============================== Test end =============================="
     end
