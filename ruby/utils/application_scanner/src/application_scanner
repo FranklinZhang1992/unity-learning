@@ -301,15 +301,28 @@ class Record
     def to_xml
         xml = Element.new("Record")
         xml.attributes["id"] = self.id
-        topology.each do |key, value|
-            xml << Element.new("#{key}").add_text("#{value}")
+        whitelist_xml = Element.new("whitelist")
+        self.whitelist_array.each do |whitelist_app|
+            whitelist_xml << Element.new("application").add_text(whitelist_app)
         end
+        xml << whitelist_xml
+        blacklist_xml = Element.new("blacklist")
+        self.blacklist_array.each do |blacklist_app|
+            blacklist_xml << Element.new("application").add_text(blacklist_app)
+        end
+        xml << blacklist_xml
+        xml << Element.new("auditor").add_text(self.auditor)
+        xml << Element.new("qual").add_text(self.qual)
         xml
     end
 
     def to_json
-        record_hash = topology.clone
+        record_hash = Hash.new
         record_hash[:id] = self.id
+        record_hash[:whitelist] = self.whitelist_array
+        record_hash[:blacklist] = self.blacklist_array
+        record_hash[:auditor] = self.auditor
+        record_hash[:qual] = self.qual
         JSON.generate(record_hash)
     end
 
