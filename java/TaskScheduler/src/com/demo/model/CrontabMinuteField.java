@@ -1,14 +1,24 @@
 package com.demo.model;
 
-import java.util.List;
-
+/**
+ * Class for storing crontab trigger minute field
+ *
+ */
 public class CrontabMinuteField extends AbstractCrontabField {
 
-    public static final int MIN = 0;
-    public static final int MAX = 59;
+	/** Minute in an hour starts at 0 and ends at 59 */
+	private static final int MIN = 0;
+	private static final int MAX = 59;
+	public static final String FIELD_NAME = "minute";
 
-    public CrontabMinuteField(String fieldStr, List<Integer> fieldList) {
-        super(fieldStr, fieldList);
-    }
+	public CrontabMinuteField(final String fieldStr) {
+		super(fieldStr, FIELD_NAME);
+		validateField(fieldStr);
+	}
+
+	@Override
+	protected void validateField(final String fieldStr) {
+		validateCommonField(fieldStr, MIN, MAX);
+	}
 
 }

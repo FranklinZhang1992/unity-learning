@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.demo.model.CronModel;
-import com.demo.service.CronParser;
+import com.demo.service.CrontabParser;
 
 public class StoreManager {
 
@@ -57,7 +57,7 @@ public class StoreManager {
         if (trigger == null || "".equals(trigger)) {
             throw new RuntimeException("no trigger is found for " + cronModel.getId());
         }
-        CronParser parser = new CronParser(trigger);
+        CrontabParser parser = new CrontabParser(trigger);
         Date next = parser.next();
         System.out.println("next run time is " + next);
         cronModel.setNextRunTime(next);
