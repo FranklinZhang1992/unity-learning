@@ -1,6 +1,8 @@
 
 package com.demo.model;
 
+import java.util.Date;
+
 /**
  * Class for storing crontab trigger month field
  *
@@ -12,14 +14,14 @@ public class CrontabMonthField extends AbstractCrontabField {
     private static final int MAX = 12;
     public static final String FIELD_NAME = "month";
 
-    public CrontabMonthField(final String fieldStr) {
+    public CrontabMonthField(final String fieldStr, final Date currentDate) {
         super(fieldStr, FIELD_NAME);
-        validateField(fieldStr);
+        validateField(fieldStr, currentDate);
     }
 
     @Override
-    protected void validateField(final String fieldStr) {
-        validateCommonField(fieldStr, MIN, MAX);
+    protected void validateField(final String fieldStr, final Date currentDate) {
+        validateCommonField(fieldStr, MIN, MAX, currentDate);
     }
 
 }

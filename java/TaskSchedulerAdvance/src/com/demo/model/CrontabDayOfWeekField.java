@@ -1,5 +1,7 @@
 package com.demo.model;
 
+import java.util.Date;
+
 import com.demo.exception.InvalidCrontabError;
 import com.demo.service.CrontabParser;
 
@@ -20,9 +22,9 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
 
     private int skipWeekCont = 1;
 
-    public CrontabDayOfWeekField(final String fieldStr) {
+    public CrontabDayOfWeekField(final String fieldStr, final Date currentDate) {
         super(fieldStr, FIELD_NAME);
-        validateField(fieldStr);
+        validateField(fieldStr, currentDate);
         convertDayOfWeek();
     }
 
@@ -43,8 +45,8 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
     }
 
     @Override
-    protected void validateField(final String fieldStr) {
-        StringBuilder processedFieldStr = new StringBuilder();
+    protected void validateField(final String fieldStr, final Date currentDate) {
+        final StringBuilder processedFieldStr = new StringBuilder();
 
         String[] splitedField = fieldStr.split("/");
         int dayOfWeekStep = 0;
@@ -65,7 +67,7 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
             processedFieldStr.append("/");
             processedFieldStr.append(String.valueOf(dayOfWeekStep));
         }
-        validateCommonField(processedFieldStr.toString(), MIN, MAX);
+        validateCommonField(processedFieldStr.toString(), MIN, MAX, currentDate);
     }
 
     /**

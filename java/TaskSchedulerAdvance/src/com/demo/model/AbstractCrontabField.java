@@ -3,6 +3,7 @@ package com.demo.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -113,10 +114,12 @@ public abstract class AbstractCrontabField {
      *
      * @param fieldStr
      *            The field string
+     * @param Current
+     *            date
      */
-    protected abstract void validateField(final String fieldStr);
+    protected abstract void validateField(final String fieldStr, final Date currentDate);
 
-    protected void validateCommonField(final String fieldStr, final int min, final int max) {
+    protected void validateCommonField(final String fieldStr, final int min, final int max, final Date currentDate) {
         // For uniform disposal, we convert all '*' to the range it represents
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
         // Stores the times includes in the trigger. e.g. If its a hour field,

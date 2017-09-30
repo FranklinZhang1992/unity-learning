@@ -74,24 +74,24 @@ public class CrontabParser {
         return yearField;
     }
 
-    private void setMinuteField(String minute) {
-        minuteField = new CrontabMinuteField(minute);
+    private void setMinuteField(String minute, Date currentDate) {
+        minuteField = new CrontabMinuteField(minute, currentDate);
     }
 
-    private void setHourField(String hour) {
-        hourField = new CrontabHourField(hour);
+    private void setHourField(String hour, Date currentDate) {
+        hourField = new CrontabHourField(hour, currentDate);
     }
 
-    private void setDayOfMonthField(String dayOfMonth) {
-        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth);
+    private void setDayOfMonthField(String dayOfMonth, Date currentDate) {
+        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth, currentDate);
     }
 
-    private void setMonthField(String month) {
-        monthField = new CrontabMonthField(month);
+    private void setMonthField(String month, Date currentDate) {
+        monthField = new CrontabMonthField(month, currentDate);
     }
 
-    private void setDayOfWeekField(String dayOfWeek) {
-        dayOfWeekField = new CrontabDayOfWeekField(dayOfWeek);
+    private void setDayOfWeekField(String dayOfWeek, Date currentDate) {
+        dayOfWeekField = new CrontabDayOfWeekField(dayOfWeek, currentDate);
     }
 
     /**
@@ -108,8 +108,8 @@ public class CrontabParser {
      *
      * @param year
      */
-    private void setYear(String year) {
-        yearField = new CrontabYearField(year);
+    private void setYearField(String year, Date currentDate) {
+        yearField = new CrontabYearField(year, currentDate);
     }
 
     public CrontabParser(String cronString) {
@@ -120,15 +120,16 @@ public class CrontabParser {
         }
 
         try {
+            Date currentDate = new Date();
             // Property set must in sequence
-            setMinuteField(fields[MINUTE_INDEX]);
-            setHourField(fields[HOUR_INDEX]);
-            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX]);
-            setMonthField(fields[MONTH_INDEX]);
-            setDayOfWeekField(fields[DAY_OF_WEEK_INDEX]);
+            setMinuteField(fields[MINUTE_INDEX], currentDate);
+            setHourField(fields[HOUR_INDEX], currentDate);
+            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX], currentDate);
+            setMonthField(fields[MONTH_INDEX], currentDate);
+            setDayOfWeekField(fields[DAY_OF_WEEK_INDEX], currentDate);
             // Set year field only when year field is received
             if (fields.length == 6) {
-                setYear(fields[YEAR_INDEX]);
+                setYearField(fields[YEAR_INDEX], currentDate);
             }
             validateCombinedFields();
         } catch (Exception e) {
