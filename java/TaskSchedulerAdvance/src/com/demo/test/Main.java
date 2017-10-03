@@ -32,9 +32,33 @@ public class Main {
         printList("day-of-week", dayOfWeekList);
     }
 
-    protected static void inspect() {
-        // String trigger = "20 20 1 */7 *";
-        String trigger = "20 20 */6 * *";
+    protected static void inspect(int option) {
+        String trigger = null;
+        switch (option) {
+        case 1: /** One time */
+            break;
+        case 2:/** One time */
+            break;
+        case 3:/** Daily */
+            trigger = "3 13 * * 2/14";
+            break;
+        case 4: /** Daily */
+            trigger = "3 14 */6 * *";
+            break;
+        case 5: /** Weekly */
+            break;
+        case 6: /** Weekly */
+            trigger = "3 14 * * 2/14";
+            break;
+        case 7:/** Monthly */
+            trigger = "3 13 1 */7 *";
+            break;
+        case 8: /** Monthly */
+            trigger = "3 14 1 */7 *";
+            break;
+        default:
+            throw new RuntimeException("Unknown option");
+        }
 
         System.out.println("Current time is: " + Util.getFormatedTime(new Date()));
         CrontabParser parser = new CrontabParser(trigger);
@@ -56,14 +80,14 @@ public class Main {
         } else {
             Calendar cal = Calendar.getInstance();
             cal.setTime(preNextDate);
-            cal.add(Calendar.SECOND, 1);
+            // cal.add(Calendar.SECOND, 1);
             return parser.next(cal.getTime());
         }
     }
 
     public static void main(String[] args) {
 
-        inspect();
+        inspect(7);
     }
 
 }

@@ -29,7 +29,7 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
 
     /**
      * Check if the day-of-month field means every day of a month
-     * 
+     *
      * @return Whether the day-of-month field means every day of a month
      */
     public boolean isEveryDayRange() {
@@ -54,27 +54,23 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
     }
 
     protected boolean isFieldListExpired(Date currentDate) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(currentDate);
-        return getTimestampField(Calendar.MONTH) == cal.get(Calendar.MONTH)
-                && getTimestampField(Calendar.YEAR) == cal.get(Calendar.YEAR) ? false : true;
+        return !Util.isSameMonth(currentDate, getTimestamp());
     }
 
     protected int getUpdatedStart(Date currentDate) {
-        System.out.println("currentDate is: " + Util.getFormatedTime(currentDate));
+        // System.out.println("currentDate is: " +
+        // Util.getFormatedTime(currentDate));
         Calendar currentCal = Calendar.getInstance();
         currentCal.setTime(currentDate);
+
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.MONDAY, Util.convertCrontabMonthToCalendarMonth(getTimestampField(Calendar.MONTH)));
+        cal.setTime(getTimestamp());
         cal.set(Calendar.DAY_OF_MONTH, getLastValueInFieldList());
-        while (cal.get(Calendar.MONTH) < currentCal.get(Calendar.MONTH)
-                && cal.get(Calendar.YEAR) < currentCal.get(Calendar.YEAR)) {
+        while (!Util.isSameMonth(currentCal.getTime(), cal.getTime())) {
             cal.add(Calendar.DAY_OF_MONTH, getFieldStep());
-            if (cal.get(Calendar.MONTH) > getTimestampField(Calendar.MONTH)) {
-                pushTimestamp(Calendar.MONTH);
-            }
-            System.out.println("timestamp is: " + Util.getFormatedTime(getTimestamp()));
         }
+
+        pushTimestamp(Calendar.MONTH, cal.get(Calendar.MONTH));
 
         return cal.get(Calendar.DAY_OF_MONTH);
     }

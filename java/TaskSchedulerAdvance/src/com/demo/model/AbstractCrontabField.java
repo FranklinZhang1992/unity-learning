@@ -64,10 +64,10 @@ public abstract class AbstractCrontabField {
         return timestamp;
     }
 
-    protected void pushTimestamp(int field) {
+    protected void pushTimestamp(int field, int value) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(timestamp);
-        cal.add(field, 1);
+        cal.add(field, value);
     }
 
     protected int getTimestampField(int field) {

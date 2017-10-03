@@ -1,7 +1,7 @@
 package com.demo.model;
 
 import com.demo.exception.InvalidCrontabError;
-import com.demo.service.CrontabParser;
+import com.demo.utils.Util;
 
 /**
  * Class for storing crontab trigger weekday field
@@ -52,7 +52,7 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
         if (splitedField.length == 2) {
             dayOfWeekStep = toInt(splitedField[1]);
             if (dayOfWeekStep >= WEEK_LENGTH) {
-                if (!CrontabParser.isIntegralMultipleOfGivenNum(dayOfWeekStep, WEEK_LENGTH)) {
+                if (!Util.isIntegralMultipleOfGivenNum(dayOfWeekStep, WEEK_LENGTH)) {
                     throw new InvalidCrontabError(FIELD_NAME, fieldStr);
                 }
                 skipWeekCont = dayOfWeekStep / WEEK_LENGTH;

@@ -52,10 +52,10 @@ public class CrontabMonthField extends AbstractCrontabField {
 
     protected int getUpdatedStart() {
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, getTimestampField(Calendar.YEAR));
+        cal.setTime(getTimestamp());
         cal.set(Calendar.MONTH, Util.convertCrontabMonthToCalendarMonth(getLastValueInFieldList()));
         cal.add(Calendar.MONTH, getFieldStep());
-        pushTimestamp(Calendar.YEAR);
+        pushTimestamp(Calendar.YEAR, cal.get(Calendar.YEAR));
         return Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH));
     }
 

@@ -17,6 +17,7 @@ import com.demo.model.CrontabMinuteField;
 import com.demo.model.CrontabMonthField;
 import com.demo.model.CrontabYearField;
 import com.demo.model.InternalTime;
+import com.demo.utils.Util;
 
 /**
  * Class for parsing crontab trigger string, aims to: 1. Validate whether the
@@ -252,25 +253,6 @@ public class CrontabParser {
     }
 
     /**
-     * Get the first day (Sunday) of current week
-     *
-     * @param currentDate
-     *            Current date
-     * @return The first day (Sunday) of current week
-     */
-    private Date getFirstDayOfCurrentWeek(Date currentDate) {
-        Calendar cal = Calendar.getInstance();
-        if (currentDate != null) {
-            cal.setTime(currentDate);
-        }
-
-        int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        int different = 1 - currentDayOfWeek;
-        cal.add(Calendar.DAY_OF_WEEK, different);
-        return cal.getTime();
-    }
-
-    /**
      * Calc next run time with the every-x-week limitation
      *
      * @return The next run time
@@ -278,36 +260,13 @@ public class CrontabParser {
     private Date getNextRunTimeWithJumpWeekLimit(Date currentDate) {
         Date nowDate = currentDate == null ? new Date() : currentDate;
 
-        Date nextDate = getNext();
+        Date nextDate = getNext(nowDate);
 
-        while (!isIntegralMultipleWeeksLater(getFirstDayOfCurrentWeek(nowDate), getFirstDayOfCurrentWeek(nextDate))
+        while (!Util.isIntegralMultipleWeeksLater(nowDate, nextDate, dayOfWeekField.getSkipWeekCount())
                 && !isYearOutOfRange(nextDate)) {
             nextDate = getNext(nextDate);
         }
         return nextDate;
-    }
-
-    /**
-     * Check if the interval days between nowDate and nextDate is integral
-     * multiple of weeks (The every-x-week trigger specified)
-     *
-     * @param nowDate
-     *            The current date
-     * @param nextDate
-     *            The next date
-     * @return Whether the interval days between nowDate and nextDate is
-     *         integral multiple of weeks
-     */
-    private boolean isIntegralMultipleWeeksLater(Date nowDate, Date nextDate) {
-        int interval = getInterval(nowDate, nextDate);
-        return isIntegralMultipleOfGivenWeek(interval, dayOfWeekField.getSkipWeekCount());
-    }
-
-    /**
-     * @see getNext(Date startDate)
-     */
-    private Date getNext() {
-        return getNext(null);
     }
 
     /**
@@ -387,36 +346,6 @@ public class CrontabParser {
         int intervalDay = getInterval(now, nextDate);
         // One year = 365 days
         return intervalDay > YEAR_THRESHOLD * 365;
-    }
-
-    /**
-     * Check if the number is integral multiple of the week (day * 7)
-     *
-     * @param num
-     *            The number to be checked
-     * @param jumpWeekNum
-     *            The number of week
-     * @return Whether the number is integral multiple of the week (day * 7)
-     */
-    public static boolean isIntegralMultipleOfGivenWeek(int num, int jumpWeekNum) {
-        int daysInAWeek = 7;
-        return isIntegralMultipleOfGivenNum(num, jumpWeekNum * daysInAWeek);
-    }
-
-    /**
-     * Check if the number is integral multiple of the givenNum
-     *
-     * @param num
-     *            The number to be checked
-     * @param givenNum
-     *            The given number
-     * @return Whether the number is integral multiple of the givenNum
-     */
-    public static boolean isIntegralMultipleOfGivenNum(int num, int givenNum) {
-        if (givenNum == 0) {
-            return false;
-        }
-        return num % givenNum == 0;
     }
 
     /**
