@@ -2,7 +2,6 @@ package com.demo.model;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import com.demo.utils.Util;
 
@@ -38,41 +37,43 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
     }
 
     @Override
-    protected int getRealStart(int cronStart) {
-        Calendar cal = Calendar.getInstance();
-        int currentDayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
-        return getMinValueOfGivenStep(currentDayOfMonth, cronStart);
+    public int getFieldStart() {
+        Calendar recordCal = Util.getCalendar();
+        int currentDayOfMonth = recordCal.get(Calendar.DAY_OF_MONTH);
+        return getMinValueOfGivenStep(currentDayOfMonth, super.getFieldStart());
     }
 
-    public List<Integer> updateFieldList(Date currentDate) {
-        if (isFieldListExpired(currentDate)) {
-            setFieldStart(getUpdatedStart(currentDate));
-            clearFieldList();
-            getFieldList().addAll(getSteppedRange(getFieldStart(), getFieldStop(), getFieldStep()));
+    /**
+     * Update this field after month is nudged
+     *
+     * @param currentDate
+     *            The current date, normally the month field is bigger than the
+     *            month field in timestamp
+     */
+    public void updateFieldList(Date currentDate) {
+        if (needUpdate()) {
+            super.updateFieldList(getFieldStartInTargetMonth(currentDate));
         }
-        return getFieldList();
     }
 
-    protected boolean isFieldListExpired(Date currentDate) {
-        return !Util.isSameMonth(currentDate, getTimestamp());
-    }
+    /**
+     * Get the start value in the new month
+     *
+     * @param currentDate
+     *            The current date
+     * @return The new start value
+     */
+    private int getFieldStartInTargetMonth(Date currentDate) {
+        Calendar currentCal = Util.getCalendar(currentDate);
+        Calendar recordCal = Util.getCalendar(getTimestamp());
 
-    protected int getUpdatedStart(Date currentDate) {
-        // System.out.println("currentDate is: " +
-        // Util.getFormatedTime(currentDate));
-        Calendar currentCal = Calendar.getInstance();
-        currentCal.setTime(currentDate);
+        while (!Util.isSameMonth(recordCal, currentCal)) {
+            recordCal.add(Calendar.DAY_OF_MONTH, getFieldStep());
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(getTimestamp());
-        cal.set(Calendar.DAY_OF_MONTH, getLastValueInFieldList());
-        while (!Util.isSameMonth(currentCal.getTime(), cal.getTime())) {
-            cal.add(Calendar.DAY_OF_MONTH, getFieldStep());
         }
 
-        pushTimestamp(Calendar.MONTH, cal.get(Calendar.MONTH));
-
-        return cal.get(Calendar.DAY_OF_MONTH);
+        setTimestamp(recordCal.getTime());
+        return recordCal.get(Calendar.DAY_OF_MONTH);
     }
 
 }

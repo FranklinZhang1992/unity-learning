@@ -1,6 +1,9 @@
 package com.demo.model;
 
 import java.util.Calendar;
+import java.util.Date;
+
+import com.demo.utils.Util;
 
 /**
  * Class for storing crontab trigger hour field
@@ -24,10 +27,42 @@ public class CrontabHourField extends AbstractCrontabField {
     }
 
     @Override
-    protected int getRealStart(int cronStart) {
-        Calendar cal = Calendar.getInstance();
-        int currentHour = cal.get(Calendar.HOUR_OF_DAY);
-        return getMinValueOfGivenStep(currentHour, cronStart);
+    public int getFieldStart() {
+        Calendar recordCal = Util.getCalendar();
+        int currentHour = recordCal.get(Calendar.HOUR_OF_DAY);
+        return getMinValueOfGivenStep(currentHour, super.getFieldStart());
+    }
+
+    /**
+     * Update this field after day-of-month is nudged
+     *
+     * @param currentDate
+     *            The current date, normally the day-of-month field is bigger
+     *            than the day-of-month field in timestamp
+     */
+    public void updateFieldList(Date currentDate) {
+        if (needUpdate()) {
+            super.updateFieldList(getFieldStartInTargetDayOfMonth(currentDate));
+        }
+    }
+
+    /**
+     * Get the start value in the new day-of-month
+     *
+     * @param currentDate
+     *            The current date
+     * @return The new start value
+     */
+    private int getFieldStartInTargetDayOfMonth(Date currentDate) {
+        Calendar currentCal = Util.getCalendar(currentDate);
+        Calendar recordCal = Util.getCalendar(getTimestamp());
+
+        while (!Util.isSameDayOfMonth(currentCal, recordCal)) {
+            recordCal.add(Calendar.HOUR_OF_DAY, getFieldStep());
+        }
+
+        setTimestamp(recordCal.getTime());
+        return recordCal.get(Calendar.HOUR_OF_DAY);
     }
 
 }

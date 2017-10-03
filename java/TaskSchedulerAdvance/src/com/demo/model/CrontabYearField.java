@@ -15,7 +15,11 @@ public class CrontabYearField extends AbstractCrontabField {
         validateField(fieldStr);
     }
 
-    // As year field can only be a number, so we add a method to get it directly
+    /**
+     * As year field can only be a number, so we add a method to get it directly
+     *
+     * @return The year number
+     */
     public int getYear() {
         if (getFieldList().isEmpty()) {
             return 0;
@@ -29,12 +33,6 @@ public class CrontabYearField extends AbstractCrontabField {
         // The only limitation for year field is: it must be a number
         int yearNum = toInt(fieldStr);
         setFieldList(Arrays.asList(yearNum));
-    }
-
-    @Override
-    @Deprecated
-    protected int getRealStart(int cronStart) {
-        return cronStart;
     }
 
 }

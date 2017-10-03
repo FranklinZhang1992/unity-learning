@@ -32,29 +32,45 @@ public class Main {
         printList("day-of-week", dayOfWeekList);
     }
 
-    protected static void inspect(int option) {
+    protected static void test(int option) {
+        System.out.println("Option is " + option);
         String trigger = null;
         switch (option) {
         case 1: /** One time */
+            trigger = "3 1 11 11 * 2017";
             break;
         case 2:/** One time */
+            trigger = "* * * * * 2017";
             break;
         case 3:/** Daily */
-            trigger = "3 13 * * 2/14";
+            trigger = "3 1 */6 * *";
             break;
         case 4: /** Daily */
-            trigger = "3 14 */6 * *";
+            trigger = "16 23 */6 * *";
             break;
         case 5: /** Weekly */
+            trigger = "3 1 * * 2/14";
             break;
         case 6: /** Weekly */
-            trigger = "3 14 * * 2/14";
+            trigger = "16 23 * * 2/14";
             break;
         case 7:/** Monthly */
-            trigger = "3 13 1 */7 *";
+            trigger = "3 1 1 */7 *";
             break;
         case 8: /** Monthly */
-            trigger = "3 14 1 */7 *";
+            trigger = "16 23 3 */7 *";
+            break;
+        case 9: /** Hourly */
+            trigger = "1 */9 * * *";
+            break;
+        case 10: /** Hourly */
+            trigger = "59 */9 * * *";
+            break;
+        case 11: /** Minutely */
+            trigger = "*/23 1 * * *";
+            break;
+        case 12: /** Minutely */
+            trigger = "*/23 * * * *";
             break;
         default:
             throw new RuntimeException("Unknown option");
@@ -63,15 +79,24 @@ public class Main {
         System.out.println("Current time is: " + Util.getFormatedTime(new Date()));
         CrontabParser parser = new CrontabParser(trigger);
 
-        int nextCount = 10;
+        int nextCount = 5;
         int i = 0;
         Date nextDate = null;
         while (i < nextCount) {
             i++;
+            if (parser.isOneTimeCrontab()) {
+                if (i > 1) {
+                    continue;
+                }
+                if (!parser.isValidDateForOneTime()) {
+                    System.out.println("[ERROR] Not a valie one time crontab");
+                }
+            }
             // printParser(parser);
             nextDate = getNext(parser, nextDate);
             System.out.println(Util.getFormatedTime(nextDate));
         }
+        System.out.println("#######################################################################");
     }
 
     protected static Date getNext(CrontabParser parser, Date preNextDate) {
@@ -80,14 +105,16 @@ public class Main {
         } else {
             Calendar cal = Calendar.getInstance();
             cal.setTime(preNextDate);
-            // cal.add(Calendar.SECOND, 1);
             return parser.next(cal.getTime());
         }
     }
 
     public static void main(String[] args) {
+        int caseNum = 12;
+        for (int i = 1; i <= caseNum; i++) {
+            test(i);
+        }
 
-        inspect(7);
     }
 
 }

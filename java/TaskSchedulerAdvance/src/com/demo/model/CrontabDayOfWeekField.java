@@ -78,9 +78,4 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
         return isFullRange(totalLength);
     }
 
-    @Override
-    protected int getRealStart(int cronStart) {
-        return cronStart;
-    }
-
 }

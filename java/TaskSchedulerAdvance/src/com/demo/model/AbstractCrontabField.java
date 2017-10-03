@@ -2,7 +2,6 @@ package com.demo.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -42,10 +41,16 @@ public abstract class AbstractCrontabField {
     private List<Integer> fieldList;
     /** The name of the field */
     private String fieldName;
+    /**
+     * The start of the field, extracted from cron string and updated according
+     * to the actual situation
+     */
     private int fieldStart;
+    /** The start of the field, extracted from cron string */
     private int fieldStop;
-    /** The step of the field */
+    /** The step of the field, extracted from cron string */
     private int fieldStep;
+    /** The time stamp of the field */
     private Date timestamp;
 
     /**
@@ -60,20 +65,23 @@ public abstract class AbstractCrontabField {
         this.fieldName = fieldName;
     }
 
+    /**
+     * Get the timestamp of the field
+     *
+     * @return The timestamp of the field
+     */
     protected Date getTimestamp() {
         return timestamp;
     }
 
-    protected void pushTimestamp(int field, int value) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(timestamp);
-        cal.add(field, value);
-    }
-
-    protected int getTimestampField(int field) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(timestamp);
-        return cal.get(field);
+    /**
+     * Set the timestamp of the field
+     *
+     * @param currentDate
+     *            The current date, will be set to timestamp property
+     */
+    protected void setTimestamp(Date currentDate) {
+        timestamp = currentDate;
     }
 
     /**
@@ -85,28 +93,31 @@ public abstract class AbstractCrontabField {
         return fieldRawStr;
     }
 
-    protected int getFieldStep() {
-        return fieldStep;
-    }
-
-    protected void setFieldStart(int fieldStart) {
-        this.fieldStart = fieldStart;
-    }
-
-    protected int getFieldStart() {
+    /**
+     * Get the start value of the field
+     *
+     * @return The start value of the field
+     */
+    public int getFieldStart() {
         return fieldStart;
     }
 
-    protected int getFieldStop() {
+    /**
+     * Get the stop value of the field
+     *
+     * @return The stop value of the field
+     */
+    public int getFieldStop() {
         return fieldStop;
     }
 
-    protected int getLastValueInFieldList() {
-        if (getFieldList().isEmpty()) {
-            return -1;
-        } else {
-            return getFieldList().get(getFieldListSize() - 1);
-        }
+    /**
+     * Get the step value of the field
+     *
+     * @return The step value of the field
+     */
+    public int getFieldStep() {
+        return fieldStep;
     }
 
     /**
@@ -119,6 +130,9 @@ public abstract class AbstractCrontabField {
         return fieldList == null ? new ArrayList<Integer>() : fieldList;
     }
 
+    /**
+     * Clear fieldList
+     */
     protected void clearFieldList() {
         getFieldList().clear();
     }
@@ -166,6 +180,16 @@ public abstract class AbstractCrontabField {
      */
     protected abstract void validateField(final String fieldStr);
 
+    /**
+     * Common validation method for all fields
+     *
+     * @param fieldStr
+     *            The cron string of the field
+     * @param min
+     *            The minimum allowable value of the field
+     * @param max
+     *            The maximum allowable value of the field
+     */
     protected void validateCommonField(final String fieldStr, final int min, final int max) {
         // For uniform disposal, we convert all '*' to the range it represents
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
@@ -202,9 +226,8 @@ public abstract class AbstractCrontabField {
                     throw new InvalidCrontabError(fieldName, fieldRawStr);
                 }
 
-                int realStart = getRealStart(fieldStart);
                 // Add all valid numbers of a field into the set
-                fieldRawSet.addAll(getSteppedRange(realStart, fieldStop, fieldStep));
+                fieldRawSet.addAll(getSteppedRange(getFieldStart(), fieldStop, fieldStep));
             } else {
                 throw new InvalidCrontabError(fieldName, fieldRawStr);
             }
@@ -324,6 +347,16 @@ public abstract class AbstractCrontabField {
         }
     }
 
+    /**
+     * Get the minimum value from the current and minus step by step
+     *
+     * @param currentValue
+     *            The current value, will continuous minus step from this value
+     * @param min
+     *            The minimum allowable value, the returned value should not be
+     *            smaller than this value
+     * @return The minimum value get by minus step from currentValue
+     */
     protected int getMinValueOfGivenStep(final int currentValue, final int min) {
         int minValue = currentValue > min ? currentValue : min;
         while (minValue - fieldStep >= min) {
@@ -332,5 +365,25 @@ public abstract class AbstractCrontabField {
         return minValue;
     }
 
-    protected abstract int getRealStart(int cronStart);
+    /**
+     * Update fieldList, the new list starts from new start value (updatedStart)
+     *
+     * @param updatedStart
+     *            The new start value of the fieldList
+     */
+    protected void updateFieldList(int updatedStart) {
+        fieldStart = updatedStart;
+        clearFieldList();
+        getFieldList().addAll(getSteppedRange(fieldStart, fieldStop, fieldStep));
+    }
+
+    /**
+     * Check if we need to update the fieldList, currently we only update it
+     * when the step is bigger than 1
+     *
+     * @return Returns true if we need to update the fieldList
+     */
+    protected boolean needUpdate() {
+        return fieldStep > 1;
+    }
 }

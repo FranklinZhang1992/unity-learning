@@ -3,7 +3,6 @@ package com.demo.model;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import com.demo.utils.Util;
 
@@ -29,34 +28,42 @@ public class CrontabMonthField extends AbstractCrontabField {
     }
 
     @Override
-    protected int getRealStart(int cronStart) {
-        Calendar cal = Calendar.getInstance();
-        int currentMonth = Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH));
-        return getMinValueOfGivenStep(currentMonth, cronStart);
+    public int getFieldStart() {
+        Calendar recordCal = Util.getCalendar();
+        int currentMonth = Util.convertCalendarMonthToCrontabMonth(recordCal.get(Calendar.MONTH));
+        return getMinValueOfGivenStep(currentMonth, super.getFieldStart());
     }
 
-    public List<Integer> updateFieldList(Date currentDate) {
-        if (isFieldListExpired(currentDate)) {
-            setFieldStart(getUpdatedStart());
-            clearFieldList();
-            getFieldList().addAll(getSteppedRange(getFieldStart(), getFieldStop(), getFieldStep()));
+    /**
+     * Update this field after year is nudged
+     *
+     * @param currentDate
+     *            The current date, normally the year field is bigger than the
+     *            year field in timestamp
+     */
+    public void updateFieldList(Date currentDate) {
+        if (needUpdate()) {
+            super.updateFieldList(getFieldStartInTargetYear(currentDate));
         }
-        return getFieldList();
     }
 
-    protected boolean isFieldListExpired(Date currentDate) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(currentDate);
-        return getTimestampField(Calendar.YEAR) == cal.get(Calendar.YEAR) ? false : true;
-    }
+    /**
+     * Get the start value in the new year
+     *
+     * @param currentDate
+     *            The current date
+     * @return The new start value
+     */
+    private int getFieldStartInTargetYear(Date currentDate) {
+        Calendar currentCal = Util.getCalendar(currentDate);
+        Calendar timestampCal = Util.getCalendar(getTimestamp());
 
-    protected int getUpdatedStart() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(getTimestamp());
-        cal.set(Calendar.MONTH, Util.convertCrontabMonthToCalendarMonth(getLastValueInFieldList()));
-        cal.add(Calendar.MONTH, getFieldStep());
-        pushTimestamp(Calendar.YEAR, cal.get(Calendar.YEAR));
-        return Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH));
+        while (!Util.isSameYear(timestampCal, currentCal)) {
+            timestampCal.add(Calendar.MONTH, getFieldStep());
+        }
+
+        setTimestamp(timestampCal.getTime());
+        return Util.convertCalendarMonthToCrontabMonth(timestampCal.get(Calendar.MONTH));
     }
 
 }

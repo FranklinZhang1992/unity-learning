@@ -42,6 +42,9 @@ public class CrontabParser {
     private static final int YEAR_THRESHOLD = 20; // 20 years threshold in this
                                                   // parser
 
+    /** Calc next run time with this date as the start date */
+    private Date calcStartDate;
+
     private CrontabMinuteField minuteField;
     private CrontabHourField hourField;
     private CrontabDayOfMonthField dayOfMonthField;
@@ -244,7 +247,11 @@ public class CrontabParser {
         return next(null);
     }
 
+    /**
+     * Calc crontab next run time from a specified time
+     */
     public Date next(Date currentDate) {
+        calcStartDate = currentDate;
         if (dayOfWeekField.isSkipWeek()) {
             return getNextRunTimeWithJumpWeekLimit(currentDate);
         } else {
@@ -281,7 +288,6 @@ public class CrontabParser {
 
         if (yearField != null) {
             t.setYear(yearField.getYear());
-            t.setMonth(0);
         }
 
         if (!monthField.getFieldList().contains(t.getMonth())) {
@@ -300,6 +306,7 @@ public class CrontabParser {
         }
 
         nudgeMinute(t);
+
         return t.toTime();
     }
 
@@ -342,8 +349,8 @@ public class CrontabParser {
      * @return Whether the given date is within 20 years from now
      */
     private boolean isYearOutOfRange(Date nextDate) {
-        Date now = new Date();
-        int intervalDay = getInterval(now, nextDate);
+        Date now = calcStartDate == null ? new Date() : calcStartDate;
+        int intervalDay = Util.getDaysBetween(now, nextDate);
         // One year = 365 days
         return intervalDay > YEAR_THRESHOLD * 365;
     }
@@ -450,6 +457,7 @@ public class CrontabParser {
         } else {
             t.setDay(nextValue);
         }
+        hourField.updateFieldList(t.toTime());
     }
 
     /**
@@ -468,6 +476,7 @@ public class CrontabParser {
         } else {
             t.setHour(nextValue);
         }
+        minuteField.updateFieldList(t.toTime());
     }
 
     /**
@@ -481,8 +490,8 @@ public class CrontabParser {
         int nextValue = findBestNext(t.getMinute(), allowedMinutes);
 
         if (nextValue == -1) {
-            t.setMinute(allowedMinutes.get(0));
             nudgeHour(t);
+            t.setMinute(allowedMinutes.get(0));
         } else {
             t.setMinute(nextValue);
         }

@@ -1,6 +1,9 @@
 package com.demo.model;
 
 import java.util.Calendar;
+import java.util.Date;
+
+import com.demo.utils.Util;
 
 /**
  * Class for storing crontab trigger minute field
@@ -24,10 +27,42 @@ public class CrontabMinuteField extends AbstractCrontabField {
     }
 
     @Override
-    protected int getRealStart(int cronStart) {
-        Calendar cal = Calendar.getInstance();
-        int currentMinute = cal.get(Calendar.MINUTE);
-        return getMinValueOfGivenStep(currentMinute, cronStart);
+    public int getFieldStart() {
+        Calendar recordCal = Util.getCalendar();
+        int currentMinute = recordCal.get(Calendar.MINUTE);
+        return getMinValueOfGivenStep(currentMinute, super.getFieldStart());
+    }
+
+    /**
+     * Update this field after hour is nudged
+     *
+     * @param currentDate
+     *            The current date, normally the hour field is bigger than the
+     *            hour field in timestamp
+     */
+    public void updateFieldList(Date currentDate) {
+        if (needUpdate()) {
+            super.updateFieldList(getFieldStartInTargetHour(currentDate));
+        }
+    }
+
+    /**
+     * Get the start value in the new hour
+     *
+     * @param currentDate
+     *            The current date
+     * @return The new start value
+     */
+    private int getFieldStartInTargetHour(Date currentDate) {
+        Calendar currentCal = Util.getCalendar(currentDate);
+        Calendar recordCal = Util.getCalendar(getTimestamp());
+
+        while (!Util.isSameHour(currentCal, recordCal)) {
+            recordCal.add(Calendar.MINUTE, getFieldStep());
+        }
+
+        setTimestamp(recordCal.getTime());
+        return recordCal.get(Calendar.MINUTE);
     }
 
 }

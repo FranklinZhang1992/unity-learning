@@ -19,12 +19,13 @@ public class Util {
         return calendarMonth + 1;
     }
 
-    public static int getMohthsBetween(Date startDate, Date endDate) {
-        Calendar startCal = Calendar.getInstance();
-        Calendar endCal = Calendar.getInstance();
+    public static int convertCalendarDayOfWeekToCrontabDayOfWeek(int calendarDayOfWeek) {
+        return calendarDayOfWeek - 1;
+    }
 
-        startCal.setTime(startDate);
-        endCal.setTime(endDate);
+    public static int getMohthsBetween(Date startDate, Date endDate) {
+        Calendar startCal = getCalendar(startDate);
+        Calendar endCal = getCalendar(endDate);
 
         int month_interval = endCal.get(Calendar.MONTH) - startCal.get(Calendar.MONTH);
         int year_interval = endCal.get(Calendar.YEAR) - startCal.get(Calendar.YEAR);
@@ -33,11 +34,8 @@ public class Util {
     }
 
     public static int getDaysBetween(Date startDate, Date endDate) {
-        Calendar startCal = Calendar.getInstance();
-        Calendar endCal = Calendar.getInstance();
-
-        startCal.setTime(startDate);
-        endCal.setTime(endDate);
+        Calendar startCal = getCalendar(startDate);
+        Calendar endCal = getCalendar(endDate);
 
         startCal.set(Calendar.HOUR_OF_DAY, 0);
         startCal.set(Calendar.MINUTE, 0);
@@ -57,10 +55,7 @@ public class Util {
      * @return The first day (Sunday) of current week
      */
     public static Date getFirstDayOfCurrentWeek(Date currentDate) {
-        Calendar cal = Calendar.getInstance();
-        if (currentDate != null) {
-            cal.setTime(currentDate);
-        }
+        Calendar cal = getCalendar(currentDate);
 
         int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
         int different = 1 - currentDayOfWeek;
@@ -116,14 +111,43 @@ public class Util {
         return num % givenNum == 0;
     }
 
-    public static boolean isSameMonth(Date srcDate, Date destDate) {
-        Calendar srcCal = Calendar.getInstance();
-        Calendar destCal = Calendar.getInstance();
+    public static boolean isSameYear(Calendar srcCal, Calendar destCal) {
+        return srcCal.get(Calendar.YEAR) == destCal.get(Calendar.YEAR);
+    }
 
-        srcCal.setTime(srcDate);
-        destCal.setTime(destDate);
-
+    public static boolean isSameMonth(Calendar srcCal, Calendar destCal) {
         return srcCal.get(Calendar.YEAR) == destCal.get(Calendar.YEAR)
                 && srcCal.get(Calendar.MONTH) == destCal.get(Calendar.MONTH);
+    }
+
+    public static boolean notReachTargetMonth(Calendar srcCal, Calendar destCal) {
+        return srcCal.get(Calendar.YEAR) < destCal.get(Calendar.YEAR)
+                || (srcCal.get(Calendar.YEAR) == destCal.get(Calendar.YEAR)
+                        && srcCal.get(Calendar.MONTH) < destCal.get(Calendar.MONTH));
+    }
+
+    public static boolean isSameDayOfMonth(Calendar srcCal, Calendar destCal) {
+        return srcCal.get(Calendar.YEAR) == destCal.get(Calendar.YEAR)
+                && srcCal.get(Calendar.MONTH) == destCal.get(Calendar.MONTH)
+                && srcCal.get(Calendar.DAY_OF_MONTH) == destCal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public static boolean isSameHour(Calendar srcCal, Calendar destCal) {
+        return srcCal.get(Calendar.YEAR) == destCal.get(Calendar.YEAR)
+                && srcCal.get(Calendar.MONTH) == destCal.get(Calendar.MONTH)
+                && srcCal.get(Calendar.DAY_OF_MONTH) == destCal.get(Calendar.DAY_OF_MONTH)
+                && srcCal.get(Calendar.HOUR_OF_DAY) == destCal.get(Calendar.HOUR_OF_DAY);
+    }
+
+    public static Calendar getCalendar(Date date) {
+        Calendar cal = Calendar.getInstance();
+        if (date != null) {
+            cal.setTime(date);
+        }
+        return cal;
+    }
+
+    public static Calendar getCalendar() {
+        return getCalendar(null);
     }
 }
