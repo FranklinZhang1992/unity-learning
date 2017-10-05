@@ -212,6 +212,7 @@ public class Convert {
         return result;
     }
 
+    @SuppressWarnings("resource")
     public void write() {
         String s = format(toStringFromDoc(this.xmlDoc));
         try {
