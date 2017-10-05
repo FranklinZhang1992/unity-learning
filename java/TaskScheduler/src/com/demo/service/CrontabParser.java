@@ -17,6 +17,7 @@ import com.demo.model.CrontabMinuteField;
 import com.demo.model.CrontabMonthField;
 import com.demo.model.CrontabYearField;
 import com.demo.model.InternalTime;
+import com.demo.utils.Util;
 
 /**
  * Class for parsing crontab trigger string, aims to: 1. Validate whether the
@@ -240,30 +241,18 @@ public class CrontabParser {
      * Calc crontab next run time
      */
     public Date next() {
-        if (dayOfWeekField.isSkipWeek()) {
-            return getNextRunTimeWithJumpWeekLimit();
-        } else {
-            return getNext();
-        }
+        return next(null);
     }
 
     /**
-     * Get the first day (Sunday) of current week
-     *
-     * @param currentDate
-     *            Current date
-     * @return The first day (Sunday) of current week
+     * Calc crontab next run time from a specified time
      */
-    private Date getFirstDayOfCurrentWeek(Date currentDate) {
-        Calendar cal = Calendar.getInstance();
-        if (currentDate != null) {
-            cal.setTime(currentDate);
+    public Date next(Date currentDate) {
+        if (dayOfWeekField.isSkipWeek()) {
+            return getNextRunTimeWithJumpWeekLimit(currentDate);
+        } else {
+            return getNext(currentDate);
         }
-
-        int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        int different = 1 - currentDayOfWeek;
-        cal.add(Calendar.DAY_OF_WEEK, different);
-        return cal.getTime();
     }
 
     /**
@@ -271,39 +260,16 @@ public class CrontabParser {
      *
      * @return The next run time
      */
-    private Date getNextRunTimeWithJumpWeekLimit() {
-        Date nowDate = new Date();
+    private Date getNextRunTimeWithJumpWeekLimit(Date currentDate) {
+        Date nowDate = currentDate == null ? new Date() : currentDate;
 
-        Date nextDate = getNext();
+        Date nextDate = getNext(nowDate);
 
-        while (!isIntegralMultipleWeeksLater(getFirstDayOfCurrentWeek(nowDate), getFirstDayOfCurrentWeek(nextDate))
-                && !isYearOutOfRange(nextDate)) {
+        while (!Util.isIntegralMultipleWeeksLater(nowDate, nextDate, dayOfWeekField.getSkipWeekCount())
+                && !isYearOutOfRange(nowDate, nextDate)) {
             nextDate = getNext(nextDate);
         }
         return nextDate;
-    }
-
-    /**
-     * Check if the interval days between nowDate and nextDate is integral
-     * multiple of weeks (The every-x-week trigger specified)
-     *
-     * @param nowDate
-     *            The current date
-     * @param nextDate
-     *            The next date
-     * @return Whether the interval days between nowDate and nextDate is
-     *         integral multiple of weeks
-     */
-    private boolean isIntegralMultipleWeeksLater(Date nowDate, Date nextDate) {
-        int interval = getInterval(nowDate, nextDate);
-        return isIntegralMultipleOfGivenWeek(interval, dayOfWeekField.getSkipWeekCount());
-    }
-
-    /**
-     * @see getNext(Date startDate)
-     */
-    private Date getNext() {
-        return getNext(null);
     }
 
     /**
@@ -317,8 +283,9 @@ public class CrontabParser {
         InternalTime t = new InternalTime(startDate);
 
         if (yearField != null) {
-            t.setYear(yearField.getYear());
-            t.setMonth(0);
+            if (nudgeYear(t, yearField.getYear())) {
+                t.setMonth(0);
+            }
         }
 
         if (!monthField.getFieldList().contains(t.getMonth())) {
@@ -341,78 +308,31 @@ public class CrontabParser {
     }
 
     /**
-     * Calc the interval days between startDate and endDate
+     * To avoid infinite loop, we need a threshold (20 years) to avoid calc next
+     * run time endlessly
      *
-     * @param startDate
-     *            The start date
-     * @param endDate
-     *            The end date
-     * @return The interval days between startDate and endDate
+     * @param nowYear
+     *            The current year number
+     * @param nextYear
+     *            The next year number
+     * @return Whether the given nextYear is within 20 years from nowYear
      */
-    public static int getInterval(Date startDate, Date endDate) {
-        // Set start day and end day
-        Calendar startCal = Calendar.getInstance();
-        startCal.setTime(startDate);
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTime(endDate);
-
-        // Get day of year of start day and end day
-        startCal.set(Calendar.HOUR_OF_DAY, 0);
-        endCal.set(Calendar.HOUR_OF_DAY, 1);
-
-        long startTime = startCal.getTimeInMillis();
-        long endTime = endCal.getTimeInMillis();
-        if (endTime < startTime) {
-            return 0;
-        } else {
-            // Convert to number of days
-            return (int) ((endTime - startTime) / (1000 * 3600 * 24));
-        }
+    private boolean isYearOutOfRange(int nowYear, int nextYear) {
+        return nowYear +  YEAR_THRESHOLD < nextYear;
     }
 
     /**
      * To avoid infinite loop, we need a threshold (20 years) to avoid calc next
-     * run time endlessly
-     *
+     * @param nowDate
+     *             The current date
      * @param nextDate
-     *            The date to be checked
-     * @return Whether the given date is within 20 years from now
+     *             The next date
+     * @return Whether the given nextDate is within 20 years from nowDate
      */
-    private boolean isYearOutOfRange(Date nextDate) {
-        Date now = new Date();
-        int intervalDay = getInterval(now, nextDate);
-        // One year = 365 days
-        return intervalDay > YEAR_THRESHOLD * 365;
-    }
-
-    /**
-     * Check if the number is integral multiple of the week (day * 7)
-     *
-     * @param num
-     *            The number to be checked
-     * @param jumpWeekNum
-     *            The number of week
-     * @return Whether the number is integral multiple of the week (day * 7)
-     */
-    public static boolean isIntegralMultipleOfGivenWeek(int num, int jumpWeekNum) {
-        int daysInAWeek = 7;
-        return isIntegralMultipleOfGivenNum(num, jumpWeekNum * daysInAWeek);
-    }
-
-    /**
-     * Check if the number is integral multiple of the givenNum
-     *
-     * @param num
-     *            The number to be checked
-     * @param givenNum
-     *            The given number
-     * @return Whether the number is integral multiple of the givenNum
-     */
-    public static boolean isIntegralMultipleOfGivenNum(int num, int givenNum) {
-        if (givenNum == 0) {
-            return false;
-        }
-        return num % givenNum == 0;
+    private boolean isYearOutOfRange(Date nowDate, Date nextDate) {
+        Calendar nowCal = Util.getCalendar(nowDate);
+        Calendar nextCal = Util.getCalendar(nextDate);
+        return isYearOutOfRange(nowCal.get(Calendar.YEAR), nextCal.get(Calendar.YEAR));
     }
 
     /**
@@ -463,16 +383,35 @@ public class CrontabParser {
     }
 
     /**
-     * Nudge year as the trigger required
+     * Nudge to a specified year (to specified year should later than the current year) as the trigger required
+     *
+     * @param t
+     *            The instance of InternalTime (global used time stamp)
+     * @param toYear
+     *            The year which will be nudged to
+     * @return
+     *            Whether the year is nudged
+     */
+    private boolean nudgeYear(InternalTime t, int toYear) {
+        int originalYear = t.getYear();
+        if (originalYear < toYear) {
+            if (isYearOutOfRange(originalYear, toYear)) {
+                throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
+            }
+            t.setYear(toYear);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Nudge 1 year as the trigger required
      *
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
     private void nudgeYear(InternalTime t) {
-        if (isYearOutOfRange(t.toTime())) {
-            throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
-        }
-        t.setYear(t.getYear() + 1);
+        nudgeYear(t, t.getYear() + 1);
     }
 
     /**
