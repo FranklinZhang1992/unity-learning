@@ -42,9 +42,6 @@ public class CrontabParser {
     private static final int YEAR_THRESHOLD = 20; // 20 years threshold in this
                                                   // parser
 
-    /** Calc next run time with this date as the start date */
-    private Date calcStartDate;
-
     private CrontabMinuteField minuteField;
     private CrontabHourField hourField;
     private CrontabDayOfMonthField dayOfMonthField;
@@ -251,7 +248,6 @@ public class CrontabParser {
      * Calc crontab next run time from a specified time
      */
     public Date next(Date currentDate) {
-        calcStartDate = currentDate;
         if (dayOfWeekField.isSkipWeek()) {
             return getNextRunTimeWithJumpWeekLimit(currentDate);
         } else {
@@ -270,7 +266,7 @@ public class CrontabParser {
         Date nextDate = getNext(nowDate);
 
         while (!Util.isIntegralMultipleWeeksLater(nowDate, nextDate, dayOfWeekField.getSkipWeekCount())
-                && !isYearOutOfRange(nextDate)) {
+                && !isYearOutOfRange(nowDate, nextDate)) {
             nextDate = getNext(nextDate);
         }
         return nextDate;
@@ -287,7 +283,9 @@ public class CrontabParser {
         InternalTime t = new InternalTime(startDate);
 
         if (yearField != null) {
-            t.setYear(yearField.getYear());
+            if (nudgeYear(t, yearField.getYear())) {
+                t.setMonth(0);
+            }
         }
 
         if (!monthField.getFieldList().contains(t.getMonth())) {
@@ -311,48 +309,31 @@ public class CrontabParser {
     }
 
     /**
-     * Calc the interval days between startDate and endDate
+     * To avoid infinite loop, we need a threshold (20 years) to avoid calc next
+     * run time endlessly
      *
-     * @param startDate
-     *            The start date
-     * @param endDate
-     *            The end date
-     * @return The interval days between startDate and endDate
+     * @param nowYear
+     *            The current year number
+     * @param nextYear
+     *            The next year number
+     * @return Whether the given nextYear is within 20 years from nowYear
      */
-    public static int getInterval(Date startDate, Date endDate) {
-        // Set start day and end day
-        Calendar startCal = Calendar.getInstance();
-        startCal.setTime(startDate);
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTime(endDate);
-
-        // Get day of year of start day and end day
-        startCal.set(Calendar.HOUR_OF_DAY, 0);
-        endCal.set(Calendar.HOUR_OF_DAY, 1);
-
-        long startTime = startCal.getTimeInMillis();
-        long endTime = endCal.getTimeInMillis();
-        if (endTime < startTime) {
-            return 0;
-        } else {
-            // Convert to number of days
-            return (int) ((endTime - startTime) / (1000 * 3600 * 24));
-        }
+    private boolean isYearOutOfRange(int nowYear, int nextYear) {
+        return nowYear +  YEAR_THRESHOLD < nextYear;
     }
 
     /**
      * To avoid infinite loop, we need a threshold (20 years) to avoid calc next
-     * run time endlessly
-     *
+     * @param nowDate
+     *             The current date
      * @param nextDate
-     *            The date to be checked
-     * @return Whether the given date is within 20 years from now
+     *             The next date
+     * @return Whether the given nextDate is within 20 years from nowDate
      */
-    private boolean isYearOutOfRange(Date nextDate) {
-        Date now = calcStartDate == null ? new Date() : calcStartDate;
-        int intervalDay = Util.getDaysBetween(now, nextDate);
-        // One year = 365 days
-        return intervalDay > YEAR_THRESHOLD * 365;
+    private boolean isYearOutOfRange(Date nowDate, Date nextDate) {
+        Calendar nowCal = Util.getCalendar(nowDate);
+        Calendar nextCal = Util.getCalendar(nextDate);
+        return isYearOutOfRange(nowCal.get(Calendar.YEAR), nextCal.get(Calendar.YEAR));
     }
 
     /**
@@ -403,17 +384,36 @@ public class CrontabParser {
     }
 
     /**
-     * Nudge year as the trigger required
+     * Nudge to a specified year (to specified year should later than the current year) as the trigger required
+     *
+     * @param t
+     *            The instance of InternalTime (global used time stamp)
+     * @param toYear
+     *            The year which will be nudged to
+     * @return
+     *            Whether the year is nudged
+     */
+    private boolean nudgeYear(InternalTime t, int toYear) {
+        int originalYear = t.getYear();
+        if (originalYear < toYear) {
+            if (isYearOutOfRange(originalYear, toYear)) {
+                throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
+            }
+            t.setYear(toYear);
+            monthField.updateFieldList(t.toTime());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Nudge 1 year as the trigger required
      *
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
     private void nudgeYear(InternalTime t) {
-        if (isYearOutOfRange(t.toTime())) {
-            throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
-        }
-        t.setYear(t.getYear() + 1);
-        monthField.updateFieldList(t.toTime());
+        nudgeYear(t, t.getYear() + 1);
     }
 
     /**

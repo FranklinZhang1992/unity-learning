@@ -37,7 +37,7 @@ public class Main {
         String trigger = null;
         switch (option) {
         case 1: /** One time */
-            trigger = "3 1 11 11 * 2017";
+            trigger = "3 1 11 9 * 2037";
             break;
         case 2:/** One time */
             trigger = "* * * * * 2017";
@@ -49,16 +49,16 @@ public class Main {
             trigger = "16 23 */6 * *";
             break;
         case 5: /** Weekly */
-            trigger = "3 1 * * 2/14";
+            trigger = "3 1 * * 4/14";
             break;
         case 6: /** Weekly */
-            trigger = "16 23 * * 2/14";
+            trigger = "16 23 * * 4/14";
             break;
         case 7:/** Monthly */
             trigger = "3 1 1 */7 *";
             break;
         case 8: /** Monthly */
-            trigger = "16 23 3 */7 *";
+            trigger = "16 23 5 */7 *";
             break;
         case 9: /** Hourly */
             trigger = "1 */9 * * *";
@@ -79,7 +79,7 @@ public class Main {
         System.out.println("Current time is: " + Util.getFormatedTime(new Date()));
         CrontabParser parser = new CrontabParser(trigger);
 
-        int nextCount = 5;
+        int nextCount = 6;
         int i = 0;
         Date nextDate = null;
         while (i < nextCount) {
