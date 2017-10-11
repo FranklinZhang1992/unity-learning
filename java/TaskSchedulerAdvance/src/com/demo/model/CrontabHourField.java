@@ -10,14 +10,13 @@ import com.demo.utils.Util;
  *
  */
 public class CrontabHourField extends AbstractCrontabField {
-
     /** Hour in a day starts at 0 and ends at 23 */
     public static final int MIN = 0;
     public static final int MAX = 23;
     public static final String FIELD_NAME = "hour";
 
-    public CrontabHourField(final String fieldStr) {
-        super(fieldStr, FIELD_NAME);
+    public CrontabHourField(final String fieldStr, final Date currentDate) {
+        super(fieldStr, FIELD_NAME, currentDate);
         validateField(fieldStr);
     }
 
@@ -28,9 +27,10 @@ public class CrontabHourField extends AbstractCrontabField {
 
     @Override
     public int getFieldStart() {
-        Calendar recordCal = Util.getCalendar();
+        Calendar recordCal = Util.getCalendar(getTimestamp());
         int currentHour = recordCal.get(Calendar.HOUR_OF_DAY);
-        return getMinValueOfGivenStep(currentHour, super.getFieldStart());
+        setFieldStart(getMinValueOfGivenStep(currentHour, super.getFieldStart()));
+        return super.getFieldStart();
     }
 
     /**
@@ -40,7 +40,7 @@ public class CrontabHourField extends AbstractCrontabField {
      *            The current date, normally the day-of-month field is bigger
      *            than the day-of-month field in timestamp
      */
-    public void updateFieldList(Date currentDate) {
+    public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
             super.updateFieldList(getFieldStartInTargetDayOfMonth(currentDate));
         }
@@ -53,7 +53,7 @@ public class CrontabHourField extends AbstractCrontabField {
      *            The current date
      * @return The new start value
      */
-    private int getFieldStartInTargetDayOfMonth(Date currentDate) {
+    private int getFieldStartInTargetDayOfMonth(final Date currentDate) {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar recordCal = Util.getCalendar(getTimestamp());
 
@@ -64,5 +64,4 @@ public class CrontabHourField extends AbstractCrontabField {
         setTimestamp(recordCal.getTime());
         return recordCal.get(Calendar.HOUR_OF_DAY);
     }
-
 }

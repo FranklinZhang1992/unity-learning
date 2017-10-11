@@ -1,13 +1,25 @@
 package com.demo.test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import com.demo.exception.PreConditionError;
 import com.demo.service.CrontabParser;
 import com.demo.utils.Util;
 
 public class Main {
+
+    protected static String getFormatedTime(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(date);
+    }
+
+    protected static Date getDateFromLong(long timeMillis) {
+        return new Date(timeMillis);
+    }
 
     protected static void printList(String title, List<Integer> list) {
         StringBuilder sb = new StringBuilder();
@@ -35,11 +47,14 @@ public class Main {
     protected static void test(int option) {
         System.out.println("Option is " + option);
         String trigger = null;
+        String startDate = "2017-02-13 00:00:00";
         switch (option) {
         case 1: /** One time */
-            trigger = "3 1 11 9 * 2037";
+            startDate = null;
+            trigger = "3 1 12 10 * 2038";
             break;
         case 2:/** One time */
+            startDate = null;
             trigger = "* * * * * 2017";
             break;
         case 3:/** Daily */
@@ -55,10 +70,10 @@ public class Main {
             trigger = "16 23 * * 4/14";
             break;
         case 7:/** Monthly */
-            trigger = "3 1 1 */7 *";
+            trigger = "3 1 13 */7 *";
             break;
         case 8: /** Monthly */
-            trigger = "16 23 5 */7 *";
+            trigger = "16 23 13 */7 *";
             break;
         case 9: /** Hourly */
             trigger = "1 */9 * * *";
@@ -76,25 +91,13 @@ public class Main {
             throw new RuntimeException("Unknown option");
         }
 
-        System.out.println("Current time is: " + Util.getFormatedTime(new Date()));
-        CrontabParser parser = new CrontabParser(trigger);
-
-        int nextCount = 6;
-        int i = 0;
-        Date nextDate = null;
-        while (i < nextCount) {
-            i++;
-            if (parser.isOneTimeCrontab()) {
-                if (i > 1) {
-                    continue;
-                }
-                if (!parser.isValidDateForOneTime()) {
-                    System.out.println("[ERROR] Not a valie one time crontab");
-                }
-            }
-            // printParser(parser);
-            nextDate = getNext(parser, nextDate);
-            System.out.println(Util.getFormatedTime(nextDate));
+        System.out.println("Current time is: " + getFormatedTime(new Date()));
+        System.out.println("trigger is: " + trigger);
+        try {
+            Date nextDate = getDateFromLong(getNearestNextRunTime(startDate, trigger));
+            System.out.println(getFormatedTime(nextDate));
+        } catch (PreConditionError e) {
+            System.out.println("[ERROR] PreConditionError");
         }
         System.out.println("#######################################################################");
     }
@@ -109,12 +112,55 @@ public class Main {
         }
     }
 
+    protected static long getNearestNextRunTime(String startDateStr, String trigger) {
+        return getNearestNextRunTime(Util.getDateFromStr(startDateStr), trigger);
+    }
+
+    protected static long getNearestNextRunTime(Date startDate, String trigger) {
+        long nearestNextRunTime = 0L;
+        CrontabParser parser = new CrontabParser(trigger, startDate);
+        // printParser(parser);
+        if (parser.isOneTimeCrontab()) {
+            if (!parser.isValidDateForOneTime()) {
+                throw new PreConditionError("Not a valid one time trigger.");
+            }
+            nearestNextRunTime = parser.next(startDate).getTime();
+        } else {
+            long currentTimeMillis = System.currentTimeMillis();
+            Date nextRunDate = parser.next(startDate);
+            while (nextRunDate.getTime() < currentTimeMillis) {
+                nextRunDate = parser.next(nextRunDate);
+            }
+            nearestNextRunTime = nextRunDate.getTime();
+        }
+        return nearestNextRunTime;
+    }
+
+    protected static void testGetDateFromStr() {
+        String dateStr = "2017-02-13";
+
+        Date date = null;
+        if (dateStr != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            try {
+                date = sdf.parse(dateStr);
+            } catch (ParseException e) {
+                System.out.println("Failed to parse date string " + dateStr);
+            }
+        }
+        System.out.println(getFormatedTime(date));
+
+    }
+
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
-        int caseNum = 12;
-        for (int i = 1; i <= caseNum; i++) {
+        int firstCaseNum = 1;
+        int lastCaseNum = 1;
+        for (int i = firstCaseNum; i <= lastCaseNum; i++) {
             test(i);
         }
-
     }
 
 }

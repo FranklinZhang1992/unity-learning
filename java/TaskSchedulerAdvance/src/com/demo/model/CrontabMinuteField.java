@@ -16,8 +16,8 @@ public class CrontabMinuteField extends AbstractCrontabField {
     private static final int MAX = 59;
     public static final String FIELD_NAME = "minute";
 
-    public CrontabMinuteField(final String fieldStr) {
-        super(fieldStr, FIELD_NAME);
+    public CrontabMinuteField(final String fieldStr, final Date currentDate) {
+        super(fieldStr, FIELD_NAME, currentDate);
         validateField(fieldStr);
     }
 
@@ -28,9 +28,10 @@ public class CrontabMinuteField extends AbstractCrontabField {
 
     @Override
     public int getFieldStart() {
-        Calendar recordCal = Util.getCalendar();
+        Calendar recordCal = Util.getCalendar(getTimestamp());
         int currentMinute = recordCal.get(Calendar.MINUTE);
-        return getMinValueOfGivenStep(currentMinute, super.getFieldStart());
+        setFieldStart(getMinValueOfGivenStep(currentMinute, super.getFieldStart()));
+        return super.getFieldStart();
     }
 
     /**
@@ -40,7 +41,7 @@ public class CrontabMinuteField extends AbstractCrontabField {
      *            The current date, normally the hour field is bigger than the
      *            hour field in timestamp
      */
-    public void updateFieldList(Date currentDate) {
+    public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
             super.updateFieldList(getFieldStartInTargetHour(currentDate));
         }
@@ -53,7 +54,7 @@ public class CrontabMinuteField extends AbstractCrontabField {
      *            The current date
      * @return The new start value
      */
-    private int getFieldStartInTargetHour(Date currentDate) {
+    private int getFieldStartInTargetHour(final Date currentDate) {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar recordCal = Util.getCalendar(getTimestamp());
 
@@ -64,5 +65,4 @@ public class CrontabMinuteField extends AbstractCrontabField {
         setTimestamp(recordCal.getTime());
         return recordCal.get(Calendar.MINUTE);
     }
-
 }

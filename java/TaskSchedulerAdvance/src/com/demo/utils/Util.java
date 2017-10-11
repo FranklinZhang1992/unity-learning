@@ -1,5 +1,6 @@
 package com.demo.utils;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -149,5 +150,29 @@ public class Util {
 
     public static Calendar getCalendar() {
         return getCalendar(null);
+    }
+
+    /**
+     * Convert a date from string to instance of Date
+     *
+     * @param dateStr
+     *            The date string (e.g. 2017-10-01)
+     * @return The instance of Date
+     */
+    public static Date getDateFromStr(String dateStr) {
+        if (dateStr != null) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                return sdf.parse(dateStr);
+            } catch (ParseException e) {
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    return sdf.parse(dateStr);
+                } catch (ParseException e1) {
+                    System.out.println("Failed to parse date string " + dateStr);
+                }
+            }
+        }
+        return null;
     }
 }

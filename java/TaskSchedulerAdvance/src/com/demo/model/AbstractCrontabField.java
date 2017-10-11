@@ -26,11 +26,10 @@ public abstract class AbstractCrontabField {
                                                                 // index for
                                                                 // start time
     private static final int CRONTAB_FIELD_STOP_GROUP_NUM = 3; // Regexp group
-                                                               // index for
-                                                               // stop time
+                                                               // index for stop
+                                                               // time
     private static final int CRONTAB_FIELD_STEP_GROUP_NUM = 5; // Regexp group
-                                                               // index for
-                                                               // step
+                                                               // index for step
 
     /** Original crontab trigger string */
     private String fieldRawStr;
@@ -61,8 +60,21 @@ public abstract class AbstractCrontabField {
      * @param fieldName
      */
     public AbstractCrontabField(final String fieldRawStr, final String fieldName) {
+        this(fieldRawStr, fieldName, null);
+    }
+
+    /**
+     * Constructor of AbstractCrontabField, set fieldRawStr and fieldName
+     * property directly without any change
+     *
+     * @param fieldRawStr
+     * @param fieldName
+     * @param currentDate
+     */
+    public AbstractCrontabField(final String fieldRawStr, final String fieldName, final Date currentDate) {
         this.fieldRawStr = fieldRawStr;
         this.fieldName = fieldName;
+        timestamp = currentDate;
     }
 
     /**
@@ -80,7 +92,7 @@ public abstract class AbstractCrontabField {
      * @param currentDate
      *            The current date, will be set to timestamp property
      */
-    protected void setTimestamp(Date currentDate) {
+    protected void setTimestamp(final Date currentDate) {
         timestamp = currentDate;
     }
 
@@ -91,6 +103,14 @@ public abstract class AbstractCrontabField {
      */
     public String getFieldStr() {
         return fieldRawStr;
+    }
+
+    /**
+     * @param fieldStart
+     *            the fieldStart to set
+     */
+    protected void setFieldStart(final int fieldStart) {
+        this.fieldStart = fieldStart;
     }
 
     /**
@@ -175,8 +195,6 @@ public abstract class AbstractCrontabField {
      *
      * @param fieldStr
      *            The field string
-     * @param Current
-     *            date
      */
     protected abstract void validateField(final String fieldStr);
 
@@ -193,10 +211,9 @@ public abstract class AbstractCrontabField {
     protected void validateCommonField(final String fieldStr, final int min, final int max) {
         // For uniform disposal, we convert all '*' to the range it represents
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
-        // Stores the times includes in the trigger. e.g. If its a hour field,
+        // Stores the times included in the trigger. e.g. If its a hour field,
         // and the trigger is *, then numbers 0-23 will all be stored into this
-        // set, we
-        // use set to avoid duplicate
+        // set, we use set to avoid duplicate
         Set<Integer> fieldRawSet = new HashSet<Integer>();
         // A sorted list with unique elements which contains all time numbers a
         // trigger represents
@@ -237,7 +254,6 @@ public abstract class AbstractCrontabField {
         Collections.sort(fieldList);
 
         this.fieldList = fieldList;
-        timestamp = new Date();
     }
 
     /**
@@ -371,7 +387,7 @@ public abstract class AbstractCrontabField {
      * @param updatedStart
      *            The new start value of the fieldList
      */
-    protected void updateFieldList(int updatedStart) {
+    protected void updateFieldList(final int updatedStart) {
         fieldStart = updatedStart;
         clearFieldList();
         getFieldList().addAll(getSteppedRange(fieldStart, fieldStop, fieldStep));

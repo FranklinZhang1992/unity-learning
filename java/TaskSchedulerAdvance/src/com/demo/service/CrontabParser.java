@@ -27,20 +27,20 @@ import com.demo.utils.Util;
 public class CrontabParser {
 
     private static final int MINUTE_INDEX = 0; // Regexp group index for minute
-                                               // field
+    // field
     private static final int HOUR_INDEX = 1; // Regexp group index for hour
-                                             // field
+    // field
     private static final int DAY_OF_MONTH_INDEX = 2; // Regexp group index for
-                                                     // dayOfMonth field
+    // dayOfMonth field
     private static final int MONTH_INDEX = 3; // Regexp group index for month
-                                              // field
+    // field
     private static final int DAY_OF_WEEK_INDEX = 4; // Regexp group index for
-                                                    // dayOfWeek field
+    // dayOfWeek field
     private static final int YEAR_INDEX = 5; // Regexp group index for year
-                                             // field (optional)
+    // field (optional)
 
     private static final int YEAR_THRESHOLD = 20; // 20 years threshold in this
-                                                  // parser
+    // parser
 
     private CrontabMinuteField minuteField;
     private CrontabHourField hourField;
@@ -48,6 +48,7 @@ public class CrontabParser {
     private CrontabMonthField monthField;
     private CrontabDayOfWeekField dayOfWeekField;
     private CrontabYearField yearField;
+    private Date timestamp;
 
     private Map<String, List<Integer>> interpolateDayOfWeekCache = new HashMap<String, List<Integer>>();
 
@@ -75,23 +76,23 @@ public class CrontabParser {
         return yearField;
     }
 
-    private void setMinuteField(String minute) {
-        minuteField = new CrontabMinuteField(minute);
+    private void setMinuteField(final String minute, final Date currentDate) {
+        minuteField = new CrontabMinuteField(minute, currentDate);
     }
 
-    private void setHourField(String hour) {
-        hourField = new CrontabHourField(hour);
+    private void setHourField(final String hour, final Date currentDate) {
+        hourField = new CrontabHourField(hour, currentDate);
     }
 
-    private void setDayOfMonthField(String dayOfMonth) {
-        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth);
+    private void setDayOfMonthField(final String dayOfMonth, final Date currentDate) {
+        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth, currentDate);
     }
 
-    private void setMonthField(String month) {
-        monthField = new CrontabMonthField(month);
+    private void setMonthField(final String month, final Date currentDate) {
+        monthField = new CrontabMonthField(month, currentDate);
     }
 
-    private void setDayOfWeekField(String dayOfWeek) {
+    private void setDayOfWeekField(final String dayOfWeek) {
         dayOfWeekField = new CrontabDayOfWeekField(dayOfWeek);
     }
 
@@ -109,12 +110,17 @@ public class CrontabParser {
      *
      * @param year
      */
-    private void setYearField(String year) {
+    private void setYearField(final String year) {
         yearField = new CrontabYearField(year);
     }
 
-    public CrontabParser(String cronString) {
+    public CrontabParser(final String cronString) {
+        this(cronString, null);
+    }
+
+    public CrontabParser(final String cronString, final Date currentDate) {
         System.out.println("Initialize CrontabParser with trigger '" + cronString + "'");
+        timestamp = currentDate == null ? new Date() : currentDate;
         String[] fields = cronString.split("\\s+");
         if (fields.length != 5 && fields.length != 6) {
             throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
@@ -122,10 +128,10 @@ public class CrontabParser {
 
         try {
             // Property set must in sequence
-            setMinuteField(fields[MINUTE_INDEX]);
-            setHourField(fields[HOUR_INDEX]);
-            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX]);
-            setMonthField(fields[MONTH_INDEX]);
+            setMinuteField(fields[MINUTE_INDEX], timestamp);
+            setHourField(fields[HOUR_INDEX], timestamp);
+            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX], timestamp);
+            setMonthField(fields[MONTH_INDEX], timestamp);
             setDayOfWeekField(fields[DAY_OF_WEEK_INDEX]);
             // Set year field only when year field is received
             if (fields.length == 6) {
@@ -170,7 +176,7 @@ public class CrontabParser {
         List<Integer> allowedDayOfMonths = dayOfMonthField.getFieldList();
         List<Integer> allowedYears = new ArrayList<Integer>();
 
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Util.getCalendar(timestamp);
         // Construct a list with all years which need to be traversed
         if (isOneTimeCrontab()) {
             allowedYears.add(yearField.getYear());
@@ -185,12 +191,12 @@ public class CrontabParser {
         DONE: for (int allowedYear : allowedYears) {
             cal.set(Calendar.YEAR, allowedYear);
             for (int allowedMonth : allowedMonths) {
-                cal.set(Calendar.MONTH, allowedMonth - 1);
+                cal.set(Calendar.MONTH, Util.convertCrontabMonthToCalendarMonth(allowedMonth));
                 for (int allowedDayOfMonth : allowedDayOfMonths) {
                     cal.set(Calendar.DAY_OF_MONTH, allowedDayOfMonth);
 
                     int convertedYear = cal.get(Calendar.YEAR);
-                    int convertedMonth = cal.get(Calendar.MONTH) + 1;
+                    int convertedMonth = Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH));
                     int convertedDayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
                     if (convertedYear == allowedYear && convertedMonth == allowedMonth
                             && convertedDayOfMonth == allowedDayOfMonth) {
@@ -220,10 +226,10 @@ public class CrontabParser {
     public boolean isValidDateForOneTime() {
         boolean isValid = true;
         int yearNum = yearField.getYear();
-        Calendar nextRunTime = Calendar.getInstance();
-        nextRunTime.setTime(next());
+        Calendar nextRunTime = Util.getCalendar(next(timestamp));
+        System.out.println("isValidDateForOneTime: next run time is: " + nextRunTime.getTime());
 
-        Calendar now = Calendar.getInstance();
+        Calendar now = Util.getCalendar();
         // If year field is set, then it means this is a one time cronjob, so
         // the time set must be later than current time
         if (now.compareTo(nextRunTime) > 0) {
@@ -247,7 +253,7 @@ public class CrontabParser {
     /**
      * Calc crontab next run time from a specified time
      */
-    public Date next(Date currentDate) {
+    public Date next(final Date currentDate) {
         if (dayOfWeekField.isSkipWeek()) {
             return getNextRunTimeWithJumpWeekLimit(currentDate);
         } else {
@@ -260,7 +266,7 @@ public class CrontabParser {
      *
      * @return The next run time
      */
-    private Date getNextRunTimeWithJumpWeekLimit(Date currentDate) {
+    private Date getNextRunTimeWithJumpWeekLimit(final Date currentDate) {
         Date nowDate = currentDate == null ? new Date() : currentDate;
 
         Date nextDate = getNext(nowDate);
@@ -279,7 +285,7 @@ public class CrontabParser {
      *            The date to start count
      * @return The next run time from now or the given date
      */
-    private Date getNext(Date startDate) {
+    private Date getNext(final Date startDate) {
         InternalTime t = new InternalTime(startDate);
 
         if (yearField != null) {
@@ -318,19 +324,20 @@ public class CrontabParser {
      *            The next year number
      * @return Whether the given nextYear is within 20 years from nowYear
      */
-    private boolean isYearOutOfRange(int nowYear, int nextYear) {
-        return nowYear +  YEAR_THRESHOLD < nextYear;
+    private boolean isYearOutOfRange(final int nowYear, final int nextYear) {
+        return nowYear + YEAR_THRESHOLD < nextYear;
     }
 
     /**
      * To avoid infinite loop, we need a threshold (20 years) to avoid calc next
+     *
      * @param nowDate
-     *             The current date
+     *            The current date
      * @param nextDate
-     *             The next date
+     *            The next date
      * @return Whether the given nextDate is within 20 years from nowDate
      */
-    private boolean isYearOutOfRange(Date nowDate, Date nextDate) {
+    private boolean isYearOutOfRange(final Date nowDate, final Date nextDate) {
         Calendar nowCal = Util.getCalendar(nowDate);
         Calendar nextCal = Util.getCalendar(nextDate);
         return isYearOutOfRange(nowCal.get(Calendar.YEAR), nextCal.get(Calendar.YEAR));
@@ -340,7 +347,7 @@ public class CrontabParser {
      * @see interpolateDayOfWeeksWithoutCache
      *
      */
-    private List<Integer> interpolateDayOfWeeks(int year, int month) {
+    private List<Integer> interpolateDayOfWeeks(final int year, final int month) {
         String key = String.valueOf(year) + "-" + String.valueOf(month);
         if (interpolateDayOfWeekCache.get(key) == null) {
             interpolateDayOfWeekCache.put(key, interpolateDayOfWeeksWithoutCache(year, month));
@@ -360,21 +367,22 @@ public class CrontabParser {
      *            The month
      * @return All valid days within the given year and month
      */
-    private List<Integer> interpolateDayOfWeeksWithoutCache(int year, int month) {
-        Calendar cal = Calendar.getInstance();
+    private List<Integer> interpolateDayOfWeeksWithoutCache(final int year, final int month) {
+        Calendar cal = Util.getCalendar();
         // As java Calendar month field starts from 0, but Crontab month field
         // starts from 1, so we need to minus 1 here
-        cal.set(year, month - 1, 1);
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, Util.convertCrontabMonthToCalendarMonth(month), 1);
 
         List<Integer> result = new ArrayList<Integer>();
         List<Integer> validDayOfMonths = dayOfMonthField.getFieldList();
         List<Integer> validDayOfWeeks = dayOfWeekField.getFieldList();
 
-        while (cal.get(Calendar.MONTH) == month - 1) {
+        while (Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH)) == month) {
             // In crontab day-of-week is in range 0-6, but in java Calendar,
             // day-of-week is in range of 1-7
-            if (validDayOfMonths.contains(cal.get(Calendar.DAY_OF_MONTH))
-                    && validDayOfWeeks.contains(cal.get(Calendar.DAY_OF_WEEK) - 1)) {
+            if (validDayOfMonths.contains(cal.get(Calendar.DAY_OF_MONTH)) && validDayOfWeeks
+                    .contains(Util.convertCalendarDayOfWeekToCrontabDayOfWeek(cal.get(Calendar.DAY_OF_WEEK)))) {
                 result.add(cal.get(Calendar.DAY_OF_MONTH));
             }
             cal.add(Calendar.DAY_OF_MONTH, 1);
@@ -384,22 +392,22 @@ public class CrontabParser {
     }
 
     /**
-     * Nudge to a specified year (to specified year should later than the current year) as the trigger required
+     * Nudge to a specified year (to specified year should later than the
+     * current year) as the trigger required
      *
      * @param t
      *            The instance of InternalTime (global used time stamp)
      * @param toYear
      *            The year which will be nudged to
-     * @return
-     *            Whether the year is nudged
+     * @return Whether the year is nudged
      */
-    private boolean nudgeYear(InternalTime t, int toYear) {
+    private boolean nudgeYear(final InternalTime t, final int toYear) {
         int originalYear = t.getYear();
         if (originalYear < toYear) {
-            if (isYearOutOfRange(originalYear, toYear)) {
+            t.setYear(toYear);
+            if (isYearOutOfRange(timestamp, t.toTime())) {
                 throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
             }
-            t.setYear(toYear);
             monthField.updateFieldList(t.toTime());
             return true;
         }
@@ -412,7 +420,7 @@ public class CrontabParser {
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
-    private void nudgeYear(InternalTime t) {
+    private void nudgeYear(final InternalTime t) {
         nudgeYear(t, t.getYear() + 1);
     }
 
@@ -422,7 +430,7 @@ public class CrontabParser {
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
-    private void nudgeMonth(InternalTime t) {
+    private void nudgeMonth(final InternalTime t) {
         List<Integer> allowedMonths = monthField.getFieldList();
         int nextValue = findBestNext(t.getMonth(), allowedMonths);
 
@@ -441,7 +449,7 @@ public class CrontabParser {
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
-    private void nudgeDate(InternalTime t) {
+    private void nudgeDate(final InternalTime t) {
         List<Integer> allowedDates = interpolateDayOfWeeks(t.getYear(), t.getMonth());
         while (allowedDates.isEmpty()) {
             nudgeMonth(t);
@@ -466,7 +474,7 @@ public class CrontabParser {
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
-    private void nudgeHour(InternalTime t) {
+    private void nudgeHour(final InternalTime t) {
         List<Integer> allowedHours = hourField.getFieldList();
         int nextValue = findBestNext(t.getHour(), allowedHours);
 
@@ -485,7 +493,7 @@ public class CrontabParser {
      * @param t
      *            The instance of InternalTime (global used time stamp)
      */
-    private void nudgeMinute(InternalTime t) {
+    private void nudgeMinute(final InternalTime t) {
         List<Integer> allowedMinutes = minuteField.getFieldList();
         int nextValue = findBestNext(t.getMinute(), allowedMinutes);
 
@@ -504,7 +512,7 @@ public class CrontabParser {
      * @param allowed
      * @return
      */
-    private int findBestNext(int current, List<Integer> allowed) {
+    private int findBestNext(final int current, final List<Integer> allowed) {
         int bestNext = -1;
         for (int val : allowed) {
             if (val > current) {

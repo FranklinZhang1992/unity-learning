@@ -34,5 +34,4 @@ public class CrontabYearField extends AbstractCrontabField {
         int yearNum = toInt(fieldStr);
         setFieldList(Arrays.asList(yearNum));
     }
-
 }

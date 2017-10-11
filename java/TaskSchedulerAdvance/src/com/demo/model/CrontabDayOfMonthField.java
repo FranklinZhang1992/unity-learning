@@ -16,8 +16,8 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
     public static final int MAX = 31;
     public static final String FIELD_NAME = "day-of-month";
 
-    public CrontabDayOfMonthField(final String fieldStr) {
-        super(fieldStr, FIELD_NAME);
+    public CrontabDayOfMonthField(final String fieldStr, final Date currentDate) {
+        super(fieldStr, FIELD_NAME, currentDate);
         validateField(fieldStr);
     }
 
@@ -38,9 +38,10 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
 
     @Override
     public int getFieldStart() {
-        Calendar recordCal = Util.getCalendar();
+        Calendar recordCal = Util.getCalendar(getTimestamp());
         int currentDayOfMonth = recordCal.get(Calendar.DAY_OF_MONTH);
-        return getMinValueOfGivenStep(currentDayOfMonth, super.getFieldStart());
+        setFieldStart(getMinValueOfGivenStep(currentDayOfMonth, super.getFieldStart()));
+        return super.getFieldStart();
     }
 
     /**
@@ -50,7 +51,7 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
      *            The current date, normally the month field is bigger than the
      *            month field in timestamp
      */
-    public void updateFieldList(Date currentDate) {
+    public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
             super.updateFieldList(getFieldStartInTargetMonth(currentDate));
         }
@@ -63,7 +64,7 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
      *            The current date
      * @return The new start value
      */
-    private int getFieldStartInTargetMonth(Date currentDate) {
+    private int getFieldStartInTargetMonth(final Date currentDate) {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar recordCal = Util.getCalendar(getTimestamp());
 
@@ -75,5 +76,4 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
         setTimestamp(recordCal.getTime());
         return recordCal.get(Calendar.DAY_OF_MONTH);
     }
-
 }

@@ -8,7 +8,6 @@ import com.demo.utils.Util;
  *
  */
 public class CrontabDayOfWeekField extends AbstractCrontabField {
-
     /**
      * Day in a week starts at 0 and ends at 6 or starts at 1 and ends at 7 (0/7
      * represents Sunday)
@@ -44,7 +43,7 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
 
     @Override
     protected void validateField(final String fieldStr) {
-        final StringBuilder processedFieldStr = new StringBuilder();
+        StringBuilder processedFieldStr = new StringBuilder();
 
         String[] splitedField = fieldStr.split("/");
         int dayOfWeekStep = 0;
@@ -77,5 +76,4 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
         int totalLength = MAX - MIN + 1;
         return isFullRange(totalLength);
     }
-
 }
