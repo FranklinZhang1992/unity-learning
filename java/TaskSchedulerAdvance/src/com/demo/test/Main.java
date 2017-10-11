@@ -47,11 +47,11 @@ public class Main {
     protected static void test(int option) {
         System.out.println("Option is " + option);
         String trigger = null;
-        String startDate = "2017-02-13 00:00:00";
+        String startDate = "2017-11-13 00:00:00";
         switch (option) {
         case 1: /** One time */
             startDate = null;
-            trigger = "3 1 12 10 * 2038";
+            trigger = "3 1 12 10 * 2018";
             break;
         case 2:/** One time */
             startDate = null;
@@ -94,8 +94,7 @@ public class Main {
         System.out.println("Current time is: " + getFormatedTime(new Date()));
         System.out.println("trigger is: " + trigger);
         try {
-            Date nextDate = getDateFromLong(getNearestNextRunTime(startDate, trigger));
-            System.out.println(getFormatedTime(nextDate));
+            getNearestNextRunTime(startDate, trigger);
         } catch (PreConditionError e) {
             System.out.println("[ERROR] PreConditionError");
         }
@@ -113,6 +112,7 @@ public class Main {
     }
 
     protected static long getNearestNextRunTime(String startDateStr, String trigger) {
+        System.out.println("start time is: " + startDateStr);
         return getNearestNextRunTime(Util.getDateFromStr(startDateStr), trigger);
     }
 
@@ -124,12 +124,17 @@ public class Main {
             if (!parser.isValidDateForOneTime()) {
                 throw new PreConditionError("Not a valid one time trigger.");
             }
-            nearestNextRunTime = parser.next(startDate).getTime();
+            Date nextRunDate = parser.next();
+            System.out.println(getFormatedTime(nextRunDate));
+            nearestNextRunTime = nextRunDate.getTime();
         } else {
-            long currentTimeMillis = System.currentTimeMillis();
-            Date nextRunDate = parser.next(startDate);
-            while (nextRunDate.getTime() < currentTimeMillis) {
+            int loopCount = 1;
+            int maxLoopCount = 6;
+            Date nextRunDate = null;
+            while (loopCount <= maxLoopCount) {
+                loopCount++;
                 nextRunDate = parser.next(nextRunDate);
+                System.out.println(getFormatedTime(nextRunDate));
             }
             nearestNextRunTime = nextRunDate.getTime();
         }
@@ -157,7 +162,7 @@ public class Main {
      */
     public static void main(String[] args) {
         int firstCaseNum = 1;
-        int lastCaseNum = 1;
+        int lastCaseNum = 8;
         for (int i = firstCaseNum; i <= lastCaseNum; i++) {
             test(i);
         }

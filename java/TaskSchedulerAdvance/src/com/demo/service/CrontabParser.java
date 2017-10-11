@@ -227,7 +227,6 @@ public class CrontabParser {
         boolean isValid = true;
         int yearNum = yearField.getYear();
         Calendar nextRunTime = Util.getCalendar(next(timestamp));
-        System.out.println("isValidDateForOneTime: next run time is: " + nextRunTime.getTime());
 
         Calendar now = Util.getCalendar();
         // If year field is set, then it means this is a one time cronjob, so
@@ -243,6 +242,11 @@ public class CrontabParser {
         return isValid;
     }
 
+    private Date getStartDate(Date currentDate) {
+        Date now = currentDate == null ? new Date() : currentDate;
+        return timestamp.getTime() > now.getTime() ? timestamp : now;
+    }
+
     /**
      * Calc crontab next run time
      */
@@ -254,10 +258,11 @@ public class CrontabParser {
      * Calc crontab next run time from a specified time
      */
     public Date next(final Date currentDate) {
+        Date startDate = getStartDate(currentDate);
         if (dayOfWeekField.isSkipWeek()) {
-            return getNextRunTimeWithJumpWeekLimit(currentDate);
+            return getNextRunTimeWithJumpWeekLimit(startDate);
         } else {
-            return getNext(currentDate);
+            return getNext(startDate);
         }
     }
 
@@ -267,7 +272,7 @@ public class CrontabParser {
      * @return The next run time
      */
     private Date getNextRunTimeWithJumpWeekLimit(final Date currentDate) {
-        Date nowDate = currentDate == null ? new Date() : currentDate;
+        Date nowDate = currentDate;
 
         Date nextDate = getNext(nowDate);
 
