@@ -29,3 +29,8 @@ arr2 = ["3", "1", "a"].sort
 
 eql = arr1.eql?(arr2)
 puts "arr1 == arr2 ? => #{eql}"
+
+var1 = "v1"
+var2 = "v2"
+arr = [var1, var2]
+p arr
