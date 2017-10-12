@@ -23,28 +23,17 @@ public abstract class AbstractCrontabField {
     protected static final String CRONTAB_FIELD_REGEXP = "^(\\d+)(-(\\d+)(/(\\d+))?)?$";
     protected Pattern crontabCommonFieldPattern = Pattern.compile(CRONTAB_FIELD_REGEXP);
 
-    private static final int CRONTAB_FIELD_START_GROUP_NUM = 1; // Regexp group
-                                                                // index for
-                                                                // start time
-    private static final int CRONTAB_FIELD_STOP_GROUP_NUM = 3; // Regexp group
-                                                               // index for stop
-                                                               // time
-    private static final int CRONTAB_FIELD_STEP_GROUP_NUM = 5; // Regexp group
-                                                               // index for step
+    private static final int CRONTAB_FIELD_START_GROUP_NUM = 1; // Regexp group index for start time
+    private static final int CRONTAB_FIELD_STOP_GROUP_NUM = 3; // Regexp group index for stop time
+    private static final int CRONTAB_FIELD_STEP_GROUP_NUM = 5; // Regexp group index for step
 
     /** Original crontab trigger string */
     private String fieldRawStr;
-    /**
-     * The time range, e.g. If the month filed is '*', then this will be a 1-12
-     * integer list
-     */
+    /** The time range, e.g. If the month filed is '*', then this will be a 1-12 integer list */
     private List<Integer> fieldList;
     /** The name of the field */
     private String fieldName;
-    /**
-     * The start of the field, extracted from cron string and updated according
-     * to the actual situation
-     */
+    /** The start of the field, extracted from cron string and updated according to the actual situation */
     private int fieldStart;
     /** The start of the field, extracted from cron string */
     private int fieldStop;
@@ -54,8 +43,7 @@ public abstract class AbstractCrontabField {
     private Date timestamp;
 
     /**
-     * Constructor of AbstractCrontabField, set fieldRawStr and fieldName
-     * property directly without any change
+     * Constructor of AbstractCrontabField, set fieldRawStr and fieldName property directly without any change
      *
      * @param fieldRawStr
      * @param fieldName
@@ -65,8 +53,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * Constructor of AbstractCrontabField, set fieldRawStr and fieldName
-     * property directly without any change
+     * Constructor of AbstractCrontabField, set fieldRawStr and fieldName property directly without any change
      *
      * @param fieldRawStr
      * @param fieldName
@@ -142,8 +129,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * Get a list which contains all valid numbers of a specified field, e.g. if
-     * day-of-week field is 2-5, then this list will contain 2, 3, 4 and 5
+     * Get a list which contains all valid numbers of a specified field, e.g. if day-of-week field is 2-5, then this list will contain 2, 3, 4 and 5
      *
      * @return A list which contains all valid numbers of a specified field
      */
@@ -212,19 +198,14 @@ public abstract class AbstractCrontabField {
     protected void validateCommonField(final String fieldStr, final int min, final int max) {
         // For uniform disposal, we convert all '*' to the range it represents
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
-        // Stores the times included in the trigger. e.g. If its a hour field,
-        // and the trigger is *, then numbers 0-23 will all be stored into this
-        // set, we use
+        // Stores the times included in the trigger. e.g. If its a hour field, and the trigger is *, then numbers 0-23 will all be stored into this set, we use
         // set to avoid duplicate
         Set<Integer> fieldRawSet = new HashSet<Integer>();
-        // A sorted list with unique elements which contains all time numbers a
-        // trigger represents
+        // A sorted list with unique elements which contains all time numbers a trigger represents
         List<Integer> fieldList = new ArrayList<Integer>();
 
-        // Below are logic to convert a trigger string into all time numbers it
-        // represents.
-        // e.g. If the hour part trigger is *, then we will get a orderly array
-        // of 0-23
+        // Below are logic to convert a trigger string into all time numbers it represents.
+        // e.g. If the hour part trigger is *, then we will get a orderly array of 0-23
         List<String> fieldValues = Arrays.asList(convertedValue.split(","));
         for (String subValue : fieldValues) {
             Matcher matcher = crontabCommonFieldPattern.matcher(subValue);
@@ -246,8 +227,7 @@ public abstract class AbstractCrontabField {
                             fieldRawStr);
                 }
 
-                // Add all valid numbers of a field into the set, The start
-                // value is based on both the cron expression and current time
+                // Add all valid numbers of a field into the set, The start value is based on both the cron expression and current time
                 fieldRawSet.addAll(getSteppedRange(getFieldStart(), fieldStop, fieldStep));
             } else {
                 throw new InvalidCrontabError("Invalid crontab " + fieldName + " field '" + fieldRawStr + "'", I18NKeys.INVALID_FIELD, fieldName, fieldRawStr);
@@ -311,8 +291,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * An example: If start is 1, stop is 3, step is 1, then a list of [1, 2, 3,
-     * 4, 5] will be returned
+     * An example: If start is 1, stop is 3, step is 1, then a list of [1, 2, 3, 4, 5] will be returned
      *
      * @param start
      *            Start time get from trigger
@@ -337,8 +316,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * Parse a string to integer, throw CrontabValidationException when the
-     * parsing failed
+     * Parse a string to integer, throw CrontabValidationException when the parsing failed
      *
      * @param str
      *            The string
@@ -353,8 +331,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * As 0 or 7 all represents Sunday, so we need to convert 7 to 0 to make it
-     * easier to handle
+     * As 0 or 7 all represents Sunday, so we need to convert 7 to 0 to make it easier to handle
      *
      */
     protected void convertDayOfWeek() {
@@ -373,8 +350,7 @@ public abstract class AbstractCrontabField {
      * @param currentValue
      *            The current value, will continuous minus step from this value
      * @param min
-     *            The minimum allowable value, the returned value should not be
-     *            smaller than this value
+     *            The minimum allowable value, the returned value should not be smaller than this value
      * @return The minimum value get by minus step from currentValue
      */
     protected int getMinValueOfGivenStep(final int currentValue, final int min) {
@@ -398,8 +374,7 @@ public abstract class AbstractCrontabField {
     }
 
     /**
-     * Check if we need to update the fieldList, currently we only update it
-     * when the step is bigger than 1
+     * Check if we need to update the fieldList, currently we only update it when the step is bigger than 1
      *
      * @return Returns true if we need to update the fieldList
      */
