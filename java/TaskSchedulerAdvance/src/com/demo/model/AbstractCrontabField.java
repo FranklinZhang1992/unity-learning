@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.demo.exception.InvalidCrontabError;
+import com.demo.i18n.I18NKeys;
 
 /**
  * Abstract class for storing crontab trigger fields
@@ -118,7 +119,7 @@ public abstract class AbstractCrontabField {
      *
      * @return The start value of the field
      */
-    public int getFieldStart() {
+    protected int getFieldStart() {
         return fieldStart;
     }
 
@@ -127,7 +128,7 @@ public abstract class AbstractCrontabField {
      *
      * @return The stop value of the field
      */
-    public int getFieldStop() {
+    protected int getFieldStop() {
         return fieldStop;
     }
 
@@ -136,7 +137,7 @@ public abstract class AbstractCrontabField {
      *
      * @return The step value of the field
      */
-    public int getFieldStep() {
+    protected int getFieldStep() {
         return fieldStep;
     }
 
@@ -213,7 +214,8 @@ public abstract class AbstractCrontabField {
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
         // Stores the times included in the trigger. e.g. If its a hour field,
         // and the trigger is *, then numbers 0-23 will all be stored into this
-        // set, we use set to avoid duplicate
+        // set, we use
+        // set to avoid duplicate
         Set<Integer> fieldRawSet = new HashSet<Integer>();
         // A sorted list with unique elements which contains all time numbers a
         // trigger represents
@@ -240,13 +242,15 @@ public abstract class AbstractCrontabField {
 
                 // The start, stop and step should all be in the max range
                 if (!rangeCheck(fieldStart, fieldStop, fieldStep, min, max)) {
-                    throw new InvalidCrontabError(fieldName, fieldRawStr);
+                    throw new InvalidCrontabError("Invalid crontab " + fieldName + " field '" + fieldRawStr + "'", I18NKeys.INVALID_FIELD, fieldName,
+                            fieldRawStr);
                 }
 
-                // Add all valid numbers of a field into the set
+                // Add all valid numbers of a field into the set, The start
+                // value is based on both the cron expression and current time
                 fieldRawSet.addAll(getSteppedRange(getFieldStart(), fieldStop, fieldStep));
             } else {
-                throw new InvalidCrontabError(fieldName, fieldRawStr);
+                throw new InvalidCrontabError("Invalid crontab " + fieldName + " field '" + fieldRawStr + "'", I18NKeys.INVALID_FIELD, fieldName, fieldRawStr);
             }
         }
 
@@ -344,7 +348,7 @@ public abstract class AbstractCrontabField {
         try {
             return Integer.valueOf(str);
         } catch (Exception e) {
-            throw new InvalidCrontabError(fieldName, fieldRawStr);
+            throw new InvalidCrontabError("Invalid crontab " + fieldName + " field '" + fieldRawStr + "'", I18NKeys.INVALID_FIELD, fieldName, fieldRawStr);
         }
     }
 

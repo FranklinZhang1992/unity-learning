@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import com.demo.utils.Util;
+
 /**
  * Class for recording time used in CrontabParser
  *
@@ -21,7 +23,7 @@ public class InternalTime {
         return year;
     }
 
-    public void setYear(int year) {
+    public void setYear(final int year) {
         this.year = year;
     }
 
@@ -29,7 +31,7 @@ public class InternalTime {
         return month;
     }
 
-    public void setMonth(int month) {
+    public void setMonth(final int month) {
         this.month = month;
     }
 
@@ -37,7 +39,7 @@ public class InternalTime {
         return day;
     }
 
-    public void setDay(int day) {
+    public void setDay(final int day) {
         this.day = day;
     }
 
@@ -45,7 +47,7 @@ public class InternalTime {
         return hour;
     }
 
-    public void setHour(int hour) {
+    public void setHour(final int hour) {
         this.hour = hour;
     }
 
@@ -53,15 +55,15 @@ public class InternalTime {
         return minute;
     }
 
-    public void setMinute(int minute) {
+    public void setMinute(final int minute) {
         this.minute = minute;
     }
 
-    private void initWithCalendar(Calendar cal) {
+    private void initWithCalendar(final Calendar cal) {
         year = cal.get(Calendar.YEAR);
         // In java calendar, month range is 0-11, but in crontab, month range is
         // 1-12
-        month = cal.get(Calendar.MONTH) + 1;
+        month = Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH));
         day = cal.get(Calendar.DAY_OF_MONTH);
         hour = cal.get(Calendar.HOUR_OF_DAY);
         minute = cal.get(Calendar.MINUTE);
@@ -74,11 +76,13 @@ public class InternalTime {
     /**
      * @param startDate
      */
-    public InternalTime(Date startDate) {
+    public InternalTime(final Date startDate) {
         Calendar cal = Calendar.getInstance();
         if (startDate != null) {
             cal.setTime(startDate);
         }
+        cal.clear(Calendar.SECOND);
+        cal.clear(Calendar.MILLISECOND);
         initWithCalendar(cal);
     }
 
@@ -87,12 +91,14 @@ public class InternalTime {
         cal.set(Calendar.YEAR, year);
         // In java calendar, month range is 0-11, but in crontab, month range is
         // 1-12
-        cal.set(Calendar.MONTH, month - 1);
+        cal.set(Calendar.MONTH, Util.convertCrontabMonthToCalendarMonth(month));
         cal.set(Calendar.DAY_OF_MONTH, day);
         cal.set(Calendar.HOUR_OF_DAY, hour);
         cal.set(Calendar.MINUTE, minute);
-        // Crontab does not care about seconds field, so we always set it as 0
-        cal.set(Calendar.SECOND, 0);
+        // Crontab does not care about seconds & millisecond field, so we always
+        // set it as 0
+        cal.clear(Calendar.SECOND);
+        cal.clear(Calendar.MILLISECOND);
 
         return cal.getTime();
     }

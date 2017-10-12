@@ -1,6 +1,7 @@
 package com.demo.model;
 
 import com.demo.exception.InvalidCrontabError;
+import com.demo.i18n.I18NKeys;
 import com.demo.utils.Util;
 
 /**
@@ -52,7 +53,7 @@ public class CrontabDayOfWeekField extends AbstractCrontabField {
             dayOfWeekStep = toInt(splitedField[1]);
             if (dayOfWeekStep >= WEEK_LENGTH) {
                 if (!Util.isIntegralMultipleOfGivenNum(dayOfWeekStep, WEEK_LENGTH)) {
-                    throw new InvalidCrontabError(FIELD_NAME, fieldStr);
+                    throw new InvalidCrontabError("Invalid crontab " + FIELD_NAME + " field '" + fieldStr + "'", I18NKeys.INVALID_FIELD, FIELD_NAME, fieldStr);
                 }
                 skipWeekCont = dayOfWeekStep / WEEK_LENGTH;
                 dayOfWeekStep = 1;
