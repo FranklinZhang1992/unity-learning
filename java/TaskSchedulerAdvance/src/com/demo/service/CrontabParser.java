@@ -41,23 +41,10 @@ public class CrontabParser {
     private CrontabDayOfWeekField dayOfWeekField;
     private CrontabYearField yearField;
     /**
-     * This property is initialized during construction, this value will be used to initialize all fields' lists This property will be updated when calculating
+     * This property is initialized during construction, this value will be used to initialize all fields' lists. This property will be updated when calculating
      * next run time and the next run time will be calculated based on this value
      */
     private Date startDate = null;
-    private Calendar currentCal = null;
-
-    /**
-     * Get an instance of Calendar, which indicates current time
-     * 
-     * @return An instance of Calendar
-     */
-    private Calendar getCurrentCal() {
-        if (currentCal == null) {
-            currentCal = Util.getCalendar();
-        }
-        return currentCal;
-    }
 
     private Map<String, List<Integer>> interpolateDayOfWeekCache = new HashMap<String, List<Integer>>();
 
@@ -188,9 +175,9 @@ public class CrontabParser {
             // For one time task, we only need to add the specified year into the list
             allowedYears.add(yearField.getYear());
         } else {
-            // For non-one time task, we need to add all years from the specified start date to 20 years later from now on.
+            // For non-one time task, we need to add all years from the specified target date to 20 years later from now on.
             int currentYear = cal.get(Calendar.YEAR);
-            for (int yearNum = currentYear; yearNum <= getCurrentCal().get(Calendar.YEAR) + YEAR_THRESHOLD; yearNum++) {
+            for (int yearNum = currentYear; yearNum <= Util.getCalendar(getTargetDate()).get(Calendar.YEAR) + YEAR_THRESHOLD; yearNum++) {
                 allowedYears.add(yearNum);
             }
         }
@@ -258,11 +245,22 @@ public class CrontabParser {
     }
 
     /**
+     * Get the target date, CrontabParser will calculate next run time based on the target date, the target date is the larger one between the start calculation
+     * time and current date
+     * 
+     * @return The target date (The finally calculated next run time shouldn't be earlier than the target date)
+     */
+    private Date getTargetDate() {
+        return getTargetDate(null);
+    }
+
+    /**
      * Get the target date, CrontabParser will calculate next run time based on the target date, the target date is the larger one between the original
      * startTime and current date
      *
      * @param currentDate
      *            Current time, null means current system time
+     * @return The target date (The finally calculated next run time shouldn't be earlier than the target date)
      */
     private Date getTargetDate(final Date currentDate) {
         Date now = currentDate == null ? new Date() : currentDate;
@@ -326,7 +324,7 @@ public class CrontabParser {
 
         Date nextDate = getNext(nowDate);
 
-        while (!Util.isIntegralMultipleWeeksLater(nowDate, nextDate, dayOfWeekField.getSkipWeekCount()) && !isYearOutOfRange(nowDate, nextDate)) {
+        while (!Util.isIntegralMultipleWeeksLater(nowDate, nextDate, dayOfWeekField.getSkipWeekCount()) && !isYearOutOfRange(nextDate)) {
             nextDate = getNext(nextDate);
         }
         return nextDate;
@@ -397,6 +395,17 @@ public class CrontabParser {
     }
 
     /**
+     * To avoid infinite loop, we need a threshold (20 years) to avoid calc next run time endlessly
+     * 
+     * @param nextDate
+     *            The next date
+     * @return Whether the given nextDate is within 20 years from targetDate
+     */
+    private boolean isYearOutOfRange(final Date nextDate) {
+        return isYearOutOfRange(getTargetDate(), nextDate);
+    }
+
+    /**
      * @see interpolateDayOfWeeksWithoutCache
      *
      */
@@ -454,7 +463,7 @@ public class CrontabParser {
         int originalYear = t.getYear();
         if (originalYear < toYear) {
             t.setYear(toYear);
-            if (isYearOutOfRange(getCurrentCal().getTime(), t.toTime())) {
+            if (isYearOutOfRange(t.toTime())) {
                 throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
             }
             monthField.updateFieldList(t.toTime());
