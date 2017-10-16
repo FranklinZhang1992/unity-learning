@@ -11,6 +11,7 @@ import com.demo.utils.Util;
  *
  */
 public class CrontabMonthField extends AbstractCrontabField {
+
     /** Month in a year starts at 1 and ends at 12 */
     private static final int MIN = 1;
     private static final int MAX = 12;
@@ -38,8 +39,7 @@ public class CrontabMonthField extends AbstractCrontabField {
      * Update this field after year is nudged
      *
      * @param currentDate
-     *            The current date, normally the year field is bigger than the
-     *            year field in timestamp
+     *            The current date, normally the year field is bigger than the year field in timestamp
      */
     public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
@@ -58,7 +58,7 @@ public class CrontabMonthField extends AbstractCrontabField {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar timestampCal = Util.getCalendar(getTimestamp());
 
-        while (!Util.isSameYear(timestampCal, currentCal)) {
+        while (!Util.hasReachedDestYear(timestampCal, currentCal)) {
             timestampCal.add(Calendar.MONTH, getFieldStep());
         }
 

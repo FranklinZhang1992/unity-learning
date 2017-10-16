@@ -44,7 +44,7 @@ public class CrontabParser {
      * This property is initialized during construction, this value will be used to initialize all fields' lists This property will be updated when calculating
      * next run time and the next run time will be calculated based on this value
      */
-    private Date startTime = null;
+    private Date startDate = null;
     private Calendar currentCal = null;
 
     /**
@@ -128,8 +128,8 @@ public class CrontabParser {
     }
 
     public CrontabParser(final String cronString, final Date currentDate) {
-        System.out.println("Initialize CrontabParser with trigger '" + cronString + "'");
-        startTime = currentDate == null ? new Date() : currentDate;
+        startDate = currentDate == null ? new Date() : currentDate;
+        System.out.println("Initialize CrontabParser with trigger '" + cronString + "', start date is " + Util.getFormatedTime(startDate));
         String[] fields = cronString.split("\\s+");
         if (fields.length != 5 && fields.length != 6) {
             throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
@@ -137,10 +137,10 @@ public class CrontabParser {
 
         try {
             // Property set must in sequence
-            setMinuteField(fields[MINUTE_INDEX], startTime);
-            setHourField(fields[HOUR_INDEX], startTime);
-            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX], startTime);
-            setMonthField(fields[MONTH_INDEX], startTime);
+            setMinuteField(fields[MINUTE_INDEX], startDate);
+            setHourField(fields[HOUR_INDEX], startDate);
+            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX], startDate);
+            setMonthField(fields[MONTH_INDEX], startDate);
             setDayOfWeekField(fields[DAY_OF_WEEK_INDEX]);
             // Set year field only when year field is received
             if (fields.length == 6) {
@@ -182,7 +182,7 @@ public class CrontabParser {
         List<Integer> allowedYears = new ArrayList<Integer>();
 
         // Construct an instance of Calendar with the startTime
-        Calendar cal = Util.getCalendar(startTime);
+        Calendar cal = Util.getCalendar(startDate);
         // Construct a list with all years which need to be traversed
         if (isOneTimeCrontab()) {
             // For one time task, we only need to add the specified year into the list
@@ -194,7 +194,8 @@ public class CrontabParser {
                 allowedYears.add(yearNum);
             }
         }
-        // Traverse year, month, and day to find if there is valid date specified in trigger
+        // Traverse year, month, and day to find if there is valid date
+        // specified in trigger
         DONE: for (int allowedYear : allowedYears) {
             cal.set(Calendar.YEAR, allowedYear);
             for (int allowedMonth : allowedMonths) {
@@ -213,7 +214,8 @@ public class CrontabParser {
             }
         }
 
-        // Check the hasValidCombination flag to know if there is valid date specified in trigger
+        // Check the hasValidCombination flag to know if there is valid date
+        // specified in trigger
         if (!hasValidCombination) {
             throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
         }
@@ -232,15 +234,27 @@ public class CrontabParser {
         Calendar nextRunTime = Util.getCalendar(next());
 
         Calendar now = Util.getCalendar();
-        // If year field is set, then it means this is a one time cronjob, so the time set must be later than current time
+        // If year field is set, then it means this is a one time cronjob, so
+        // the time set must be later than current time
         if (now.compareTo(nextRunTime) > 0) {
             isValid = false;
         }
-        // If year field is set, then it means this is a one time cronjob, so it much be able to be triggered in the year user specified
+        // If year field is set, then it means this is a one time cronjob, so it
+        // much be able to be triggered in the year user specified
         else if (now.compareTo(nextRunTime) < 0 && yearNum != nextRunTime.get(Calendar.YEAR)) {
             isValid = false;
         }
         return isValid;
+    }
+
+    /**
+     * Get actually used start time (Because we think current minute is always expired, so if we want the task to be executed at the specified start time, we
+     * need to use one minute earlier than the specified start time)
+     * 
+     * @return The start calculation time
+     */
+    private Date getStartCalculationTime() {
+        return Util.getOneMinuteEarlier(startDate);
     }
 
     /**
@@ -252,7 +266,8 @@ public class CrontabParser {
      */
     private Date getTargetDate(final Date currentDate) {
         Date now = currentDate == null ? new Date() : currentDate;
-        return startTime.getTime() > now.getTime() ? startTime : now;
+        Date startCalcTime = getStartCalculationTime();
+        return startCalcTime.getTime() > now.getTime() ? startCalcTime : now;
     }
 
     /**
@@ -274,8 +289,9 @@ public class CrontabParser {
     public Date next(final Date currentDate) {
         // Work out the target date, the returned next run time should be the nearest valid next run time from the target date.
         Date targetDate = getTargetDate(currentDate);
-        // Calc the first next run time from the startTime because all fields' lists were initialized based on this time
-        Date nextDate = internalNext(startTime);
+        // Calc the first next run time from the startDate because all fields' lists were initialized based on this time (As we should include the startDate it
+        // self should be included, so we should use one minute earlier as the start calculation time)
+        Date nextDate = internalNext(getStartCalculationTime());
         // Calc next run time step by step until it is later than the target time
         while (nextDate.getTime() <= targetDate.getTime()) {
             nextDate = internalNext(nextDate);
@@ -404,7 +420,8 @@ public class CrontabParser {
      */
     private List<Integer> interpolateDayOfWeeksWithoutCache(final int year, final int month) {
         Calendar cal = Util.getCalendar();
-        // As java Calendar month field starts from 0, but Crontab month field starts from 1, so we need to minus 1 here
+        // As java Calendar month field starts from 0, but Crontab month field
+        // starts from 1, so we need to minus 1 here
         cal.set(year, Util.convertCrontabMonthToCalendarMonth(month), 1);
 
         List<Integer> result = new ArrayList<Integer>();
@@ -412,7 +429,8 @@ public class CrontabParser {
         List<Integer> validDayOfWeeks = dayOfWeekField.getFieldList();
 
         while (Util.convertCalendarMonthToCrontabMonth(cal.get(Calendar.MONTH)) == month) {
-            // In crontab day-of-week is in range 0-6, but in java Calendar, day-of-week is in range of 1-7
+            // In crontab day-of-week is in range 0-6, but in java Calendar,
+            // day-of-week is in range of 1-7
             if (validDayOfMonths.contains(cal.get(Calendar.DAY_OF_MONTH))
                     && validDayOfWeeks.contains(Util.convertCalendarDayOfWeekToCrontabDayOfWeek(cal.get(Calendar.DAY_OF_WEEK)))) {
                 result.add(cal.get(Calendar.DAY_OF_MONTH));

@@ -48,8 +48,7 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
      * Update this field after month is nudged
      *
      * @param currentDate
-     *            The current date, normally the month field is bigger than the
-     *            month field in timestamp
+     *            The current date, normally the month field is bigger than the month field in timestamp
      */
     public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
@@ -68,7 +67,7 @@ public class CrontabDayOfMonthField extends AbstractCrontabField {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar recordCal = Util.getCalendar(getTimestamp());
 
-        while (!Util.isSameMonth(recordCal, currentCal)) {
+        while (!Util.hasReachedDestMonth(recordCal, currentCal)) {
             recordCal.add(Calendar.DAY_OF_MONTH, getFieldStep());
 
         }

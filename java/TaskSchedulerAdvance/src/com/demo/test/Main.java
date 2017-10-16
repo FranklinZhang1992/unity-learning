@@ -47,7 +47,7 @@ public class Main {
     protected static void test(final int option) {
         System.out.println("Option is " + option);
         String trigger = null;
-        String startDate = "2016-5-13 00:00:00";
+        String startDate = "2017-12-5";
         switch (option) {
         case 1: /** One time */
             startDate = null;
@@ -95,6 +95,12 @@ public class Main {
             break;
         case 15: /** tricky case */
             trigger = "30 8 * 9-11 *";
+            break;
+        case 16: /** tricky case */
+            trigger = "0 0 17 * *";
+            break;
+        case 17: /** tricky case */
+            trigger = "0 0 5 * *";
             break;
         default:
             throw new RuntimeException("Unknown option");
@@ -224,7 +230,7 @@ public class Main {
      */
     public static void main(final String[] args) {
         int firstCaseNum = 1;
-        int lastCaseNum = 15;
+        int lastCaseNum = 17;
         for (int i = firstCaseNum; i <= lastCaseNum; i++) {
             test(i);
         }

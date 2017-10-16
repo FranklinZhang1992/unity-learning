@@ -109,4 +109,19 @@ public class InternalTime {
         return df.format(toTime());
     }
 
+    public String inspect() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("year:");
+        sb.append(year);
+        sb.append(",month:");
+        sb.append(month);
+        sb.append(",day:");
+        sb.append(day);
+        sb.append(",hour:");
+        sb.append(hour);
+        sb.append(",minute:");
+        sb.append(minute);
+        return sb.toString();
+    }
+
 }

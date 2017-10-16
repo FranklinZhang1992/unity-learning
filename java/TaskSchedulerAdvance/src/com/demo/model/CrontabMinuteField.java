@@ -38,8 +38,7 @@ public class CrontabMinuteField extends AbstractCrontabField {
      * Update this field after hour is nudged
      *
      * @param currentDate
-     *            The current date, normally the hour field is bigger than the
-     *            hour field in timestamp
+     *            The current date, normally the hour field is bigger than the hour field in timestamp
      */
     public void updateFieldList(final Date currentDate) {
         if (needUpdate()) {
@@ -58,7 +57,7 @@ public class CrontabMinuteField extends AbstractCrontabField {
         Calendar currentCal = Util.getCalendar(currentDate);
         Calendar recordCal = Util.getCalendar(getTimestamp());
 
-        while (!Util.isSameHour(currentCal, recordCal)) {
+        while (!Util.hasReachedDestHour(currentCal, recordCal)) {
             recordCal.add(Calendar.MINUTE, getFieldStep());
         }
 

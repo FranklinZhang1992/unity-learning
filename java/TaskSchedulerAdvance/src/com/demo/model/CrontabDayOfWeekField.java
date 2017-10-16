@@ -9,9 +9,9 @@ import com.demo.utils.Util;
  *
  */
 public class CrontabDayOfWeekField extends AbstractCrontabField {
+
     /**
-     * Day in a week starts at 0 and ends at 6 or starts at 1 and ends at 7 (0/7
-     * represents Sunday)
+     * Day in a week starts at 0 and ends at 6 or starts at 1 and ends at 7 (0/7 represents Sunday)
      */
     public static final int MIN = 0;
     public static final int MAX = 7;
