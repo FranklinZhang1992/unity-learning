@@ -175,7 +175,7 @@ public class CrontabParser {
             // For one time task, we only need to add the specified year into the list
             allowedYears.add(yearField.getYear());
         } else {
-            // For non-one time task, we need to add all years from the specified target date to 20 years later from now on.
+            // For non-one time task, we need to add all years from the specified target date to 20 years later from it.
             int currentYear = cal.get(Calendar.YEAR);
             for (int yearNum = currentYear; yearNum <= Util.getCalendar(getTargetDate()).get(Calendar.YEAR) + YEAR_THRESHOLD; yearNum++) {
                 allowedYears.add(yearNum);
