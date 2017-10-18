@@ -1,0 +1,12 @@
+[Unit]
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/simple_server --pidfile=/var/run/simple_server.pid --log=/var/log/simple_server.log --verbose
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=simple_serverd.service
