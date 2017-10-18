@@ -102,12 +102,6 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
         PrepareResponse.ok(response)
     rescue => err
         PrepareResponse.bad_request(response, "#{err}")
-    ensure
-        @thread = Thread.new do
-            sleep 2
-            log.debug("Stop Server")
-            %x{systemctl stop simple_server}
-        end
     end
 end
 
