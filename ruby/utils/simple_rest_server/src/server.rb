@@ -36,6 +36,13 @@ def rm_pidfile
     end
 end
 
+def quit(signal)
+    log.debug("Exiting ...")
+    $logger.close unless $logger.nil?
+    rm_pidfile
+    exit(signal)
+end
+
 def trap_exit(server)
     ['HUP', 'QUIT', 'INT', 'TERM'].each do |signal|
         trap(signal) { server.stop }
@@ -95,6 +102,12 @@ class Root < WEBrick::HTTPServlet::AbstractServlet
         PrepareResponse.ok(response)
     rescue => err
         PrepareResponse.bad_request(response, "#{err}")
+    ensure
+        @thread = Thread.new do
+            sleep 2
+            log.debug("Stop Server")
+            %x{systemctl stop simple_server}
+        end
     end
 end
 
@@ -111,10 +124,12 @@ class Server
     def ready?() @ready end
     def start
         if ready?
+            log.debug("Starting Server")
             @server.start
         end
     end
     def stop
+        log.debug("Stopping Server")
         @server.shutdown
     end
 end
@@ -155,13 +170,11 @@ if __FILE__ == $0
         CommandHandler.instance.parse(ARGV)
         CommandHandler.instance.handle
     rescue SystemExit => err
-        exit 0
+        quit(0)
     rescue Exception => err
         log.error("Server exited because error: #{err}")
-        exit 1
+        quit(1)
     else
-        exit 0
-    ensure
-        rm_pidfile
+        quit(0)
     end
 end
