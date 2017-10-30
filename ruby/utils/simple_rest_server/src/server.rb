@@ -5,9 +5,12 @@ require 'rexml/document'
 require 'singleton'
 require 'optparse'
 require 'pathname'
+require 'logger'
+require 'fileutils'
 
 $stdout.sync = true
 $verbose = false
+$pidfile = nil
 
 def log
     $logger ||= begin
@@ -21,6 +24,23 @@ def log
     end
     $logger.level = $verbose ? Logger::DEBUG : Logger::INFO
     $logger
+end
+
+def touch_pidfile
+    File.open($pidfile, 'w') {|o| o.print Process.pid.to_s ; o.fsync }
+end
+
+def rm_pidfile
+    unless $pidfile.nil?
+        FileUtils.rm_f($pidfile) if File.exist?($pidfile)
+    end
+end
+
+def quit(signal)
+    log.debug("Exiting ...")
+    $logger.close unless $logger.nil?
+    rm_pidfile
+    exit(signal)
 end
 
 def trap_exit(server)
@@ -87,32 +107,29 @@ end
 
 class Server
 
-    def initialize(options)
+    def initialize
         log.debug("Initializing Server")
         config = {:Port => 9000, :BindAddress => '127.0.0.1'}
         @server = WEBrick::HTTPServer.new(config)
         @root = Root.new(@server)
         @server.mount('/', @root)
-        File.open(options[:pidfile], 'w') {|o| o.print Process.pid.to_s ; o.fsync }
         @ready = true
     end
     def ready?() @ready end
     def start
         if ready?
+            log.debug("Starting Server")
             @server.start
         end
     end
     def stop
+        log.debug("Stopping Server")
         @server.shutdown
     end
 end
 
 class CommandHandler
     include Singleton
-
-    def initialize
-        @options = {}
-    end
 
     def parse(args)
         return if args.nil? || args.empty?
@@ -121,7 +138,7 @@ class CommandHandler
             opts.banner = "A server which can execute some commands"
 
             opts.on("-p", "--pidfile=PIDFILE", "Specified pid file") do |value|
-                @options[:pidfile] = value
+                $pidfile = value
             end
             opts.on("-v", "--[no-]verbose", "Run verbosely") do |value|
                 $verbose = value
@@ -132,12 +149,11 @@ class CommandHandler
         end
 
         opt_parser.order!
-        @options
     end
 
-    def handle(options)
-        options = options.nil? ? {} : options
-        server = Server.new(options)
+    def handle
+        touch_pidfile
+        server = Server.new
         trap_exit(server)
         server.start
     end
@@ -145,14 +161,14 @@ end
 
 if __FILE__ == $0
     begin
-        options = CommandHandler.instance.parse(ARGV)
-        CommandHandler.instance.handle(options)
+        CommandHandler.instance.parse(ARGV)
+        CommandHandler.instance.handle
     rescue SystemExit => err
-        exit 0
+        quit(0)
     rescue Exception => err
         log.error("Server exited because error: #{err}")
-        exit 1
+        quit(1)
     else
-        exit 0
+        quit(0)
     end
 end
