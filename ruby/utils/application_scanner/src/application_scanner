@@ -19,7 +19,7 @@
 #    update the whitelist and blacklist of the record and mark this record as qualified. Now you have 
 #    one qualified record and you can use it as a standard and check other files.
 #
-# 5) Use the 'check' sub-command to check multi files under another specified folder, thie command will
+# 5) Use the 'check' sub-command to check multi files under another specified folder, this command will
 #    show you which file contain blacklist applications or unqualifed applications.
 #    (Notice: If you find unqualified applications in the check result, this means you need to re-do the
 #    steps from #1 to genrate a new qualified record for checking)
@@ -36,7 +36,7 @@
 #   application_scanner import --location=/tmp/20170924215208 -v
 #
 # 4) Check a specified folder
-#   application_scanner check --location=/tmp/check_dir -v
+#   application_scanner check --location=/tmp/check_dir --output-type=file --output-location=/tmp/check_result -v
 #
 
 require 'logger'
