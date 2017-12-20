@@ -1,0 +1,120 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./prepare_workspace {workspace_name} {need_build}
+#                           $1            $2
+#                      shanghai_build    true
+
+#=============================================================================
+
+# This script is used to generate a workspace under your folder.
+
+#=============================================================================
+
+require 'timeout'
+
+$stdout.sync = true
+
+$WORKSPACE_NAME = ARGV[0].to_s
+$NEED_BUILD = ARGV[0].to_s
+$USER_NAME = %x{whoami}
+
+class Main
+  attr_accessor :workspace_name
+  attr_accessor :user_name
+  attr_accessor :build_server
+  attr_accessor :need_build
+  def initialize
+    self.workspace_name = "#{$WORKSPACE_NAME}".chomp
+    self.need_build = "#{$NEED_BUILD}".chomp == "true" ? true : false
+    self.user_name = "#{$USER_NAME}".chomp
+    self.build_server = begin IO.read("/developer/fzhang/script/centos7.3/build_server").strip rescue nil end
+    check_params
+    show_params
+    @repo_map = Hash.new
+    @repo_map["fzhang"] = "git@github.com:Stratus-franklinzhang/unity-third-party.git"
+  end
+  def build_info_file() "/developer/#{self.user_name}/#{self.workspace_name}/unity-third-party/virt-v2v/build_info.out" end
+  def build_folder() "/developer/#{self.user_name}/#{self.workspace_name}/unity-third-party/virt-v2v/build" end
+  def show_params
+    puts "Received params: workspace name = #{self.workspace_name}, need_build = #{self.need_build}, user name = #{self.user_name}, build server = #{self.build_server}"
+  end
+  def check_params
+    if self.workspace_name.empty?
+      raise "Please input the workspace name!"
+    end
+    if self.build_server.nil? || self.build_server.empty?
+      raise "Cannot find a build server"
+    end
+  end
+  def source_code_exist?
+    workspace = "/developer/#{self.user_name}/#{self.workspace_name}"
+    source_code_folder = "#{workspace}/unity-third-party/virt-v2v"
+    if File.exist?(workspace) &&  File.exist?(source_code_folder)
+      return true
+    elsif File.exist?(workspace)
+      %x{rm -rf #{workspace}}
+      return false
+    else
+      return false
+    end
+  end
+  def fetch_source_code
+    puts "===================begin to get the source code of everrun from GitHub========================"
+    dest_folder = "/developer/#{self.user_name}/#{self.workspace_name}"
+    %x{mkdir -p #{dest_folder}}
+    %x{git clone git@github.com:stratustech/unity-third-party #{dest_folder}/unity-third-party}
+    puts "===================cloned successfully========================"
+  end
+  def compile_source_code
+    puts "===================begin to exec make (do not delete the file build_info.out generated in the source code folder)========================"
+    File.delete(build_info_file) if File.exist?(build_info_file)
+    IO.popen("ssh #{self.user_name}@#{self.build_server} /developer/#{self.user_name}/script/common/generate_p2v_rpm #{self.workspace_name}") { |io|
+      while line = io.gets
+        line.chomp!
+        puts line
+        File.open(build_info_file, "a") { |f|
+          f.write "#{line}\n"
+        }
+      end
+    }
+    puts "===================exec make finished, wait until the compile is done========================"
+  end
+  def get_repo
+    return @repo_map["#{self.user_name}"]
+  end
+  def link_remote_repo
+    repo = get_repo
+    unless repo.nil?
+      puts "will add GitHub repo #{repo} with alias fork for user #{self.user_name}"
+      workspace = "/developer/#{self.user_name}/#{self.workspace_name}/unity-third-party"
+      IO.popen("/developer/#{self.user_name}/script/common/link_remote_repo #{workspace} #{repo}") { |io|
+        while line = io.gets
+          line.chomp!
+          puts line
+        end
+      }
+    end
+  end
+  def run
+    if source_code_exist?
+      puts "source code already exists"
+    else
+      fetch_source_code
+    end
+    if self.need_build
+      compile_source_code
+    end
+    link_remote_repo
+  end
+end
+
+begin
+  main = Main.new
+  main.run
+rescue Exception => e
+  puts "Error occured during preparing workspace => #{e}"
+  raise
+end

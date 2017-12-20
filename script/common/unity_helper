@@ -1,0 +1,1281 @@
+#!/usr/bin/ruby
+
+require 'readline'
+require 'net/http'
+require 'uri'
+require 'rexml/document'
+require 'cgi'
+require 'set'
+require 'tempfile'
+
+#=============================================================================
+
+# Use example:
+# ./unity_helper
+# > help
+#=============================================================================
+
+# This script is used to search for a DUT you need.
+
+#=============================================================================
+
+include REXML
+
+class String
+  def to_bool
+    return true if self =~ (/^(true|t|yes|y|1)$/i)
+    return false if self.empty? || self =~ (/^(false|f|no|n|0)$/i)
+
+    raise ArgumentError.new "invalid value: #{self}"
+  end
+end
+
+class Commands
+  WIN_2K12_REGEXP = Regexp.new('win\S*2[0-9a-zA-Z]{0,}12')
+  WIN_REGEXP = Regexp.new('win\S*')
+  VALID_VERSION_REGEXP = Regexp.new('[0-9][.][0-9]')
+  VALID_BUILD_NUM_REGEXP = Regexp.new('[0-9]{1,}')
+  DUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})[.][0-9]{1,}[-]([0-9]{1,})')
+  INPUT_VERSION_REGEXP = Regexp.new('([0-9]{1,})[.]([0-9]{1,})')
+  EVERRUN_73_VERSION_REGEXP = Regexp.new('7[.]3[.][0-9][.][0-9]-([0-9]{1,})')
+  EVERRUN_74_VERSION_REGEXP = Regexp.new('7[.]4[.][0-9][.][0-9]-([0-9]{1,})')
+  EVERRUN_75_VERSION_REGEXP = Regexp.new('7[.]5[.][0-9][.][0-9]-([0-9]{1,})')
+  FTTEST_VERSION_REGEXP = Regexp.new('20[0-9]{6}_[0-9a-z]{7}')
+  DOH_USERNAME = "admin"
+  DOH_PASSWORD = "admin"
+  VALID_LUN_TYPE = %w{INTERNAL ISCSI FC MIXED INCONSISTENT EXTERNAL}
+  EXTERNAL_LUN_TYPE = %w{ISCSI FC MIXED INCONSISTENT}
+
+  def win2k12_re() WIN_2K12_REGEXP end
+  def win_re() WIN_REGEXP end
+  def valid_version_re() VALID_VERSION_REGEXP end
+  def valid_build_num_re() VALID_BUILD_NUM_REGEXP end
+  def dut_version_re() DUT_VERSION_REGEXP end
+  def input_version_re() INPUT_VERSION_REGEXP end
+  def everrun_73_version_re() EVERRUN_73_VERSION_REGEXP end
+  def everrun_74_version_re() EVERRUN_74_VERSION_REGEXP end
+  def everrun_75_version_re() EVERRUN_75_VERSION_REGEXP end
+  def fttest_version_re() FTTEST_VERSION_REGEXP end
+
+  VALID_COMPARE_SYMBOL = %w{> < = >= <=}
+  def valid_compare?(compare)
+    return VALID_COMPARE_SYMBOL.to_set.include?(compare)
+  end
+  private :valid_compare?
+  def valid_version?(version)
+    return version.match(valid_version_re)
+  end
+  private :valid_version?
+  def valid_build_num?(build_num)
+    return build_num.match(valid_build_num_re)
+  end
+  private :valid_build_num?
+
+  def valid_lun_type?(lun_type)
+    return VALID_LUN_TYPE.to_set.include?(lun_type)
+  end
+  private :valid_lun_type?
+  def external_lun_type?(lun_type)
+    return EXTERNAL_LUN_TYPE.to_set.include?(lun_type)
+  end
+  private :external_lun_type?
+
+  def help(*args)
+    command = args.shift
+    if command.nil?
+      msg = "Unity helper:\n"
+      msg += "Usage: <command> [args...]\n"
+      msg += "    1. duts <accessible_only> <count> <scope>                                    list all DUTs\n"
+      msg += "    2. vcd <name> <count> <scope>                                                search for a DUT contains specified VCD.\n"
+      msg += "    3. version <compare> <version> <build_num> <count> <scope>                   search for a DUT with the specified version.\n"
+      msg += "    4. host <release_num> <count> <scope>                                        search for a DUT hosting on specified OS.\n"
+      msg += "    5. find_avance <count> <scope>                                               search for an Avance DUT.\n"
+      msg += "    6. dut_detail <dut>                                                          show detail information of a DUT.\n"
+      msg += "    7. reserve <dut> <comments>                                                  reserve a DUT.\n"
+      msg += "    8. release <dut> <comments>                                                  release a DUT.\n"
+      msg += "    9. available_versions <count> <build_version>                                search for available everRun build versions.\n"
+      msg += "    10. prepare_fttest_folder <build_version>                                    auto generate a folder to run fttest.\n"
+      msg += "    11. reserved_dut <count> <reserver>                                          find a DUT reserved by a specified people(default is yourself).\n"
+      msg += "    12. find_dut_by_lun_type <lun_type> <count> <scope>                          find a DUT contains Logical Disks with specified lun type.\n"
+      msg += "    13. pci_info <keyword> <count> <scope>                                       search for a DUT contains a specified PCI device.\n"
+      msg += "    14. available_fttest_versions <count>                                        search for available fttest builds.\n"
+      msg += "    15. fork_fttest <build_name> <update_link>                                   copy a specified fttest build to your own test folder and make some changes.\n"
+      msg += "    16. get_doh_watch_length <scope>                                             get doh watch response length of a specified DUT or some DUTs.\n"
+      msg += "    17. find_dut_with_usb <count> <scope>                                        search for a DUT with USB devices.\n"
+      msg += "    18. find_dut_with_usb_partitions <count> <scope>                             search for a DUT with USB partitions.\n"
+      msg += "    19. find_installed_dut <count> <scope>                                       find installed DUT(s), not recovered or replaced.\n"
+      msg += "Use \" help <command>\" to show the detail information. (e.g. help duts).\n"
+      msg += "quit   --->   exit\n\n"
+      puts msg
+    else
+      case command
+      when "duts" # 1
+        msg = "Usage\n"
+        msg += "    duts <accessible_only> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts which can be accessed or not.\n\n"
+        msg += "Arguments\n"
+        msg += "    accessible_only            Use the flag to specify the dut you want must be accessed, it can accept the value \"yes\" or \"no\".\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Example\n"
+        msg += "    Find two idle duts which can be accessed.\n"
+        msg += "    > duts yes 2 idle\n\n"
+        puts msg
+      when "vcd" # 2
+        msg = "Usage\n"
+        msg += "    vcd <name> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts contain the specified vcd-name.\n\n"
+        msg += "Arguments\n"
+        msg += "    name                       The vcd name, it can only accept the value \"win2k12\" now, you can contact Franklin to add other VCD support.\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find ten reserved duts which contain the vcd with the name win2k12.\n"
+        msg += "    > vcd win2k12 2 reserved\n\n"
+        puts msg
+      when "version" # 3
+        msg = "Usage\n"
+        msg += "    version <compare> <version> <build_num> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts with a rang version.\n\n"
+        msg += "Arguments\n"
+        msg += "    compare                    The compare symbol of version, it can accept the values \">\", \">=\", \"=\", \"<\", \"<=\".\n"
+        msg += "    version                    The version point of the dut.\n"
+        msg += "    build_num                  The build number of the dut.\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find a idle dut which the version is before 7.4-127\n"
+        msg += "    > version <= 7.4 127 1 idle\n\n"
+        puts msg
+      when "host" # 4
+        msg = "Usage\n"
+        msg += "    host <release_num> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to search for the duts which the specified host OS.\n\n"
+        msg += "Arguments\n"
+        msg += "    release_num                The release version of the host OS you want to find, it can accept the values \"centos-6.6\", \"centos-6.7\", \"centos-7.1\", \"centos-7.2\".\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\".\n\n"
+        msg += "Examples\n"
+        msg += "    Find a idle dut which the host OS is centos-6.6\n"
+        msg += "    > host centos-7.1 1 idle\n\n"
+        puts msg
+      when "find_avance" # 5
+        msg = "Usage\n"
+        msg += "    find_avance <count> <scope>\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of the dut you want.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    Find a idle Avance dut\n"
+        msg += "    > find_avance 1 idle\n\n"
+        puts msg
+      when "dut_detail" # 6
+        msg = "Usage\n"
+        msg += "    dut_detail <dut>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to show the detail information of the specified DUT. By the way, this command can only show the value of version, vcpus and memory now.\n\n"
+        msg += "Arguments\n"
+        msg += "    dut                        The dut you specify.\n\n"
+        msg += "Examples\n"
+        msg += "    Show the detail information of germany.\n"
+        msg += "    > dut_detail germany\n\n"
+        puts msg
+      when "reserve" # 7
+        msg = "Usage\n"
+        msg += "    reserve <dut> <comments>\n\n"
+        msg += "Description\n"
+        msg += "    You can easily reserve a DUT with this command.\n\n"
+        msg += "Arguments\n"
+        msg += "    dut                        The dut you specify.\n"
+        msg += "    comments                   The comments for your reserve action.\n\n"
+        msg += "Examples\n"
+        msg += "    Reserve DUT germany.\n"
+        msg += "    > reserve germany\n\n"
+        puts msg
+      when "release" # 8
+        msg = "Usage\n"
+        msg += "    release <dut> <comments>\n\n"
+        msg += "Description\n"
+        msg += "    You can easily release a DUT with this command.\n\n"
+        msg += "Arguments\n"
+        msg += "    dut                        The dut you specify.\n"
+        msg += "    comments                   The comments for your release action.\n\n"
+        msg += "Examples\n"
+        msg += "    Release DUT germany.\n"
+        msg += "    > release germany\n\n"
+        puts msg
+      when "available_versions" # 9
+        msg = "Usage\n"
+        msg += "    available_versions <count> <build_version>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to list all availabe detail versions base on the specified version, and  the result list will start with the latest version.\n\n"
+        msg += "Arguments\n"
+        msg += "    dut                        The dut you specify.\n"
+        msg += "    count                      The count of versions you want to list, num 0 means all\n"
+        msg += "    build_version              The specified version.\n\n"
+        msg += "Examples\n"
+        msg += "    List 5 versions which base on 7.4.\n"
+        msg += "    > available_versions 5 7.4\n\n"
+        puts msg
+      when "prepare_fttest_folder" # 10
+        msg = "Usage\n"
+        msg += "    prepare_fttest_folder <build_version>\n\n"
+        msg += "Description\n"
+        msg += "    Auto generate a link to run fttestUse.\n"
+        msg += "    This command is only useful before installing a DUT with a specified build version. You can get into the path that this command outputs to use the command \"nohup fttest sn/null,dut=$dut_name,vms=1 &\" to run fttest to install a DUT.\n\n"
+        msg += "Arguments\n"
+        msg += "    build_version              The version you want to build.\n\n"
+        msg += "Examples\n"
+        msg += "    Auto generate a link for running fttest to install the DUT \"germany\" with the build version 7.4.0.0-147\n"
+        msg += "    > prepare_fttest_folder 7.4.0.0-147\n"
+        msg += "      - Then get into the folder the above command outputs.\n"
+        msg += "      - Finally run this command \"nohup fttest sn/null,dut=$dut_name,vms=1 &\" to install a DUT.\n\n"
+        puts msg
+      when "reserved_dut" # 11
+        msg = "Usage\n"
+        msg += "    reserved_dut <count> <reserver>\n\n"
+        msg += "Description\n"
+        msg += "    If you want to know which DUTs are reserved by a specified person, this command may be helpful.\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    reserver                   The owner of the DUT.\n\n"
+        msg += "Examples\n"
+        msg += "    Find 3 DUTs which is reserved by yourself.\n"
+        msg += "    > reserved_dut 3\n\n"
+        puts msg
+      when "find_dut_by_lun_type" #12
+        msg = "Usage\n"
+        msg += "    find_dut_by_lun_type <lun_type> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    You can use this command to find a DUT which contains Logical Disks with specfied LUN type.\n\n"
+        msg += "Arguments\n"
+        msg += "    lun_type                   The LUN type of the Logical Disk, valid LUN types are \"INTERNAL\", \"ISCSI\", \"FC\", \"MIXED\", \"INCONSISTENT\", \"EXTERNAL\".\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    Find 1 DUT which contains a Logical Disk that is 'INTERNAL'.\n"
+        msg += "    > find_dut_by_lun_type INTERNAL 1 idle\n\n"
+        puts msg
+      when "pci_info" #13
+        msg = "Usage\n"
+        msg += "    pci_info <keyword> <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    You can use this command to find a DUT which contains specified PCI device.\n\n"
+        msg += "Arguments\n"
+        msg += "    keyword                    The keyword you want the result of lspci command contain.\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    Find 1 DUT which contains Xeon E5.\n"
+        msg += "    > pci_info Xeon 1 idle\n\n"
+        puts msg
+      when "available_fttest_versions" #14
+        msg = "Usage\n"
+        msg += "    available_fttest_versions <count>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to list all availabe fttest builds, and the result list will start with the latest build.\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of fttest builds you want to list.\n\n"
+        msg += "Examples\n"
+        msg += "    List 5 fttest builds.\n"
+        msg += "    > available_fttest_versions 5\n\n"
+        puts msg
+      when "fork_fttest" #15
+        msg = "Usage\n"
+        msg += "    fork_fttest <build_name> <update_link>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to copy a specified fttest build to /test_logs1/{your account}/fttest_builds folder, and modify basic_vm_coverage.pl to let it use your own config file.\n\n"
+        msg += "Arguments\n"
+        msg += "    build_name                 The specified fttest build name.\n"
+        msg += "    update_link                Valid values are true/false, determines whether to create a soft link \"current\".\n\n"
+        msg += "Examples\n"
+        msg += "    Copy fttest build \"20170219_d6eb5a5\" and create the soft link.\n"
+        msg += "    > fork_fttest 20170219_d6eb5a5 true\n\n"
+        puts msg
+      when "get_doh_watch_length" #16
+        msg = "Usage\n"
+        msg += "    get_doh_watch_length <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to get doh watch response length of a specified DUT or some DUTs.\n\n"
+        msg += "Arguments\n"
+        msg += "    scope                      The specified DUT name or a kind of scope (reserved, idle, all), default value is all.\n\n"
+        msg += "Examples\n"
+        msg += "    Get doh watch response length of all DUTs.\n"
+        msg += "    > get_doh_watch_length\n\n"
+        puts msg
+      when "find_dut_with_usb" #17
+        msg = "Usage\n"
+        msg += "    find_dut_with_usb <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to find a DUT with USB devices.\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    find from idle DUTs.\n"
+        msg += "    > find_dut_with_usb 0 idle\n\n"
+        puts msg
+      when "find_dut_with_usb_partitions" #18
+        msg = "Usage\n"
+        msg += "    find_dut_with_usb_partitions <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to find a DUT with USB partitions.\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    find from idle DUTs.\n"
+        msg += "    > find_dut_with_usb_partitions 0 idle\n\n"
+        puts msg
+      when "find_installed_dut" #19
+        msg = "Usage\n"
+        msg += "    find_installed_dut <count> <scope>\n\n"
+        msg += "Description\n"
+        msg += "    Use this command to find a DUT which are installed (not recovered or replaced).\n\n"
+        msg += "Arguments\n"
+        msg += "    count                      The count of DUT you want to list.\n"
+        msg += "    scope                      Use the argument to specify the status of the dut you want, it can accept the value \"all\", \"idle\" or \"reserved\"\n\n"
+        msg += "Examples\n"
+        msg += "    find installed idle DUTs.\n"
+        msg += "    > find_installed_dut 0 idle\n\n"
+        puts msg
+      else
+        puts "unsupported command #{command}"
+      end
+    end
+  end
+
+  #
+  #=========================================================
+  # Methods used by commands
+  #=========================================================
+  #
+
+  def run_command(cmd)
+    IO.popen(cmd) { |io|
+      while line = io.gets
+        line.chomp!
+        puts line
+      end
+    }
+  end
+
+  def fetch_duts(mode="all")
+    raise "unknown mode #{mode}" unless mode == "all" || mode == "idle" || mode == "reserved"
+    data = nil
+    duts = []
+    Net::HTTP.start('134.111.24.152', 80) do |http|
+      response = http.get('/')
+      raise "Cannot talk to rinfo" unless response.code.to_i == 200
+      data = response.body
+    end
+    data = data.gsub('target=_blank', 'target="_blank"')
+    data = data.gsub('class=reserved', 'class="reserved"')
+    data = data.gsub('class=idle', 'class="idle"')
+    data = data.gsub('class=busy', 'class="busy"')
+    data = data.gsub('>=', '=')
+    data = data.gsub('<=', '=')
+    data = data.gsub(/<a href=\S* onclick="return confirm\('Are you sure you want to release DUT [0-9a-zA-Z]{1,} \?'\);"\/>[0-9\?]*<\/a>/, '')
+    begin_index = data.index('<tbody>')
+    end_index = data.index('</tbody>')
+    data = data[begin_index, end_index - begin_index + 8]
+    doc = Document.new(data)
+    empty = Element.new
+    tr_xmls = doc.root
+    (tr_xmls||empty).elements.each do |tr|
+      td_xml = (tr||empty).elements['td']
+      type = (td_xml||empty).attributes['class']
+      dut_name = ((td_xml||empty).elements['a']||empty).text
+      case mode
+      when "all"
+        duts << dut_name
+      when "idle"
+        duts << dut_name if type == "idle"
+      when "reserved"
+        duts << dut_name if type == "reserved"
+      end
+    end # end of block
+    duts
+  end
+  private :fetch_duts
+  def fetch_doh_session(dut)
+    session = nil
+    server = "#{dut}.sn.stratus.com"
+    begin
+      req = Net::HTTP::Post.new("http://#{server}/doh/")
+      req.body = "<requests output='XML'><request id='1' target='session'><login><username>#{DOH_USERNAME}</username><password>#{DOH_PASSWORD}</password></login></request></requests>"
+      req.content_type = 'text/xml'
+      Net::HTTP.start(server, 80) do |http|
+        response = http.request(req)
+        raise "Cannot talk to DUT #{dut}" unless response.code.to_i == 200
+        data = response.body
+        unless data.nil?
+          root = Document.new(data).root
+          empty = Element.new
+          login_xml = (root.elements['response']||empty).elements['login']
+          status = (login_xml||empty).attributes['status']
+          if status == "ok"
+            session = ((login_xml||empty).elements['session-id']||empty).text
+          end
+        end
+      end
+    rescue Exception => e
+      # puts "error occured during fetch doh session from DUT #{dut} => #{e}"
+    end
+    session
+  end
+  private :fetch_doh_session
+  def do_doh_request(dut, request_body)
+    # puts "Get doh topo from DUT #{dut}"
+    data = nil
+    server = "#{dut}.sn.stratus.com"
+    begin
+      session = fetch_doh_session(dut)
+      req = Net::HTTP::Post.new("http://#{server}/doh/")
+      req.body = "<requests output='XML'>#{request_body}</requests>"
+      req.content_type = 'text/xml'
+      unless session.nil?
+        cookie = CGI::Cookie.new("JSESSIONID", "#{session}")
+        req['Cookie'] = cookie.to_s
+      end
+      Net::HTTP.start(server, 80) do |http|
+        response = http.request(req)
+        raise "Cannot talk to DUT #{dut}" unless response.code.to_i == 200
+        data = response.body
+        root = Document.new(data).root
+        empty = Element.new
+        status = (root.elements['response']||empty).attributes['status']
+        unless status == "ok"
+          data = nil
+        end
+      end # end of Net::HTTP.start block
+    rescue Exception => e
+      # puts "error occured during fetch doh topo from DUT #{dut} => #{e}"
+    end
+    data
+  end
+  private :do_doh_request
+  def fetch_doh(dut)
+    request_body = "<request id='1' target='supernova'><watch/></request>"
+    return do_doh_request(dut, request_body)
+  end
+  private :fetch_doh
+  def fetch_dut_version(dut)
+    request_body = "<request id='1' target='supernova'><select>supernova/version</select></request>"
+    return do_doh_request(dut, request_body)
+  end
+  private :fetch_dut_version
+  def find_vcd(dest, pattern, scope, count)
+    puts "Find VCD #{dest} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = (root.elements['response']||empty).elements['output']
+      (outputs_xml||empty).elements.each do |output_xml|
+        next unless output_xml.name == 'volume'
+        is_iso = (((output_xml.elements['media-info']||empty).elements['isiso']||empty).text||"false").to_bool
+        if is_iso
+          name = (output_xml.elements['name']||empty).text
+          if name.match(pattern)
+            puts "[Result] DUT #{dut} contains a #{dest} VCD [#{name}]"
+            got_count += 1
+            break
+          end
+        end
+      end # end of volumes_xml block
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_vcd
+  def compare_dut_ver(dut_ver, version, build_num)
+    dut_ver_match_result = dut_ver.match(dut_version_re)
+    input_ver_match_result = version.match(input_version_re)
+    raise "Not a valid dut version #{dut_ver}" if dut_ver_match_result.nil?
+    raise "Not a valid version #{version}" if input_ver_match_result.nil?
+    # Convert DUT version
+    dut_main_ver = dut_ver_match_result[1] || "0"
+    dut_sub_ver = dut_ver_match_result[2] || "0"
+    dut_build_num = dut_ver_match_result[3] || "0"
+    dut_main_ver = dut_main_ver.to_i
+    dut_sub_ver = dut_sub_ver.to_i
+    dut_build_num = dut_build_num.to_i
+    # Convert input version
+    main_ver = input_ver_match_result[1] || "0"
+    sub_ver = input_ver_match_result[2] || "0"
+    main_ver = main_ver.to_i
+    sub_ver = sub_ver.to_i
+    build_num = build_num.to_i
+
+    cmp_arr1 = []
+    cmp_arr2 = []
+    cmp_arr1 << dut_main_ver
+    cmp_arr1 << dut_sub_ver
+    cmp_arr1 << dut_build_num
+
+    cmp_arr2 << main_ver
+    cmp_arr2 << sub_ver
+    cmp_arr2 << build_num
+
+    compare_result = 0
+    for i in 0 .. 2
+      next if cmp_arr1[i] == cmp_arr2[i]
+      if cmp_arr1[i] > cmp_arr2[i]
+        compare_result = 1
+        break
+      elsif cmp_arr1[i] < cmp_arr2[i]
+        compare_result = -1
+        break
+      end
+    end
+    return compare_result
+  end
+  private :compare_dut_ver
+  def find_dut_by_version(version, build_num, count, scope, compare)
+    puts "Find DUT #{compare} #{version}-#{build_num} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_dut_version(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = begin (root.elements['response']||empty).elements['output'] rescue nil end
+      dut_ver = ((outputs_xml||empty).elements['version']||empty).text
+      next if dut_ver.nil?
+      begin
+        case compare
+        when ">"
+          if compare_dut_ver(dut_ver, version, build_num) > 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "<"
+          if compare_dut_ver(dut_ver, version, build_num) < 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "="
+          if compare_dut_ver(dut_ver, version, build_num) == 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when ">="
+          if compare_dut_ver(dut_ver, version, build_num) >= 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        when "<="
+          if compare_dut_ver(dut_ver, version, build_num) <= 0
+            puts "[Result] DUT #{dut}'s version is #{dut_ver}"
+            got_count += 1
+          end
+        end
+      rescue Exception => e
+        next
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_dut_by_version
+  def find_dut_by_relase_num(release_num, pattern, count, scope)
+    puts "Find DUT with release #{release_num} begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      result = %x{ftssh #{dut} cat /etc/redhat-release 2>&1}
+      next unless $?.success?
+      if result.match(pattern)
+        puts "[Result] DUT #{dut} is hosted on #{result}"
+        got_count += 1
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  private :find_dut_by_relase_num
+  def get_primary_node(root)
+    primary_node_xml = nil
+      outputs_xml = (root.elements['response']||empty).elements['output']
+      (outputs_xml||empty).elements.each do |output_xml|
+        next unless output_xml.name == 'host'
+        is_primary = ((output_xml.elements['is-primary']||empty).text||"false").to_bool
+        if is_primary
+          primary_node_xml = output_xml
+          break
+        end
+      end # end of output_xml block
+      primary_node_xml
+  end
+  private :get_primary_node
+  # Can only be used for sorting build versions
+  def bubble_sort(array)
+    return array if array.size < 2
+    (array.size - 2).downto(0) do |i|
+      (0 .. i).each do |j|
+        release_num1 = begin array[j][1].to_i rescue 0 end
+        release_num2 = begin array[j + 1][1].to_i rescue 0 end
+        array[j], array[j + 1] = array[j + 1], array[j] if release_num1 <= release_num2
+      end
+    end
+    return array
+  end
+  private :bubble_sort
+  # Can only be used for sorting fttest builds
+  def bubble_sort_for_fttest(array)
+    return array if array.size < 2
+    (array.size - 2).downto(0) do |i|
+      (0 .. i).each do |j|
+        array[j], array[j + 1] = array[j + 1], array[j] if array[j] <= array[j + 1]
+      end
+    end
+    return array
+  end
+  private :bubble_sort
+  def show_build_versions(build_versions, count)
+    got_count = 0
+    build_versions.each do |version|
+      break if got_count >= count
+      puts version
+      got_count += 1
+    end
+  end
+  private :show_build_versions
+  def get_everrun_75_builds(count)
+    build_versions = []
+    builds = Dir.glob("/test_logs/fttest2/unity-7.5/builds/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(everrun_75_version_re)
+        unless match_result.nil?
+          build_versions << match_result
+        end
+      end
+    end # end of builds block
+    build_versions = bubble_sort(build_versions)
+    puts "Available everRun-7.5 builds are:"
+    show_build_versions(build_versions, count)
+  end
+  private :get_everrun_75_builds
+  def get_everrun_74_builds(count)
+    build_versions = []
+    builds = Dir.glob("/test_logs/fttest2/unity-7.4/builds/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(everrun_74_version_re)
+        unless match_result.nil?
+          build_versions << match_result
+        end
+      end
+    end # end of builds block
+    build_versions = bubble_sort(build_versions)
+    puts "Available everRun-7.4 builds are:"
+    show_build_versions(build_versions, count)
+  end
+  private :get_everrun_74_builds
+  def get_everrun_73_builds(count)
+    build_versions = []
+    builds = Dir.glob("/test_logs/fttest2/unity-7.3/builds/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(everrun_73_version_re)
+        unless match_result.nil?
+          build_versions << match_result
+        end
+      end
+    end # end of builds block
+    build_versions = bubble_sort(build_versions)
+    puts "Available everRun-7.3 builds are:"
+    show_build_versions(build_versions, count)
+  end
+  private :get_everrun_73_builds
+
+  #
+  #=========================================================
+  # Commands
+  #=========================================================
+  #
+
+  def duts(*args)
+    accessible_only = args.shift
+    puts "accessible_only is required (\"yes\" or \"no\")" if accessible_only.nil?
+    raise "valid accessible_only values are \"yes\" and \"no\"" unless accessible_only == "yes" || accessible_only == "no"
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    mode = args.shift
+    puts "Find DUT begin, this may take a few minutes."
+    duts = mode.nil? ? fetch_duts : fetch_duts(mode)
+    find_count = 0
+    if accessible_only == "yes"
+      duts.each do |dut|
+        break if find_count >= count
+        data = fetch_dut_version(dut)
+        if !data.nil?
+          puts dut
+          find_count += 1
+        end
+      end
+      puts "Total find #{find_count} DUTs"
+    elsif accessible_only == "no"
+      duts.each do |dut|
+        break if find_count >= count
+        puts dut
+        find_count += 1
+      end
+      puts "Total find #{find_count} DUTs"
+    end
+  end
+  def vcd(*args)
+    name = args.shift
+    count = args.shift
+    scope = args.shift || "all"
+    raise "vcd name is reuired" if name.nil?
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    case name
+    when "win2k12"
+      find_vcd("win2k12", win2k12_re, scope, count)
+    when "win"
+      find_vcd("win", win_re, scope, count)
+    else
+      puts "unsupported VCD name, valid VCD names are: \"win2k12\""
+    end
+  end
+  def version(*args)
+    compare = args.shift
+    raise "compare is reuired" if compare.nil?
+    raise "Not a valid compare, allowed values are #{VALID_COMPARE_SYMBOL}" unless valid_compare?(compare)
+    version = args.shift
+    raise "DUT version is reuired" if version.nil?
+    raise "Not a valid version" unless valid_version?(version)
+    build_num = args.shift
+    raise "build number is reuired" if build_num.nil?
+    raise "Not a valid build number" unless valid_build_num?(build_num)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    find_dut_by_version(version, build_num, count, scope, compare)
+  end
+  def host(*args)
+    release_num = args.shift
+    raise "release number is required" if release_num.nil?
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    case release_num
+    when "centos-7.1"
+      pattern = Regexp.new('CentOS [\S ]* 7.1')
+      find_dut_by_relase_num(release_num, pattern, count, scope)
+    when "centos-6.6"
+      pattern = Regexp.new('CentOS [\S ]* 6.6')
+      find_dut_by_relase_num(release_num, pattern, count, scope)
+    when "centos-6.7"
+      pattern = Regexp.new('CentOS [\S ]* 6.7')
+      find_dut_by_relase_num(release_num, pattern, count, scope)
+    when "centos-7.2"
+      pattern = Regexp.new('CentOS [\S ]* 7.2')
+      find_dut_by_relase_num(release_num, pattern, count, scope)
+    else
+      puts "unsupported release number, valid release numbers are: \"centos-7.1\", \"centos-7.2\", \"centos-6.6\", \"centos-6.7\""
+    end
+  end
+  def find_avance(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "Find Avance begin, this may take a few minutes."
+    got_count = 0
+    duts = fetch_duts(scope)
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      empty = Element.new
+      version = ((((root.elements['response']||empty).elements['output']||empty).elements['supernova ']||empty).elements['version']||empty).text
+      unless version.nil?
+        if version[0, 1] == "R"
+          puts "[Result] DUT #{dut} is installed with Avance"
+          got_count += 1
+        end
+      end
+    end # end of duts block
+  end
+  def dut_detail(*args)
+    dut = args.shift
+    raise "DUT name is requied" if dut.nil?
+    data = fetch_doh(dut)
+    raise "DUT #{dut} is not available" if data.nil?
+    root = Document.new(data).root
+    output_xml = (root.elements['response']||empty).elements['output']
+    supernova_xml = (output_xml||empty).elements['supernova ']
+    version = ((supernova_xml||empty).elements['version']||empty).text
+    provisioning_xml = (supernova_xml||empty).elements['provisioning']
+    # vcpu
+    vcpus = begin provisioning_xml.elements['allowed'].elements['vcpus'].elements['hard'].text.to_i rescue 0 end
+    # memory
+    unlicensed = begin provisioning_xml.elements['data'].elements['memory'].elements['unlicensed-memory'].text.to_i rescue 0 end
+    primary_node_xml = get_primary_node(root)
+    ramDisk = begin primary_node_xml.elements['dom0-memory'].elements['actual'].text.to_i > supernova_xml.elements['ramdisk-configuration'].elements['size'].text.to_i ? supernova_xml.elements['ramdisk-configuration'].elements['size'].text.to_i : 0 rescue 0 end
+    avanceMem = begin primary_node_xml.elements['dom0-memory'].elements['actual'].text.to_i - ramDisk rescue 0 end
+    total_memory = begin provisioning_xml.elements['data'].elements['memory'].elements['memory-total'].text.to_i rescue 0 end
+    memory = format("%0.1f", ((total_memory + unlicensed + avanceMem + ramDisk) / (1024.0 * 1024.0 * 1024.0)))
+    # host os
+    host_os = %x{ftssh #{dut} cat /etc/redhat-release 2>&1}.chomp
+    unless $?.success?
+      host_os = nil
+    end
+    ldisk_count = 0
+    output_xml.each do |output|
+      ldisk_count += 1 if output.name == "disk"
+    end
+    # output message
+    msg = "DUT #{dut} detail:\n"
+    msg += "  version: #{version}\n"
+    msg += "  vcpus:   #{vcpus}\n"
+    msg += "  memory:  #{memory}G\n"
+    msg += "  host OS: #{host_os}\n"
+    msg += "  ldisks:  #{ldisk_count}\n"
+    puts msg
+  end
+  def reserve(*args)
+    dut = args.shift
+    raise "DUT name is required" if dut.nil?
+    comments = args.shift || "overnight; testing"
+    cmd = "rschedule reserve --host=#{dut} --comment=\"#{comments}\""
+    result = %x{#{cmd} 2>&1}
+    if $?.success?
+      puts "[Result] Successfully reserved DUT #{dut}"
+    else
+      puts "Failed to reserve DUT #{dut} => #{result}"
+    end
+  end
+  def release(*args)
+    dut = args.shift
+    raise "DUT name is required" if dut.nil?
+    comments = args.shift || "finished test"
+    cmd = "rschedule release --host=#{dut} --comment=\"#{comments}\""
+    result = %x{#{cmd} 2>&1}
+    if $?.success?
+      puts "[Result] Successfully released DUT #{dut}"
+    else
+      puts "Failed to release DUT #{dut} => #{result}"
+    end
+  end
+  def available_versions(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    version = args.shift
+    case version
+    when "7.3"
+      get_everrun_73_builds(count)
+    when "7.4"
+      get_everrun_74_builds(count)
+    when "7.5"
+      get_everrun_75_builds(count)
+    else
+      get_everrun_73_builds(count)
+      get_everrun_74_builds(count)
+    end
+  end
+  def prepare_fttest_folder(*args)
+    version = args.shift
+    raise "build version is required" if version.nil?
+    source_folder = nil
+    user_name = "#{%x{whoami}}"
+    user_name.chomp!
+    # generate source folder url
+    if version.match(everrun_73_version_re)
+      source_folder = "/test_logs/fttest2/unity-7.3/builds/#{version}"
+    elsif version.match(everrun_74_version_re)
+      source_folder = "/test_logs/fttest2/unity-7.4/builds/#{version}"
+    elsif version.match(everrun_75_version_re)
+      source_folder = "/test_logs/fttest2/unity-7.5/builds/#{version}"
+    elsif version == "current"
+      builds = Dir.glob("/test_logs/fttest2/unity-7.5/builds/*")
+      max_release_num = 0
+      current_version = nil
+      builds.each do |file|
+        if File.directory?(file)
+          match_result = file.match(everrun_75_version_re)
+          unless match_result.nil?
+            release_num = begin match_result[1].to_i rescue 0 end
+            if release_num >= max_release_num
+              max_release_num = release_num
+              current_version = match_result
+            end
+          end
+        end
+      end # end of builds block
+      raise "no current version is found" if current_version.nil?
+      puts "current version is #{current_version}"
+      version = current_version
+      source_folder = "/test_logs/fttest2/unity-7.5/builds/#{version}"
+    else
+      raise "Version #{version} not found, valid version should be like: 7.4.0.0-142"
+    end # end of if
+    raise "#{source_folder} does not exist" if source_folder.nil? || !File.exist?(source_folder)
+    deploy_folder = "/test_logs1/#{user_name}/everrun_build/#{version}"
+    local_file = "#{deploy_folder}/local"
+    project_file = "#{deploy_folder}/project"
+    if File.exist?(deploy_folder) && File.exist?(local_file) && File.exist?(project_file)
+      puts "Already ready to run fttest, you can run fttest (nohup fttest sn/null,dut=$dut_name,vms=1 &) under:"
+      puts deploy_folder
+    else
+      %x{mkdir -p #{deploy_folder}}
+      %x{ln -s /test_logs/fttest2/unity/current #{deploy_folder}/project}
+      %x{ln -s #{source_folder} #{deploy_folder}/local}
+      puts "You can now run fttest (nohup fttest sn/null,dut=$dut_name,vms=1 &) *better to run it on RDP* under:"
+      puts deploy_folder
+    end
+  end
+  def reserved_dut(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    reserver = args.shift
+    if reserver.nil?
+      reserver = "#{%x{whoami}}".chomp!
+    end
+    puts "Find DUTs reserved by #{reserver} begin, this may take a few minutes."
+    dut_reserver_regexp = Regexp.new("Reserved: (#{reserver})[ ]")
+    duts = fetch_duts("reserved")
+    got_count = 0
+    found_duts = []
+    duts.each do |dut|
+      break if got_count >= count
+      rinfo_message = %x{rinfo | grep "^#{dut} *[0-9]*%" 2>&1}
+      if rinfo_message.match(dut_reserver_regexp)
+        found_duts << dut
+        got_count += 1
+      end
+    end # end of duts block
+    if got_count > 0
+      puts "[Result] Below DUTs are reserved by #{reserver}"
+      found_duts.each do |dut|
+        puts dut
+      end
+      puts "Total find #{got_count} DUTs"
+    else
+      puts "[Result] No DUT is reserved by #{reserver}"
+    end
+  end
+  def find_dut_by_lun_type(*args)
+    lun_type = args.shift
+    raise "not a valid lun type" unless valid_lun_type?(lun_type)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "find DUT by lun type begin, this may take a few minutes..."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      data = fetch_doh(dut)
+      next if data.nil?
+      lds = []
+      find_lds = false
+      root = Document.new(data).root
+      empty = Element.new
+      outputs_xml = begin root.elements['response'].elements['output'] rescue empty end
+      outputs_xml.elements.each do |output_xml|
+        next unless output_xml.name == 'disk'
+        disk_lun_type = begin output_xml.elements['lun-type'].text rescue nil end
+        disk_name = begin output_xml.elements['name'].text rescue nil end
+        if lun_type == "EXTERNAL"
+          if external_lun_type?(disk_lun_type)
+            lds << disk_name
+            find_lds = true
+          end
+        else
+          if lun_type == disk_lun_type
+            lds << disk_name
+            find_lds = true
+          end
+        end
+      end # end of outputs_xml block
+      if find_lds
+        puts "[Result] DUT #{dut} contains #{lun_type} type Logical Disks"
+        got_count += 1
+        find_lds = false
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  def pci_info(*args)
+    keyword = args.shift
+    raise "keywork is required" if keyword.nil?
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+    puts "Find DUT PCI info begin, this may take a few minutes."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      result = %x{ftssh #{dut} lspci 2>&1 | grep #{keyword}}
+      next unless $?.success?
+      if result != ""
+        got_count += 1
+        puts "[Result] DUT #{dut}'s PCI info contains keyword #{keyword}"
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  def available_fttest_versions(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+
+    fttest_builds = []
+    builds = Dir.glob("/test_logs/fttest2/unity/*")
+    builds.each do |file|
+      if File.directory?(file)
+        match_result = file.match(fttest_version_re)
+        if match_result
+          fttest_builds << "#{File.basename(file)}"
+        end
+      end
+    end # end of builds block
+    fttest_builds = bubble_sort_for_fttest(fttest_builds)
+    puts "Available fttest builds are:"
+    show_build_versions(fttest_builds, count)
+  end
+  def fork_fttest(*args)
+    version = args.shift
+    update_link = args.shift
+    update_link = update_link == "true" ? true : false
+    source_folder = "/test_logs/fttest2/unity/#{version}"
+    raise "source folder does not exist" unless File.exist?(source_folder)
+    user = %x{whoami}.chomp
+    dest_parent_folder = "/test_logs1/#{user}/fttest_build"
+    %x{mkdir -p #{dest_parent_folder}} unless File.exist?(dest_parent_folder)
+    dest_folder = "#{dest_parent_folder}/#{version}"
+    unless File.exist?(dest_folder)
+      %x{cp -rv #{source_folder} #{dest_folder} 2>&1}
+    end
+    if File.exist?(dest_folder)
+      puts "fttest build has been copied to #{dest_folder}"
+    else
+      raise "failed to copy fttest build"
+    end
+
+    # Modify fttest_config.sim
+    fttest_config_file_content = ""
+    fttest_config_file = "#{dest_folder}/fttest_config.sim"
+    File.open(fttest_config_file, "r") { |file|
+      while line  = file.gets
+        fttest_config_file_content << line
+      end
+    }
+    custom_config_file = "/test_logs1/#{user}/new-isos/new-isos.sim"
+    custom_vm_iso_repo = "http://logs.sn.stratus.com/test_logs1/#{user}/new-isos"
+    custom_vm_iso_repo_path = "/test_logs1/#{user}/new-isos"
+    custom_vm_iso_repo_md = "new-isos.sim"
+    fttest_config_file_content = fttest_config_file_content.gsub("http://common.sn.stratus.com/unity/test-appliance", custom_vm_iso_repo)
+    fttest_config_file_content = fttest_config_file_content.gsub("/common/distro/unity/test-appliance", custom_vm_iso_repo_path)
+    fttest_config_file_content = fttest_config_file_content.gsub("unityGuestIsos.sim", custom_vm_iso_repo_md)
+    temp_file = Tempfile.open("fttest_config.sim.temp", "/developer/#{user}")
+    begin
+        temp_file.puts fttest_config_file_content
+        temp_file.flush
+        temp_file_path = temp_file.path
+        FileUtils.cp(temp_file_path, fttest_config_file)
+        puts "fttest_config.sim has been modified to use custom config file"
+    rescue
+        raise "failed to modify fttest_config.sim"
+    ensure
+        temp_file.close!
+    end
+
+    # Modify basic_vm_coverage.pl
+    basic_vm_coverage_file_content = ""
+    basic_vm_coverage_file = "#{dest_folder}/test/testlists/basic_vm_coverage.pl"
+    File.open(basic_vm_coverage_file, "r") { |file|
+      while line  = file.gets
+        basic_vm_coverage_file_content << line
+      end
+    }
+    basic_vm_coverage_file_content = basic_vm_coverage_file_content.gsub('/common/distro/unity/test-appliance/unityGuestIsos.sim', custom_config_file)
+    temp_file = Tempfile.open("basic_vm_coverage.pl.temp", "/developer/#{user}")
+    begin
+        temp_file.puts basic_vm_coverage_file_content
+        temp_file.flush
+        temp_file_path = temp_file.path
+        FileUtils.cp(temp_file_path, basic_vm_coverage_file)
+        puts "basic_vm_coverage.pl has been modified to use custom config file"
+    rescue
+        raise "failed to modify basic_vm_coverage.pl"
+    ensure
+        temp_file.close!
+    end
+
+    if update_link
+      link_file = "#{dest_parent_folder}/current"
+      File.delete(link_file) if File.exist?(link_file)
+      %x{ln -s #{dest_folder} #{link_file}}
+      puts "[Result] You can now use #{link_file} to link to project"
+    else
+      puts "[Result] You can now use #{dest_folder} to link to project"
+    end
+  end
+  def get_doh_watch_length(*args)
+    scope = args.shift || "all"
+    duts = nil
+    if scope == "all" || scope == "idle" || scope == "reserved"
+      duts = fetch_duts(scope)
+    else
+      duts = []
+      duts << scope
+    end
+    max_len = 0
+    duts.each do |dut|
+      cmd = "curl --silent -H \"Content-type: text/xml\" -d \"<?xml version='1.0' encoding='utf-8'?><requests output='XML'><request id='1' target='supernova'><watch/></request></requests>\" http://#{dut}/doh/"
+      r = %x{#{cmd}}
+      len = r.length
+      max_len = len if len > max_len
+      puts "[Result] DUT #{dut}'s DOH watch response length is #{len}"
+    end # end of duts block
+    puts "[Result] MAX length is #{max_len}"
+  end
+  def find_dut_with_usb(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+
+    puts "Find DUT with USB begin, this may take a few minutes."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      removable_disk_count = 0
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      output_xmls = begin root.elements['response'].elements['output'] rescue [] end
+      output_xmls.each do |output_xml|
+        next unless output_xml.name == 'removable-disk'
+        removable_disk_count += 1
+      end
+      if removable_disk_count > 0
+        got_count += 1
+        puts "[Result] DUT #{dut} contains #{removable_disk_count} USB devices"
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  def find_dut_with_usb_partitions(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+
+    puts "Find DUT with USB partitions begin, this may take a few minutes."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+      removable_disk_partition_count = 0
+      data = fetch_doh(dut)
+      next if data.nil?
+      root = Document.new(data).root
+      output_xmls = begin root.elements['response'].elements['output'] rescue [] end
+      output_xmls.each do |output_xml|
+        next unless output_xml.name == 'removable-disk-partition'
+        removable_disk_partition_count += 1
+      end
+      if removable_disk_partition_count > 0
+        got_count += 1
+        puts "[Result] DUT #{dut} contains #{removable_disk_partition_count} USB partitions"
+      end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  def find_installed_dut(*args)
+    count = args.shift
+    raise "count is required" if count.nil?
+    count = (count.to_i == 0) ? 9999 : count.to_i
+    scope = args.shift || "all"
+    raise "unsupported scope #{scope}" unless scope == "all" || scope == "idle" || scope == "reserved"
+
+    puts "Find installed DUT begin, this may take a few minutes."
+    duts = fetch_duts(scope)
+    got_count = 0
+    duts.each do |dut|
+      break if got_count >= count
+        %x{ftssh root@node0.#{dut} cat /var/opt/ft/log/install.log 2>&1}
+        node0_installed = $?.success?
+        %x{ftssh root@node1.#{dut} cat /var/opt/ft/log/install.log 2>&1}
+        node1_installed = $?.success?
+        if node0_installed || node1_installed
+          got_count += 1
+          puts "[Result] DUT #{dut} is installed"
+        end
+    end # end of duts block
+    puts "Total find #{got_count} DUTs"
+  end
+  def quit
+    Kernel.exit
+  end
+  def exit
+    Kernel.exit
+  end
+end
+
+com = Commands.new
+
+commands = com.methods - Object.methods
+
+Readline.completion_proc = lambda { |s|
+  commands.find_all { |e| e.match(s) }
+}
+
+loop do
+  line = Readline.readline("> ", true)
+  next if line == ""
+  if line.nil?
+    puts "\n"
+    Kernel.exit
+  end
+  begin
+    args = line.split
+    command = args.shift
+    if com.respond_to? command
+      com.send(command.intern, *args)
+    else
+      puts "unsupported command #{command}"
+    end
+  rescue SystemExit => exception
+    puts "Quitting: #{exception}\n"
+    Kernel.exit
+  rescue Exception => exception
+    puts "Error executing #{line}\n"
+    puts " == #{exception} == \n"
+  end
+end
+

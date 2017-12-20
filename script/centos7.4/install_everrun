@@ -1,0 +1,106 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./install_everrun {workspace_name}   {dut_name}   {force_compile}
+#                           $1             $2            $3 (optional)
+#                    shanghai_build       greece         true
+
+#=============================================================================
+
+# This script is used to do the install everrun to a DUT
+
+#=============================================================================
+
+require 'fileutils'
+require 'pathname'
+
+$stdout.sync = true
+
+def get_arg(index)
+    ARGV[index].nil? ? nil : ARGV[index].chomp
+end
+
+def show_help
+    msg =<<EOF
+NAME
+    install_everrun
+
+SYNOPSIS
+    install_everrun <workspace> <DUT> <force compile>
+
+DESCRIPTION
+    This script can install everrun to a DUT, compile source code if needed
+
+ARGUMENTS
+    <workspace>         The name of workspace
+    <DUT>               The name of DUT
+    <force compile>     Whether compiling is needed (true/yes/y means compiling is needed)
+
+EOF
+    puts msg
+    exit(0)
+end
+
+if get_arg(0) == "-h" || get_arg(0) == "--help"
+    show_help
+end
+
+WORKSPACE = get_arg(0)
+DUT = get_arg(1)
+FORCE_COMPILE = get_arg(2)
+USER = ENV["USER"]
+CURRENT_DIR = Pathname.new(File.dirname(__FILE__)).realpath
+BUILD_SERVER = begin IO.read("#{CURRENT_DIR}/build_server").strip rescue nil end
+
+WORKSPACE_PATH = "/developer/#{USER}/#{WORKSPACE}"
+SOURCE_LOCATION = "#{WORKSPACE_PATH}/unity-stratus"
+INSTALL_EVERRUN_SCRIPT_LOCATION = "/developer/#{USER}/script/common/everrun_test"
+
+unless File.exist?(WORKSPACE_PATH)
+    raise "workspace not found under '#{WORKSPACE_PATH}'"
+end
+
+if DUT.nil?
+    raise "must specify a DUT"
+else
+    raise "not a valid DUT: #{DUT}" unless exec("duthelp #{DUT}", false)
+end
+
+def exec(cmd, verbose=true)
+    puts "exec: #{cmd}"
+    IO.popen(cmd) { |io|
+      while line = io.gets
+        puts line.chomp if verbose
+      end
+    }
+    $?.success?
+end
+
+def compile
+    exec("ssh #{USER}@#{BUILD_SERVER} /developer/#{USER}/script/common/compile_everrun #{WORKSPACE}")
+end
+
+def install
+    FileUtils.cd(WORKSPACE_PATH, :err=>[:child, :out]) do
+        if DUT.nil?
+            exec("#{INSTALL_EVERRUN_SCRIPT_LOCATION} sn/null,vms=0")
+        else
+            exec("#{INSTALL_EVERRUN_SCRIPT_LOCATION} sn/null,dut=#{DUT},vms=0")
+        end
+    end
+end
+
+def force_compile?
+    FORCE_COMPILE == "true" || FORCE_COMPILE == "yes" || FORCE_COMPILE == "y"
+end
+
+def main
+    compile if force_compile?
+    install
+end
+
+if __FILE__ == $0
+    main
+end

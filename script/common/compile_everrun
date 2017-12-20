@@ -1,0 +1,19 @@
+#!/bin/bash --login
+#=============================================================================
+
+# Use example:
+# ./compile_everrun {workspace_path}
+#                             $1
+#                    shanghai_build
+
+#=============================================================================
+
+# Compile the source code of everrun in build host
+
+#=============================================================================
+workspace_path=$1
+user_name=`whoami`
+cd /developer/$user_name/${workspace_path}/unity-build
+echo "===========================begin to compile========================"
+make
+echo "===========================compiled successfully========================"
