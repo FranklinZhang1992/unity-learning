@@ -50,6 +50,7 @@ end
 WORKSPACE = get_arg(0)
 DUT = get_arg(1)
 FORCE_COMPILE = get_arg(2)
+
 USER = ENV["USER"]
 CURRENT_DIR = Pathname.new(File.dirname(__FILE__)).realpath
 BUILD_SERVER = begin IO.read("#{CURRENT_DIR}/build_server").strip rescue nil end
@@ -70,7 +71,7 @@ end
 
 def exec(cmd, verbose=true)
     puts "exec: #{cmd}"
-    IO.popen(cmd) { |io|
+    IO.popen(cmd, :err=>[:child, :out]) { |io|
       while line = io.gets
         puts line.chomp if verbose
       end
@@ -83,7 +84,7 @@ def compile
 end
 
 def install
-    FileUtils.cd(WORKSPACE_PATH, :err=>[:child, :out]) do
+    FileUtils.cd(WORKSPACE_PATH) do
         if DUT.nil?
             exec("#{INSTALL_EVERRUN_SCRIPT_LOCATION} sn/null,vms=0")
         else
