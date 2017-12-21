@@ -1,5 +1,0 @@
-#!/usr/bin/expect
-# This script used to check if the shanghai2 build host can be accessed, before doing the daily build
-#send "use_name=`whoami`\r"
-spawn ssh jsong@shanghai2.sn.stratus.com
-expect eof
