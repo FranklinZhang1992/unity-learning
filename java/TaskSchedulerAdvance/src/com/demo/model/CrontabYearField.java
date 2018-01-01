@@ -1,7 +1,6 @@
 package com.demo.model;
 
 import java.util.Arrays;
-import java.util.Date;
 
 /**
  * Class for storing crontab trigger year field
@@ -11,14 +10,14 @@ public class CrontabYearField extends AbstractCrontabField {
 
     public static final String FIELD_NAME = "year";
 
-    public CrontabYearField(final String fieldStr, final Date currentDate) {
+    public CrontabYearField(final String fieldStr) {
         super(fieldStr, FIELD_NAME);
-        validateField(fieldStr, currentDate);
+        validateField(fieldStr);
     }
 
     // As year field can only be a number, so we add a method to get it directly
     public int getYear() {
-        if (getFieldList() == null) {
+        if (getFieldList().isEmpty()) {
             return 0;
         } else {
             return getFieldList().get(0);
@@ -26,10 +25,16 @@ public class CrontabYearField extends AbstractCrontabField {
     }
 
     @Override
-    protected void validateField(final String fieldStr, final Date currentDate) {
+    protected void validateField(final String fieldStr) {
         // The only limitation for year field is: it must be a number
         int yearNum = toInt(fieldStr);
         setFieldList(Arrays.asList(yearNum));
+    }
+
+    @Override
+    @Deprecated
+    protected int getRealStart(int cronStart) {
+        return cronStart;
     }
 
 }

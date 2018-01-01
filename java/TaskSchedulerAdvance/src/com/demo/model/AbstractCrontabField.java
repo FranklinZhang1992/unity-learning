@@ -2,6 +2,7 @@ package com.demo.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -41,6 +42,11 @@ public abstract class AbstractCrontabField {
     private List<Integer> fieldList;
     /** The name of the field */
     private String fieldName;
+    private int fieldStart;
+    private int fieldStop;
+    /** The step of the field */
+    private int fieldStep;
+    private Date timestamp;
 
     /**
      * Constructor of AbstractCrontabField, set fieldRawStr and fieldName
@@ -54,6 +60,22 @@ public abstract class AbstractCrontabField {
         this.fieldName = fieldName;
     }
 
+    protected Date getTimestamp() {
+        return timestamp;
+    }
+
+    protected void pushTimestamp(int field) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(timestamp);
+        cal.add(field, 1);
+    }
+
+    protected int getTimestampField(int field) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(timestamp);
+        return cal.get(field);
+    }
+
     /**
      * Get the original field string
      *
@@ -63,6 +85,30 @@ public abstract class AbstractCrontabField {
         return fieldRawStr;
     }
 
+    protected int getFieldStep() {
+        return fieldStep;
+    }
+
+    protected void setFieldStart(int fieldStart) {
+        this.fieldStart = fieldStart;
+    }
+
+    protected int getFieldStart() {
+        return fieldStart;
+    }
+
+    protected int getFieldStop() {
+        return fieldStop;
+    }
+
+    protected int getLastValueInFieldList() {
+        if (getFieldList().isEmpty()) {
+            return -1;
+        } else {
+            return getFieldList().get(getFieldListSize() - 1);
+        }
+    }
+
     /**
      * Get a list which contains all valid numbers of a specified field, e.g. if
      * day-of-week field is 2-5, then this list will contain 2, 3, 4 and 5
@@ -70,7 +116,11 @@ public abstract class AbstractCrontabField {
      * @return A list which contains all valid numbers of a specified field
      */
     public List<Integer> getFieldList() {
-        return fieldList;
+        return fieldList == null ? new ArrayList<Integer>() : fieldList;
+    }
+
+    protected void clearFieldList() {
+        getFieldList().clear();
     }
 
     /**
@@ -89,10 +139,7 @@ public abstract class AbstractCrontabField {
      * @return The size of the fieldList
      */
     protected int getFieldListSize() {
-        if (fieldList == null) {
-            return 0;
-        }
-        return fieldList.size();
+        return getFieldList().size();
     }
 
     /**
@@ -103,7 +150,7 @@ public abstract class AbstractCrontabField {
      * @return Whether the fieldList contains all numbers a field permit
      */
     protected boolean isFullRange(final int totalLength) {
-        if (fieldList != null && fieldList.size() == totalLength) {
+        if (getFieldList().size() == totalLength) {
             return true;
         }
         return false;
@@ -117,9 +164,9 @@ public abstract class AbstractCrontabField {
      * @param Current
      *            date
      */
-    protected abstract void validateField(final String fieldStr, final Date currentDate);
+    protected abstract void validateField(final String fieldStr);
 
-    protected void validateCommonField(final String fieldStr, final int min, final int max, final Date currentDate) {
+    protected void validateCommonField(final String fieldStr, final int min, final int max) {
         // For uniform disposal, we convert all '*' to the range it represents
         String convertedValue = fieldStr.replaceAll("^\\*", min + "-" + max);
         // Stores the times includes in the trigger. e.g. If its a hour field,
@@ -144,19 +191,20 @@ public abstract class AbstractCrontabField {
                 String stepStr = matcher.group(CRONTAB_FIELD_STEP_GROUP_NUM);
                 // Treat all fields as x-y/z format
                 // start = x
-                int start = toInt(startStr);
+                fieldStart = toInt(startStr);
                 // stop = y, if y is not specified, then stop = start
-                int stop = stopStr == null ? start : toInt(stopStr);
+                fieldStop = stopStr == null ? fieldStart : toInt(stopStr);
                 // step = z, if z is not specified, then step = 1
-                int step = stepStr == null ? 1 : toInt(stepStr);
+                fieldStep = stepStr == null ? 1 : toInt(stepStr);
 
                 // The start, stop and step should all be in the max range
-                if (!rangeCheck(start, stop, step, min, max)) {
+                if (!rangeCheck(fieldStart, fieldStop, fieldStep, min, max)) {
                     throw new InvalidCrontabError(fieldName, fieldRawStr);
                 }
 
+                int realStart = getRealStart(fieldStart);
                 // Add all valid numbers of a field into the set
-                fieldRawSet.addAll(getSteppedRange(start, stop, step));
+                fieldRawSet.addAll(getSteppedRange(realStart, fieldStop, fieldStep));
             } else {
                 throw new InvalidCrontabError(fieldName, fieldRawStr);
             }
@@ -166,6 +214,7 @@ public abstract class AbstractCrontabField {
         Collections.sort(fieldList);
 
         this.fieldList = fieldList;
+        timestamp = new Date();
     }
 
     /**
@@ -230,7 +279,7 @@ public abstract class AbstractCrontabField {
      *            Step get from trigger
      * @return A list of numbers
      */
-    private List<Integer> getSteppedRange(final int start, final int stop, final int step) {
+    protected List<Integer> getSteppedRange(final int start, final int stop, final int step) {
         List<Integer> steppedRange = new ArrayList<Integer>();
         if (start == stop && step == 1) {
             steppedRange.add(start);
@@ -274,4 +323,14 @@ public abstract class AbstractCrontabField {
             }
         }
     }
+
+    protected int getMinValueOfGivenStep(final int currentValue, final int min) {
+        int minValue = currentValue > min ? currentValue : min;
+        while (minValue - fieldStep >= min) {
+            minValue -= fieldStep;
+        }
+        return minValue;
+    }
+
+    protected abstract int getRealStart(int cronStart);
 }

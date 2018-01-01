@@ -74,24 +74,24 @@ public class CrontabParser {
         return yearField;
     }
 
-    private void setMinuteField(String minute, Date currentDate) {
-        minuteField = new CrontabMinuteField(minute, currentDate);
+    private void setMinuteField(String minute) {
+        minuteField = new CrontabMinuteField(minute);
     }
 
-    private void setHourField(String hour, Date currentDate) {
-        hourField = new CrontabHourField(hour, currentDate);
+    private void setHourField(String hour) {
+        hourField = new CrontabHourField(hour);
     }
 
-    private void setDayOfMonthField(String dayOfMonth, Date currentDate) {
-        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth, currentDate);
+    private void setDayOfMonthField(String dayOfMonth) {
+        dayOfMonthField = new CrontabDayOfMonthField(dayOfMonth);
     }
 
-    private void setMonthField(String month, Date currentDate) {
-        monthField = new CrontabMonthField(month, currentDate);
+    private void setMonthField(String month) {
+        monthField = new CrontabMonthField(month);
     }
 
-    private void setDayOfWeekField(String dayOfWeek, Date currentDate) {
-        dayOfWeekField = new CrontabDayOfWeekField(dayOfWeek, currentDate);
+    private void setDayOfWeekField(String dayOfWeek) {
+        dayOfWeekField = new CrontabDayOfWeekField(dayOfWeek);
     }
 
     /**
@@ -108,8 +108,8 @@ public class CrontabParser {
      *
      * @param year
      */
-    private void setYearField(String year, Date currentDate) {
-        yearField = new CrontabYearField(year, currentDate);
+    private void setYearField(String year) {
+        yearField = new CrontabYearField(year);
     }
 
     public CrontabParser(String cronString) {
@@ -120,16 +120,15 @@ public class CrontabParser {
         }
 
         try {
-            Date currentDate = new Date();
             // Property set must in sequence
-            setMinuteField(fields[MINUTE_INDEX], currentDate);
-            setHourField(fields[HOUR_INDEX], currentDate);
-            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX], currentDate);
-            setMonthField(fields[MONTH_INDEX], currentDate);
-            setDayOfWeekField(fields[DAY_OF_WEEK_INDEX], currentDate);
+            setMinuteField(fields[MINUTE_INDEX]);
+            setHourField(fields[HOUR_INDEX]);
+            setDayOfMonthField(fields[DAY_OF_MONTH_INDEX]);
+            setMonthField(fields[MONTH_INDEX]);
+            setDayOfWeekField(fields[DAY_OF_WEEK_INDEX]);
             // Set year field only when year field is received
             if (fields.length == 6) {
-                setYearField(fields[YEAR_INDEX], currentDate);
+                setYearField(fields[YEAR_INDEX]);
             }
             validateCombinedFields();
         } catch (Exception e) {
@@ -241,10 +240,14 @@ public class CrontabParser {
      * Calc crontab next run time
      */
     public Date next() {
+        return next(null);
+    }
+
+    public Date next(Date currentDate) {
         if (dayOfWeekField.isSkipWeek()) {
-            return getNextRunTimeWithJumpWeekLimit();
+            return getNextRunTimeWithJumpWeekLimit(currentDate);
         } else {
-            return getNext();
+            return getNext(currentDate);
         }
     }
 
@@ -272,8 +275,8 @@ public class CrontabParser {
      *
      * @return The next run time
      */
-    private Date getNextRunTimeWithJumpWeekLimit() {
-        Date nowDate = new Date();
+    private Date getNextRunTimeWithJumpWeekLimit(Date currentDate) {
+        Date nowDate = currentDate == null ? new Date() : currentDate;
 
         Date nextDate = getNext();
 
@@ -474,6 +477,7 @@ public class CrontabParser {
             throw new InvalidCrontabError("Trigger is invalid.", I18NKeys.INVALID_TRIGGER);
         }
         t.setYear(t.getYear() + 1);
+        monthField.updateFieldList(t.toTime());
     }
 
     /**
@@ -487,11 +491,12 @@ public class CrontabParser {
         int nextValue = findBestNext(t.getMonth(), allowedMonths);
 
         if (nextValue == -1) {
-            t.setMonth(allowedMonths.get(0));
             nudgeYear(t);
+            t.setMonth(allowedMonths.get(0));
         } else {
             t.setMonth(nextValue);
         }
+        dayOfMonthField.updateFieldList(t.toTime());
     }
 
     /**
@@ -529,8 +534,8 @@ public class CrontabParser {
         int nextValue = findBestNext(t.getHour(), allowedHours);
 
         if (nextValue == -1) {
-            t.setHour(allowedHours.get(0));
             nudgeDate(t);
+            t.setHour(allowedHours.get(0));
         } else {
             t.setHour(nextValue);
         }

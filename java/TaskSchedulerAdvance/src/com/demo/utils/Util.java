@@ -9,4 +9,14 @@ public class Util {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return sdf.format(date);
     }
+    
+    public static int convertCrontabMonthToCalendarMonth(int crontabMonth) {
+        return crontabMonth - 1;
+    }
+    
+    public static int convertCalendarMonthToCrontabMonth(int calendarMonth) {
+        return calendarMonth + 1;
+    }
+    
+    
 }

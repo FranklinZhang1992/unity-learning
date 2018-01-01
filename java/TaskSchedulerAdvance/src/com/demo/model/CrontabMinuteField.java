@@ -1,6 +1,6 @@
 package com.demo.model;
 
-import java.util.Date;
+import java.util.Calendar;
 
 /**
  * Class for storing crontab trigger minute field
@@ -13,14 +13,21 @@ public class CrontabMinuteField extends AbstractCrontabField {
     private static final int MAX = 59;
     public static final String FIELD_NAME = "minute";
 
-    public CrontabMinuteField(final String fieldStr, final Date currentDate) {
+    public CrontabMinuteField(final String fieldStr) {
         super(fieldStr, FIELD_NAME);
-        validateField(fieldStr, currentDate);
+        validateField(fieldStr);
     }
 
     @Override
-    protected void validateField(final String fieldStr, final Date currentDate) {
-        validateCommonField(fieldStr, MIN, MAX, currentDate);
+    protected void validateField(final String fieldStr) {
+        validateCommonField(fieldStr, MIN, MAX);
+    }
+
+    @Override
+    protected int getRealStart(int cronStart) {
+        Calendar cal = Calendar.getInstance();
+        int currentMinute = cal.get(Calendar.MINUTE);
+        return getMinValueOfGivenStep(currentMinute, cronStart);
     }
 
 }
