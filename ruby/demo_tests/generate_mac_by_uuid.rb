@@ -137,6 +137,7 @@ def test3
 
 end
 
+# (0 ~ 4294967295)
 test3
 # check_mac("00:04:fc:00:a3:00")
 
