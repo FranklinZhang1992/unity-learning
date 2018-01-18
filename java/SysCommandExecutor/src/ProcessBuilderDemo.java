@@ -20,6 +20,13 @@ public class ProcessBuilderDemo {
 					}
 				} catch (IOException e) {
 					System.err.println("IOException in printInputStream" + e);
+				} finally {
+					if (bf != null) {
+						try {
+							bf.close();
+						} catch (IOException e) {
+						}
+					}
 				}
 			}
 		}).start();
@@ -36,7 +43,6 @@ public class ProcessBuilderDemo {
 		pb.directory(workingDirFile);
 		Map<String, String> env = pb.environment();
 		env.put("LIBGUESTFS_CACHEDIR", "/tmp/test");
-		InputStream is = null;
 		System.out.println("Command exection start");
 		try {
 			Process p = pb.start();
@@ -52,13 +58,6 @@ public class ProcessBuilderDemo {
 			System.err.println("IOException in exec cmd" + e);
 		} catch (InterruptedException e) {
 			System.err.println("InterruptedException in exec cmd" + e);
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 	}
 }

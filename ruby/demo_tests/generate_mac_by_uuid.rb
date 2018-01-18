@@ -50,6 +50,18 @@ end
 def address() "252.64.254.243" end
 
 
+class Fixnum
+    MAX = begin
+        if RUBY_PLATFORM == 'java'
+            2 ** 63 - 1
+        else
+            2 ** (0.size * 8 - 2) - 1
+        end
+    end
+    MIN = -MAX - 1
+end
+
+
 #####################################
 ############ Modified ###############
 #####################################
@@ -67,12 +79,12 @@ def mac_finger_print
 end
 
 def generate_cluster_id
-    if $IS_COBRA
-        mac_finger_print
-    else
-        return nil unless address
-        addr = IPAddr.new(address).to_i
-        addr & 0x7ff
+    $PERSIST_ID ||= begin
+        srand(Time.now.to_i)
+        # Get a random number seeded by current time
+        rand(Fixnum::MAX) & 0x7ff
+    rescue
+        nil
     end
 end
 
@@ -134,11 +146,36 @@ def test3
         puts "%0x" % ad_hoc_mac_base
         $PERSIST_MAC = nil
     end
-
 end
 
+def test4
+    x = 4294967297 & 0x7ff
+    puts x
+    x = 2047 & 0x7ff
+    puts x
+    x = 2048 & 0x7ff
+    puts x
+    x = 2046 & 0x7ff
+    puts x
+    x = Fixnum::MAX & 0x7ff
+    puts x
+end
+
+def test5
+    10.times do
+        puts generate_cluster_id
+        $PERSIST_ID = nil
+        sleep 1
+    end
+end
+
+def test6
+    puts "#{Fixnum::MAX} => #{Fixnum::MAX.class}"
+    x = Fixnum::MAX + 1
+    puts "#{x} => #{x.class}"
+end
 # (0 ~ 4294967295)
-test3
+test4
 # check_mac("00:04:fc:00:a3:00")
 
 # ad_hoc_mac_base_test("192.168.234.71")

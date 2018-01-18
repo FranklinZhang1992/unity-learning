@@ -19,6 +19,13 @@ public class RuntimeDemo {
 					}
 				} catch (IOException e) {
 					System.err.println("IOException in printInputStream" + e);
+				} finally {
+					if (bf != null) {
+						try {
+							bf.close();
+						} catch (IOException e) {
+						}
+					}
 				}
 			}
 		}).start();
@@ -26,11 +33,10 @@ public class RuntimeDemo {
 
 	public static void main(String[] args) {
 		String workingDir = "/tmp/test";
-		String outputMode = "mock";
+		String outputMode = "mockup";
 		File workingDirFile = new File(workingDir);
 		List<String> cmdArray = Arrays.asList("virt-v2v", "-i", "ova", "/mnt/export/win10_pro", "-v", "-x", "-o",
 				outputMode, "-of", "raw", "-os", "default");
-		InputStream is = null;
 		System.out.println("Command exection start");
 		try {
 			Process p = Runtime.getRuntime().exec((String[]) cmdArray.toArray(),
@@ -47,13 +53,6 @@ public class RuntimeDemo {
 			System.err.println("IOException in exec cmd" + e);
 		} catch (InterruptedException e) {
 			System.err.println("InterruptedException in exec cmd" + e);
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 	}
 
