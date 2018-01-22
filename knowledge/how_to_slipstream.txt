@@ -3,3 +3,6 @@ http://www.winhelponline.com/blog/slipstream-windows-10-integrate-updates-setup-
 
 # Download Windows update
 http://www.catalog.update.microsoft.com/Home.aspx
+
+# Microsoft official doc of slipstream
+https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/add-updates-to-customized-windows-and-winpe-images
