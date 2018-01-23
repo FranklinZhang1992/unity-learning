@@ -6,3 +6,7 @@ http://www.catalog.update.microsoft.com/Home.aspx
 
 # Microsoft official doc of slipstream
 https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/add-updates-to-customized-windows-and-winpe-images
+
+# Use DISM for slipstream
+https://blogs.technet.microsoft.com/configmgrdogs/2012/02/14/applying-windows-updates-to-a-base-wim-using-dism-and-powershell/
+https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-8.1-and-8/hh824838(v=win.10)
