@@ -47,7 +47,7 @@ class MACAddr
     end
 end
 
-def address() "252.64.254.243" end
+def address() "10.80.4.108" end
 
 
 class Fixnum
@@ -89,8 +89,9 @@ def generate_cluster_id
 end
 
 def ad_hoc_mac_base
-    cluster_id = generate_cluster_id
-    return nil unless cluster_id
+    return nil unless address
+    addr = IPAddr.new(address).to_i
+    cluster_id = addr & 0x7ff
     # Allocate from the Avance MAC ranges 00:04:fc:00:xx:xx and 00:04:fc:40:xx:xx
     # puts "A: #{((cluster_id >> 10)&1) << 22}"
     # puts "B: #{(cluster_id & 0x3ff) << 6}"
@@ -175,7 +176,7 @@ def test6
     puts "#{x} => #{x.class}"
 end
 # (0 ~ 4294967295)
-test4
+test1
 # check_mac("00:04:fc:00:a3:00")
 
 # ad_hoc_mac_base_test("192.168.234.71")

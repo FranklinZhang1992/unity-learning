@@ -1,7 +1,10 @@
 # str = "abc abc"
 # p str.sub("abc", "X")
 
-str = '/nodes/id/123456/protected-virtual-machine'
-segments = str.sub('/nodes/', '').split('/')
-lookup = segments.shift
-p lookup
+class Demo
+    attr :var
+
+    def initialize
+        @var = $GLOBAL_VAR
+    end
+end
