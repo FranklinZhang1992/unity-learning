@@ -91,7 +91,6 @@ end
 
 def generate_cluster_id
     cluster_id = guest_mac_seed
-    cluster_id = nil
     if cluster_id.nil?
         return nil unless address
         puts "guest_mac_seed has not been set, use system address as seed"
