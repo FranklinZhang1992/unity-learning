@@ -2,6 +2,7 @@
 require 'ipaddr'
 require 'securerandom'
 
+$SEED = nil
 $PERSIST_MAC = nil
 $IS_COBRA = false
 
@@ -47,7 +48,7 @@ class MACAddr
     end
 end
 
-def address() "10.80.4.108" end
+def address() "0.0.0.0" end
 
 
 class Fixnum
@@ -78,20 +79,33 @@ def mac_finger_print
     end
 end
 
-def generate_cluster_id
-    $PERSIST_ID ||= begin
-        srand(Time.now.to_i)
-        # Get a random number seeded by current time
-        rand(Fixnum::MAX) & 0x7ff
+def guest_mac_seed
+    $SEED ||= begin
+        current_sys_milliseconds = (Time.now.to_r * 1000).to_i
+        srand(current_sys_milliseconds)
+        rand(Fixnum::MAX)
     rescue
         nil
     end
 end
 
+def generate_cluster_id
+    cluster_id = guest_mac_seed
+    cluster_id = nil
+    if cluster_id.nil?
+        return nil unless address
+        puts "guest_mac_seed has not been set, use system address as seed"
+        cluster_id = IPAddr.new(address).to_i
+        $SEED = cluster_id
+    end
+    cluster_id & 0x7ff
+rescue
+    nil
+end
+
 def ad_hoc_mac_base
-    return nil unless address
-    addr = IPAddr.new(address).to_i
-    cluster_id = addr & 0x7ff
+    cluster_id = generate_cluster_id
+    return nil unless cluster_id
     # Allocate from the Avance MAC ranges 00:04:fc:00:xx:xx and 00:04:fc:40:xx:xx
     # puts "A: #{((cluster_id >> 10)&1) << 22}"
     # puts "B: #{(cluster_id & 0x3ff) << 6}"
@@ -119,6 +133,21 @@ def each_ad_hoc_mac
         yield mac
     }
     nil
+end
+
+def mac
+    mac_base = ad_hoc_mac_base or return
+    offset = mac_base
+    mac_min = sprintf("00:04:fc:%02x:%02x:%02x",
+                  (offset>>16) & 0xff,
+                  (offset>>8) & 0xff,
+                  offset & 0xff )
+    offset = mac_base + 63
+    mac_max = sprintf("00:04:fc:%02x:%02x:%02x",
+                  (offset>>16) & 0xff,
+                  (offset>>8) & 0xff,
+                  offset & 0xff )
+    puts "#{mac_min} ~ #{mac_max}"
 end
 
 def check_mac(mac)
@@ -175,8 +204,34 @@ def test6
     x = Fixnum::MAX + 1
     puts "#{x} => #{x.class}"
 end
+
+def test7
+    mac
+    mac
+    mac
+    mac
+    mac
+    mac
+    mac
+    mac
+end
+
+def test8
+    n = 2
+    (0..n -1).each { |i|
+        puts i
+    }
+end
+
+def test9
+    # n = 0x1
+    # puts (((n >> 10)&1) << 22)
+    cluster_id = IPAddr.new("255.255.255.255").to_i & 0x7ff
+    puts (((cluster_id >> 10)&1) << 22)
+end
+
 # (0 ~ 4294967295)
-test1
+test7
 # check_mac("00:04:fc:00:a3:00")
 
 # ad_hoc_mac_base_test("192.168.234.71")
