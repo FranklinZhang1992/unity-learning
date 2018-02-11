@@ -15,7 +15,7 @@ public class TaskGeneric extends TaskBase {
 		logger.info(name + ": 10s task");
 		long currentTime = System.currentTimeMillis();
 		long expectedTime = currentTime + 10000;
-		while (!isCancel() && expectedTime > System.currentTimeMillis()) {
+		while (!cancel && expectedTime > System.currentTimeMillis()) {
 			logger.info(name + ": cancel = " + cancel);
 			try {
 				Thread.sleep(1000);
@@ -27,16 +27,8 @@ public class TaskGeneric extends TaskBase {
 
 	@Override
 	protected void stopImpl() {
-		logger.info(name + ": call stopImpl");
-		setCancel(true);
-	}
-
-	public synchronized boolean isCancel() {
-		return cancel;
-	}
-
-	public synchronized void setCancel(boolean cancel) {
-		this.cancel = cancel;
+		logger.info(name + ": cancel");
+		cancel = true;
 	}
 
 }
