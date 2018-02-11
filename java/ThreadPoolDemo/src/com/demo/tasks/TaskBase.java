@@ -4,7 +4,6 @@ public abstract class TaskBase implements ITask {
 
 	private Logger logger = new Logger(TaskBase.class);
 	private boolean initialized;
-	private boolean running;
 
 	@Override
 	public void init() {
@@ -18,24 +17,16 @@ public abstract class TaskBase implements ITask {
 
 	@Override
 	public void start() {
-		if (!running) {
-			logger.info("starting");
-			running = true;
-			startImpl();
-		}
+		startImpl();
 	}
 
 	@Override
 	public void stop() {
-		if (running) {
-			logger.info("stopping");
-			stopImpl();
-			running = false;
-		}
-		logger.info("stopped");
+		stopImpl();
 	}
 
-	protected void initImpl() {}
+	protected void initImpl() {
+	}
 
 	abstract protected void startImpl();
 
