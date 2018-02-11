@@ -20,10 +20,9 @@ public abstract class TaskBase implements ITask {
 	public void start() {
 		if (!running) {
 			logger.info("starting");
-			startImpl();
 			running = true;
+			startImpl();
 		}
-		logger.info("running");
 	}
 
 	@Override
