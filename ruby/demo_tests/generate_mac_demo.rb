@@ -219,4 +219,7 @@ def test6
     puts MACAddr.new(max_mac).is_marathon_mac?
 end
 
-test6
+def test7
+    puts is_ad_hoc_mac?("00:04:fc:00:83:00")
+end
+test7
