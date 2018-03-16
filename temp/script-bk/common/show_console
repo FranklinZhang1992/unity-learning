@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#=============================================================================
+
+# Use example:
+# ./show_console  {DUT}    {NODE}
+#                   $1       $2
+#                 greece     0
+
+#=============================================================================
+
+SERIAL_INFO=$(/developer/$USER/script/common/serial_info $@)
+telnet $SERIAL_INFO

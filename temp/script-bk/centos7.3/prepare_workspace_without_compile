@@ -1,0 +1,153 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./prepare_workspace {workspace_name}
+#                           $1
+#                      shanghai_build
+
+#=============================================================================
+
+# This script is used to generate a workspace under your folder.
+
+#=============================================================================
+
+require 'timeout'
+
+$stdout.sync = true
+
+$WORKSPACE_NAME = ARGV[0].to_s
+$USER_NAME = %x{whoami}
+
+class Main
+  attr_accessor :workspace_name
+  attr_accessor :user_name
+  attr_accessor :build_server
+  def initialize
+    self.workspace_name = "#{$WORKSPACE_NAME}".chomp
+    self.user_name = "#{$USER_NAME}".chomp
+    self.build_server = begin IO.read("/developer/fzhang/script/centos7.3/build_server").strip rescue nil end
+    check_params
+    show_params
+    @repo_map = Hash.new
+    @repo_map["fzhang"] = "git@github.com:Stratus-franklinzhang/unity-stratus.git"
+    @repo_map["jsong"] = "git@github.com:stratus-everrun-js/unity-stratus.git"
+    @repo_map["tli"] = "git@github.com:stratus-tonyli/unity-stratus.git"
+    @repo_map["vgao"] = "git@github.com:stratus-vickygao/unity-stratus.git"
+    @repo_map["jma"] = "git@github.com:Stratus-everrun-ui/unity-stratus.git"
+    @ui_repo_map = Hash.new
+    @ui_repo_map["hwu"] = "git@github.com:Stratus-everrun-ui/unity-ui.git"
+    @ui_repo_map["jma"] = "git@github.com:Stratus-everrun-ui/unity-ui.git"
+    @ui_repo_map["rliu"] = "git@github.com:Stratus-everrun-ui/unity-ui.git"
+  end
+  def build_info_file() "/developer/#{self.user_name}/#{self.workspace_name}/unity-build/build_info.out" end
+  def kit_folder() "/developer/#{self.user_name}/#{self.workspace_name}/unity-build/kit" end
+  def show_params
+    puts "Received params: workspace name = #{self.workspace_name}, user name = #{self.user_name}, build server = #{self.build_server}"
+  end
+  def check_params
+    if self.workspace_name.empty?
+      raise "Please input the workspace name!"
+    end
+    if self.build_server.nil? || self.build_server.empty?
+      raise "Cannot find a build server"
+    end
+  end
+  def source_code_exist?
+    workspace = "/developer/#{self.user_name}/#{self.workspace_name}"
+    source_code_folder = "#{workspace}/unity-build"
+    if File.exist?(workspace) &&  File.exist?(source_code_folder)
+      return true
+    elsif File.exist?(workspace)
+      %x{rm -rf #{workspace}}
+      return false
+    else
+      return false
+    end
+  end
+  def fetch_source_code
+    puts "===================begin to get the source code of everrun from GitHub========================"
+    dest_folder = "/developer/#{self.user_name}/#{self.workspace_name}"
+    %x{mkdir -p #{dest_folder}}
+    %x{git clone git@github.com:stratustech/unity-stratus #{dest_folder}/unity-stratus}
+    %x{git clone git@github.com:stratustech/unity-drivers #{dest_folder}/unity-stratus/unity-drivers}
+    %x{git clone git@github.com:stratustech/unity-third-party #{dest_folder}/unity-stratus/unity-third-party}
+    %x{git clone git@github.com:stratustech/unity-libvirt #{dest_folder}/unity-stratus/unity-libvirt}
+    %x{git clone git@github.com:stratustech/unity-ui.git #{dest_folder}/unity-stratus/unity-ui}
+    %x{ln -s #{dest_folder}/unity-stratus #{dest_folder}/unity-build}
+    puts "===================cloned successfully========================"
+  end
+  def compile_source_code
+    puts "===================begin to exec make (do not delete the file build_info.out generated in the source code folder)========================"
+    File.delete(build_info_file) if File.exist?(build_info_file)
+    IO.popen("ssh #{self.user_name}@#{self.build_server} /developer/#{self.user_name}/script/common/compile_everrun #{self.workspace_name}") { |io|
+      while line = io.gets
+        line.chomp!
+        puts line
+        File.open(build_info_file, "a") { |f|
+          f.write "#{line}\n"
+        }
+      end
+    }
+    puts "===================exec make finished, wait until the compile is done========================"
+  end
+  def build_finished?
+    is_finished = false
+    if File.exist?(kit_folder)
+      kit_file = Dir.glob("#{kit_folder}/*.kit")
+      iso_file = Dir.glob("#{kit_folder}/*.iso")
+      if kit_file.length > 0 && iso_file.length > 0
+        is_finished = true
+      end
+    end
+    is_finished
+  end
+  def get_repo
+    return @repo_map["#{self.user_name}"]
+  end
+  def get_ui_repo
+    return @ui_repo_map["#{self.user_name}"]
+  end
+  def link_remote_repo
+    repo = get_repo
+    ui_repo = get_ui_repo
+    unless repo.nil?
+      puts "will add GitHub repo #{repo} with alias fork for user #{self.user_name}"
+      workspace = "/developer/#{self.user_name}/#{self.workspace_name}/unity-build"
+      IO.popen("/developer/#{self.user_name}/script/common/link_remote_repo #{workspace} #{repo}") { |io|
+        while line = io.gets
+          line.chomp!
+          puts line
+        end
+      }
+    end
+
+    unless ui_repo.nil?
+      puts "will add GitHub UI repo #{ui_repo} with alias fork for user #{self.user_name}"
+      ui_workspace = "/developer/#{self.user_name}/#{self.workspace_name}/unity-build/unity-ui"
+      IO.popen("/developer/#{self.user_name}/script/common/link_remote_repo #{ui_workspace} #{ui_repo}") { |io|
+        while line = io.gets
+          line.chomp!
+          puts line
+        end
+      }
+    end
+  end
+  def run
+    if source_code_exist?
+      puts "source code already exists"
+    else
+      fetch_source_code
+    end
+    link_remote_repo
+  end
+end
+
+begin
+  main = Main.new
+  main.run
+rescue Exception => e
+  puts "Error occured during preparing workspace => #{e}"
+  raise
+end

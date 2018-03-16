@@ -1,0 +1,66 @@
+#!/usr/bin/ruby
+
+def get_arg(index)
+    ARGV[index].nil? ? nil : ARGV[index].chomp
+end
+
+class SerialInfo
+    attr :node
+    attr :server
+    attr :port
+
+    def initialize(node, server, port)
+        @node = node
+        @server = server
+        @port = port
+    end
+end
+
+def show_help
+    msg =<<EOF
+NAME
+    serial_info
+
+SYNOPSIS
+    serial_info <DUT> <node>
+
+DESCRIPTION
+    This script can get serial info of a DUT
+
+ARGUMENTS
+    <DUT>               The name of DUT
+    <node>              Which node you want to show
+
+EOF
+    puts msg
+    exit(0)
+end
+
+if get_arg(0) == "-h" || get_arg(0) == "--help"
+    show_help
+end
+
+DUT = get_arg(0)
+NODE = get_arg(1)
+
+unless NODE == "0" || NODE == "1"
+    raise "invalid node specified"
+end
+
+info_hash = Hash.new
+dut_info = %x{duthelp #{DUT}}.chomp
+
+NODE0_SERIAL_INFO_RE = Regexp.new("node0.#{DUT}\n    serial: host: (digi[0-9a-z]*):([1-9][0-9]*)\n")
+NODE1_SERIAL_INFO_RE = Regexp.new("node1.#{DUT}\n    serial: host: (digi[0-9a-z]*):([1-9][0-9]*)\n")
+
+matched = NODE0_SERIAL_INFO_RE.match(dut_info)
+if matched
+    info_hash["0"] = SerialInfo.new("node0", matched[1], matched[2])
+end
+matched = NODE1_SERIAL_INFO_RE.match(dut_info)
+if matched
+    info_hash["1"] = SerialInfo.new("node1", matched[1], matched[2])
+end
+
+serial_info = info_hash[NODE]
+puts "#{serial_info.server} #{serial_info.port}"

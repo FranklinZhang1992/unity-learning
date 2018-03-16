@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#=============================================================================
+
+# Use example:
+# ./modify_influxdb_service
+
+#=============================================================================
+
+# This script is used to modify influxdb service configuration file
+
+#=============================================================================
+
+# Modify influxDB service to disable its start on failure ability
+[ -f /usr/lib/systemd/system/influxdb.service ] && {
+  sed -e "s/^Restart=on-failure/Restart=no/" -i /usr/lib/systemd/system/influxdb.service
+}
+
+systemctl disable influxdb

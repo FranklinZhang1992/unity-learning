@@ -1,0 +1,16 @@
+#!/usr/bin/ruby
+
+require '../lib/lib_cmdline'
+require '../lib/lib_prepare_workspace'
+
+OPTIONS = {
+    "--workspace" => "Specify workspace",
+    "test" => "test"
+}
+
+add_option(:workspace, "--workspace=WORKSPACE", "Specify workspace")
+add_option(:test, "--test=2", "test", false)
+
+run do |opts|
+    p opts
+end

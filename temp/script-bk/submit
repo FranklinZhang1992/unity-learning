@@ -1,0 +1,62 @@
+#!/bin/bash --login
+
+#=============================================================================
+
+# This script is used to submit modified scripts to betsy, do not run this
+# script on betsy
+
+#=============================================================================
+
+function update_timestamp() {
+    current_time=`date +%s`;
+    echo "current time = $current_time"
+    timestamp_file=$current_folder/timestamp
+    if [ -f $timestamp_file ]
+    then
+        rm -f $timestamp_file
+    fi
+    echo $current_time > $timestamp_file
+    chmod 444 $timestamp_file
+}
+
+function submit() {
+    path=$1
+    parent_folder=${path##*/}
+    if [ "$parent_folder" == "tmp" ]
+    then
+        echo "ignored"
+        return
+    fi
+    for element in `ls $1`
+    do
+        current_file=$1/$element
+        last_modified_time=`stat -c %Y $current_file`;
+        if [ $[ $last_modified_time - $down_time ] -gt 0 ]
+        then
+            echo "submit $current_file to betsy:/developer/fzhang/script/$parent_folder"
+            scp -r $current_file fzhang@betsy.sn.stratus.com:/developer/fzhang/script/$parent_folder/
+        fi
+    done
+}
+
+echo "starting sublimt"
+current_folder=`pwd`
+timestamp_file=$current_folder/timestamp
+down_time=`cat $timestamp_file`
+echo "download time = $down_time"
+folder_name=${current_folder##*/}
+if [ "$folder_name" = "script" ]
+then
+    for element in `ls $current_folder`
+    do
+        sub_folder="$current_folder/$element"
+        if [ -d $sub_folder ] && [ ! -L $sub_folder ]
+        then
+            echo "submit modified files in $sub_folder"
+            submit $sub_folder
+        fi
+    done
+fi
+
+update_timestamp
+echo "done"

@@ -1,0 +1,403 @@
+#!/usr/bin/ruby
+
+require 'logger'
+require 'optparse'
+require 'uri'
+require 'net/http'
+require 'net/https'
+require 'singleton'
+require 'json'
+
+# DEMOS:
+# Query local centos PM performance:
+## ./query_influxdb --host=localhost --port=8086 --username=root --password=root --db=collectd --pm-hostname=localhost --cpu --memory --disk=sda --network=enp0s3
+# Query VM performance on DUT tanzania
+## ./query_influxdb --host=tanzania.sn.stratus.com --port=8086 --username=root --password=root --db=collectd-m --vm-hostname=sles-11-x86_64-ava-install-10cpu --vcpu=10 --vdisk=vda --vnetwork=00:04:fc:00:91:03
+# Query PM performance on DUT tanzania
+## ./query_influxdb --host=node0 --port=8086 --username=root --password=root --db=collectd-m --pm-hostname=node0 --cpu --memory --disk=sda --network=biz0
+
+class ExitException < RuntimeError ; end
+
+class Logger
+    class LogDevice
+       def add_log_header(file) end
+    end
+    class Formatter
+        def timestamp(time)
+            time.strftime('%m/%d %H:%M:%S.') + ('%06d' % [time.usec.to_s])
+        end
+        def call(severity, time, progname, message)
+            "%s %s %18s %s\n" % [severity[0..0], timestamp(time), "[#{progname}]", message]
+        end
+    end
+end
+
+def setup_logging(logdevice)
+    if logdevice
+        %x{touch #{logdevice}} unless File.exist?(logdevice)
+        $log = Logger.new( logdevice )
+    else
+        $log = Logger.new( STDOUT )
+    end
+
+rescue => err
+    Kernel.exit
+end
+
+def logDebug(&block)
+    $log.debug($log_title, &block)
+end
+
+def logInfo(&block)
+    $log.info($log_title, &block)
+end
+
+def logWarning(&block)
+    $log.warn($log_title, &block)
+end
+
+def logError(&block)
+    $log.error($log_title, &block)
+end
+
+def parse_args(argv)
+    options = {}
+
+    option_parser = OptionParser.new
+    glb_help_msg = "This script is able to send requests to influxdb to do the query\n"
+
+    option_parser.banner = glb_help_msg # Global help message
+    option_parser.separator ""
+    option_parser.separator "Specific options:"
+
+    option_parser.on('--pm-hostname=HOST_NAME', 'filter by PM hostname') do |value|
+        options[:pm_hostname] = value
+    end
+    option_parser.on('--cpu', 'get PM cpu performance') do
+        options[:cpu] = true
+    end
+    option_parser.on('--memory', 'get PM memory performance') do
+        options[:memory] = true
+    end
+    option_parser.on('--disk=INSTANCE', 'get PM disk performance') do |value|
+        options[:disk] = value
+    end
+    option_parser.on('--network=INSTANCE', 'get PM network performance') do |value|
+        options[:network] = value
+    end
+    option_parser.on('--vm-hostname=HOST_NAME', 'filter by VM hostname') do |value|
+        options[:vm_hostname] = value
+    end
+    option_parser.on('--vcpu=CORE_MUM', 'get VM cpu performance') do |value|
+        options[:vcpu] = value
+    end
+    option_parser.on('--vdisk=TYPE_INSTANCE', 'get VM disk performance') do |value|
+        options[:vdisk] = value
+    end
+    option_parser.on('--vnetwork=TYPE_INSTANCE', 'get VM network performance') do |value|
+        options[:vnetwork] = value
+    end
+    option_parser.on('--db=DATABASE', 'get all PM&VM performance') do |value|
+        options[:db] = value
+    end
+
+    option_parser.on('-H', '--host=HOST', 'specify the host name/ip') do |value|
+        options[:host] = value
+    end
+    option_parser.on('-P', '--port=port', 'specify the host port') do |value|
+        options[:port] = value
+    end
+    option_parser.on('-u', '--username=USERNAME', 'username of influxdb') do |value|
+        options[:username] = value
+    end
+    option_parser.on('-p', '--password=PASSWORD', 'password of influxdb') do |value|
+        options[:password] = value
+    end
+    option_parser.on('--log=LOG_FILE', 'password of influxdb') do |value|
+        options[:log_file] = value
+    end
+    option_parser.on('--https-mode=HTTPS_MODE', 'password of influxdb') do
+        options[:https_mode] = true
+    end
+    option_parser.on('-i', '--interval=INTERVAL', 'specify the collecting interval') do |value|
+        options[:interval] = value.to_i
+    end
+
+    option_parser.separator ""
+    option_parser.separator "Common options:"
+
+    option_parser.on('-h', '--help', 'show this help message and exit') do
+        puts option_parser
+        exit
+    end
+
+    option_parser.parse(argv)
+    options
+end
+
+class PerformanceCollector
+    include Singleton
+    attr :options
+
+    def get(uri)
+        result = nil
+        Net::HTTP.start(uri.host, uri.port) do |http|
+          request = Net::HTTP::Get.new uri
+          response = http.request request
+          raise "failed to send query request => #{response.body}" unless response.code.to_i == 200
+          result = response.body
+        end
+        result
+    end
+    def generate_uri(query_str)
+        url = self.options[:https_mode] ? "https" : "http"
+        url << "://#{self.options[:host]}:#{self.options[:port]}"
+        url << "/query"
+
+        uri = URI(url)
+        params = {
+            :pretty => true,
+            :db => self.options[:db],
+            :q => query_str
+        }
+        if self.options[:username] && self.options[:password]
+            params[:u] = self.options[:username]
+            params[:p] = self.options[:password]
+        end
+
+        uri.query = URI.encode_www_form(params)
+        uri
+    end
+    def generate_query_str
+        query_array = []
+        [:cpu, :memory, :disk, :network, :vcpu, :vdisk, :vnetwork].each do |type|
+            if self.options[type]
+                method = "query_#{type}"
+                query_array << self.send(method)
+            end
+        end
+
+        query_str = ""
+        query_array.flatten.each do |str|
+            query_str << str << ";"
+        end
+        query_str
+    end
+    def query_cpu
+        host = self.options[:pm_hostname]
+        "SELECT LAST(\"value\") AS \"value\" FROM \"cpu_value\" WHERE \"host\" = '#{host}' AND \"type\" = 'percent' AND \"type_instance\" = 'active'"
+    end
+    def query_memory
+        host = self.options[:pm_hostname]
+        "SELECT LAST(\"value\") AS \"value\" FROM \"memory_value\" WHERE \"host\" = '#{host}' AND \"type\" = 'percent' AND \"type_instance\" = 'used'"
+    end
+    def query_disk
+        host = self.options[:pm_hostname]
+        instance = self.options[:disk]
+
+        sql = "SELECT \"value\" FROM \"disk_read\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'disk_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_disk_read_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 AS \"value\" FROM \"disk_read\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'disk_octets' AND \"time\" >= '#{time}'"
+
+        sql = "SELECT \"value\" FROM \"disk_write\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'disk_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_disk_write_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 AS \"value\" FROM \"disk_write\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'disk_octets' AND \"time\" >= '#{time}'"
+        [query_disk_read_sql, query_disk_write_sql]
+    end
+    def query_network
+        host = self.options[:pm_hostname]
+        instance = self.options[:network]
+
+        sql = "SELECT \"value\" FROM \"interface_rx\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'if_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_network_rx_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 * 8 AS \"value\" FROM \"interface_rx\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'if_octets' AND \"time\" >= '#{time}'"
+
+        sql = "SELECT \"value\" FROM \"interface_tx\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'if_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_network_tx_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 * 8 AS \"value\" FROM \"interface_tx\" WHERE \"host\" = '#{host}' AND \"instance\" = '#{instance}' AND \"type\" = 'if_octets' AND \"time\" >= '#{time}'"
+        [query_network_rx_sql, query_network_tx_sql]
+    end
+    def query_vcpu
+        host = self.options[:vm_hostname]
+        core_num = self.options[:vcpu].to_i
+        sql = "SELECT \"value\" FROM \"virt_value\" WHERE \"host\" = '#{host}' AND \"type\" = 'virt_cpu_total' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        return "SELECT DERIVATIVE(\"value\", 10s) / (10 * #{core_num} * 1000000000) AS \"value\" FROM \"virt_value\" WHERE \"host\" = '#{host}' AND \"type\" = 'virt_cpu_total' AND \"time\" >= '#{time}'"
+    end
+    def query_vdisk
+        host = self.options[:vm_hostname]
+        type_instance = self.options[:vdisk]
+
+        sql = "SELECT \"value\" FROM \"virt_read\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'disk_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_virt_read_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 AS \"value\" FROM \"virt_read\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'disk_octets' AND \"time\" >= '#{time}'"
+
+        sql = "SELECT \"value\" FROM \"virt_write\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'disk_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_virt_write_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 AS \"value\" FROM \"virt_write\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'disk_octets' AND \"time\" >= '#{time}'"
+        [query_virt_read_sql, query_virt_read_sql]
+    end
+    def query_vnetwork
+        host = self.options[:vm_hostname]
+        type_instance = self.options[:vnetwork]
+
+        sql = "SELECT \"value\" FROM \"virt_rx\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'if_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_virt_rx_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 * 8 AS \"value\" FROM \"virt_rx\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'if_octets' AND \"time\" >= '#{time}'"
+
+        sql = "SELECT \"value\" FROM \"virt_tx\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'if_octets' ORDER BY time DESC LIMIT 2"
+        uri = generate_uri(sql)
+        result = get(uri)
+        json_obj = JSON.parse(result)
+        time = json_obj["results"][0]["series"][0]["values"][1][0]
+        query_virt_tx_sql = "SELECT DERIVATIVE(\"value\", 10s) / 10 * 8 AS \"value\" FROM \"virt_tx\" WHERE \"host\" = '#{host}' AND \"type_instance\" = '#{type_instance}' AND \"type\" = 'if_octets' AND \"time\" >= '#{time}'"
+        [query_virt_rx_sql, query_virt_tx_sql]
+    end
+
+    RESULT_HANDLER_MAP = {
+        :cpu_value => "handle_cpu",
+        :memory_value => "handle_memory",
+        :disk_read => "handle_disk_read",
+        :disk_write => "handle_disk_write",
+        :interface_rx => "handle_network_receive",
+        :interface_tx => "handle_network_transmit",
+        :virt_value => "handle_vcpu",
+        :virt_read => "handle_vdisk_read",
+        :virt_write => "handle_vdisk_write",
+        :virt_rx => "handle_vnetwork_receive",
+        :virt_tx => "handle_vnetwork_transmit",
+    }
+    def handle_result(result)
+        json_obj = JSON.parse(result)
+        result_map = {}
+
+        msg_array = []
+        json_obj["results"].each do |result|
+            name = result["series"][0]["name"]
+            msg_array << self.send(RESULT_HANDLER_MAP[name.to_sym], result)
+        end
+
+        puts msg_array.inspect
+    end
+    def handle_cpu(json_obj)
+        cpu_usage = json_obj["series"][0]["values"][0][1]
+        return "cpu => #{convert_percent(cpu_usage)}"
+    end
+    def handle_memory(json_obj)
+        memory_usage = json_obj["series"][0]["values"][0][1]
+        return "memory => #{convert_percent(memory_usage)}"
+    end
+    def handle_disk_read(json_obj)
+        disk_read_speed = json_obj["series"][0]["values"][0][1]
+        return "diskR => #{convert_rate_unit(disk_read_speed)}B/s"
+    end
+    def handle_disk_write(json_obj)
+        disk_write_speed = json_obj["series"][0]["values"][0][1]
+        return "diskW => #{convert_rate_unit(disk_write_speed)}B/s"
+    end
+    def handle_network_receive(json_obj)
+        network_rx = json_obj["series"][0]["values"][0][1]
+        return "netRX => #{convert_rate_unit(network_rx)}b/s"
+    end
+    def handle_network_transmit(json_obj)
+        network_tx = json_obj["series"][0]["values"][0][1]
+        return "netTX => #{convert_rate_unit(network_tx)}b/s"
+    end
+    def handle_vcpu(json_obj)
+        vcpu_usage = json_obj["series"][0]["values"][0][1]
+        return "vcpu => #{convert_percent(vcpu_usage)}"
+    end
+    def handle_vdisk_read(json_obj)
+        vdisk_read_speed = json_obj["series"][0]["values"][0][1]
+        return "vdiskR => #{convert_rate_unit(vdisk_read_speed)}B/s"
+    end
+    def handle_vdisk_write(json_obj)
+        vdisk_write_speed = json_obj["series"][0]["values"][0][1]
+        return "vdiskW => #{convert_rate_unit(vdisk_write_speed)}B/s"
+    end
+    def handle_vnetwork_receive(json_obj)
+        vnetwork_rx = json_obj["series"][0]["values"][0][1]
+        return "vnetRX => #{convert_rate_unit(vnetwork_rx)}b/s"
+    end
+    def handle_vnetwork_transmit(json_obj)
+        vnetwork_tx = json_obj["series"][0]["values"][0][1]
+        return "vnetTX => #{convert_rate_unit(vnetwork_tx)}b/s"
+    end
+
+    def convert_percent(percent)
+        percent = percent.to_f
+        percent = format("%0.2f", percent)
+        (0..1).each do
+            percent = "#{percent}".sub(/0$/, '')
+        end
+        percent = "#{percent}".sub(/.$/, '')
+        return "#{percent}%"
+    end
+    def convert_rate_unit(num)
+        num = num.to_f
+        unit_index = 0
+        unit_array = [nil, "K", "M", "G"]
+        while (num > 1024 && unit_index < unit_array.length - 1)
+            num /= 1024
+            unit_index += 1
+        end
+        num = format("%0.2f", num)
+        (0..1).each do
+            num = "#{num}".sub(/0$/, '')
+        end
+        num = "#{num}".sub(/.$/, '')
+        return "#{num}#{unit_array[unit_index]}"
+    end
+
+    def run(options)
+        @options = options.nil? ? {} : options
+        uri = generate_uri(generate_query_str)
+        loop do
+            result = get(uri)
+            handle_result(result)
+            interval = self.options[:interval] ? self.options[:interval] : 10
+            sleep interval
+        end
+    end
+    def shutdown
+        Kernel.exit
+    end
+end
+
+begin
+    ['HUP', 'QUIT', 'INT', 'TERM'].each do |signal|
+        trap(signal) { raise ExitException.new(signal) }
+    end
+    options = parse_args(ARGV)
+    setup_logging(options[:log_file])
+    PerformanceCollector.instance.run(options)
+rescue ExitException => signal
+    puts "Received signal: #{signal}"
+    PerformanceCollector.instance.shutdown
+rescue Exception => e
+    raise
+end

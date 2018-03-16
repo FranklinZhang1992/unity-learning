@@ -1,0 +1,13 @@
+#!/bin/bash
+
+sim_pid=`ps -ef | grep -i "\[sim\]" | grep -v "grep" | awk '{print $2}' | head -1`
+if [ -z "$sim_pid" ]
+then
+  sim_pid=""
+fi
+echo "find sim pid: $sim_pid"
+if [ $sim_pid ]
+then
+  echo "send kill -9 signal to sim"
+  kill -9 $sim_pid
+fi

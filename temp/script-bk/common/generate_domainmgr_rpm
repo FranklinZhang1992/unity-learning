@@ -1,0 +1,18 @@
+#=============================================================================
+
+# Use example:
+# ./generate_hwmonitor_rpm {workspace_path}
+#                                $1       
+#                           shanghai_build
+
+#=============================================================================
+
+# Generate the rpm in shanghai2 build host
+
+#=============================================================================
+workspace_path=$1
+user_name=`whoami`
+cd /developer/$user_name/${workspace_path}/unity-build/unity-domainmgr
+echo "===========================begin to complie========================"
+make
+echo "===========================complied successfully========================"

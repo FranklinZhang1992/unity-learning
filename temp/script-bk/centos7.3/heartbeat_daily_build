@@ -1,0 +1,108 @@
+#!/bin/bash
+#=============================================================================
+
+# Use example:
+# ./heartbeat_daily_build {workspace_path} {branch_name} {dut_name}
+#                             $1              $2           $3
+#                       shanghai_build     master       greece
+
+#=============================================================================
+
+# This script is used to do the daily build for heartbeat. It will get
+# the latest modification of branch ${branch_name} under the specified 
+# workspace ${workspace_path}, then switch to shanghai6 build host to
+# generate the rpm by command make. Finally, it will copy the rpm to
+# the specified dut ${dut_name}, and use it to replace the original.
+
+#=============================================================================
+
+workspace_path=$1
+branch_name=$2
+dut_name=$3
+user_name=`whoami`
+build_server=$(cat /developer/fzhang/script/centos7.3/build_server)
+
+# All of the paramters cannot be empty string, if so, exit the script.
+function check_parameters {
+    echo "===================begin to check parameters========================" 
+    if [ "" == "$workspace_path" ] || [ "" == "$branch_name" ] || [ "" == "$dut_name" ]
+    then
+        echo "Please input the parameters!"
+        exit 0
+    fi
+    echo "==================checked successfully========================"
+}
+
+# Get the latest modification under the specified workspace
+function pull_latest_code {
+    echo "===================begin to pull the latest code========================"
+    cd /developer/$user_name/${workspace_path}/unity-build/
+    git pull
+    remote_name=$(git remote -v | grep "fork" | grep -v "grep" | awk '{print $1}' | head -1)
+    if [ $remote_name ]
+    then
+      echo "will pull from remote $remote_name"
+      git pull $remote_name
+    fi    
+    git checkout ${branch_name}
+    current_branch=$(git branch | grep "* $branch_name")
+    echo "current branch is $current_branch"
+    if [ -z "$current_branch" ]
+    then
+      echo "failed to checkout to branch $branch_name"
+      exit 0
+    fi
+    if [ "$current_branch" = "master" ]
+    then
+        git pull origin master
+    else
+        git pull ${remote_name} ${branch_name}
+    fi
+    git branch
+    echo "===================pulled successfully========================"
+}
+
+function deploy {
+    echo "====================deploy begin===================================================="
+    echo "Copying everruninfluxdbagent"
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/files/etc/init.d/everruninfluxdbagent root@node0.${dut_name}:/etc/init.d
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/files/etc/init.d/everruninfluxdbagent root@node1.${dut_name}:/etc/init.d
+
+    echo "Copying cib.xml.templ"
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/files/var/lib/heartbeat/crm/cib.xml.templ root@node0.${dut_name}:/var/lib/heartbeat/crm/cib.xml.templ
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/files/var/lib/heartbeat/crm/cib.xml.templ root@node1.${dut_name}:/var/lib/heartbeat/crm/cib.xml.templ
+
+    echo "Copying hb_recover"
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/utilities/hb_recover root@node0.${dut_name}:/usr/lib/spine/bin/hb_recover
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/platform/heartbeat_management/utilities/hb_recover root@node1.${dut_name}:/usr/lib/spine/bin/hb_recover
+
+    echo "Copying smd"
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/java/smd-main/smd root@node0.${dut_name}:/usr/smd/smd
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/java/smd-main/smd root@node1.${dut_name}:/usr/smd/smd
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/java/smd-main/smd root@node0.${dut_name}:/etc/init.d/smd
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/java/smd-main/smd root@node1.${dut_name}:/etc/init.d/smd
+
+    echo "Copying stat_helper"
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/scripts/src/usr/bin/stat_helper.rb root@node0.${dut_name}:/usr/sbin/stat_helper
+    ftscp /developer/$user_name/${workspace_path}/unity-stratus/unity-mgmt/sm/scripts/src/usr/bin/stat_helper.rb root@node1.${dut_name}:/usr/sbin/stat_helper
+
+    echo "Modifying influxDB service to disable its start on failure ability"
+    ftscp /developer/$user_name/script/common/modify_influxdb_service root@node0.${dut_name}:/usr/bin/
+    ftscp /developer/$user_name/script/common/modify_influxdb_service root@node1.${dut_name}:/usr/bin/
+    ftssh root@node0.${dut_name} modify_influxdb_service
+    ftssh root@node1.${dut_name} modify_influxdb_service
+    ftssh root@node0.${dut_name} rm -f /usr/bin/modify_influxdb_service
+    ftssh root@node1.${dut_name} rm -f /usr/bin/modify_influxdb_service
+
+    echo "Restart hb"
+    ftssh root@${dut_name} systemctl restart everrun-heartbeat-recover
+    echo "====================deploy end===================================================="
+}
+
+# The main function for daily build
+function daily_build {
+    pull_latest_code
+    deploy
+}
+
+check_parameters && daily_build

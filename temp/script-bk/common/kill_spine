@@ -1,0 +1,13 @@
+#!/bin/bash
+
+spine_pid=`ps -ef | grep -i "\[spine\]" | grep -v "grep" | awk '{print $2}' | head -1`
+if [ -z "$spine_pid" ]
+then
+  spine_pid=""
+fi
+echo "find spine pid: $spine_pid"
+if [ $spine_pid ]
+then
+  echo "send kill -9 signal to spine"
+  kill -9 $spine_pid
+fi

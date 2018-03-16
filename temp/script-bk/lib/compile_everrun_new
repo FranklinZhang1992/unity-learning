@@ -1,0 +1,19 @@
+#!/bin/bash
+#=============================================================================
+
+# Use example:
+# ./compile_everrun_new {workspace_name}
+#                                   $1
+#                             shanghai_build
+
+#=============================================================================
+
+# Compile the source code of everrun in shanghai2 build host
+
+#=============================================================================
+workspace_name=$1
+user_name=`whoami`
+cd /developer/$user_name/${workspace_name}/unity-build
+echo "===========================begin to compile========================"
+make </dev/null 2>&1 | tee make.out
+echo "===========================compiled successfully========================"

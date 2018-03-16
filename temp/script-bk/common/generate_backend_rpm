@@ -1,0 +1,24 @@
+#=============================================================================
+
+# Use example:
+# ./generate_backend_rpm {workspace_path}
+#                             $1       
+#                        shanghai_build
+
+#=============================================================================
+
+# Generate the rpm in shanghai2 build host
+
+#=============================================================================
+workspace_path=$1
+user_name=`whoami`
+cd /developer/$user_name/${workspace_path}/unity-build/unity-mgmt/sm/
+echo "===========================begin to clean========================"
+make clean
+echo "===========================cleaned successfully========================"
+echo "===========================begin to complie========================"
+make NOTEST=1
+echo "===========================complied successfully========================"
+echo "===========================begin to install========================"
+make install
+echo "===========================installed successfully========================"
