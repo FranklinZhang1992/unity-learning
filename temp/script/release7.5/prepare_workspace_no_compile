@@ -1,0 +1,17 @@
+#!/usr/bin/ruby
+
+require '../lib/lib_utils'
+
+workspace = ARGV.shift
+
+def prepare_workspace
+end
+
+def compile
+    # exec_cmd()
+end
+
+puts build_server
+
+
+
