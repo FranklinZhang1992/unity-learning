@@ -231,6 +231,7 @@ def test7
     mac = formatted_mac($MAC_TYPE, mac_base)
     puts mac
     puts MACAddr.new(mac).is_marathon_mac?
+    puts is_ad_hoc_mac?("00:04:fc:00:83:00")
 end
 
 test7

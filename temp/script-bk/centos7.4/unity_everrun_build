@@ -1,0 +1,26 @@
+#!/bin/bash --login
+
+#=============================================================================
+
+# Use example:
+# ./unity_everrun_build    <dut>
+#                            $1
+#                        DUT name
+
+#=============================================================================
+
+# This script is used to do the complete build for everrun.
+
+#=============================================================================
+
+DUT=$1
+
+date_str=$(date "+%Y%m%d%H%M%S")
+rschedule release --host=${DUT} --comment="Daily build ${date_str}"
+WORKSPACE_NAME="workspace_${date_str}"
+
+# Prepare workspace and compile source code, links will be created, too
+/developer/${USER}/script/current/prepare_workspace ${WORKSPACE_NAME}
+
+# Install everrun to DUT
+/developer/${USER}/script/current/install_everrun ${WORKSPACE_NAME} ${DUT}

@@ -1,0 +1,143 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'pathname'
+
+#=============================================================================
+
+# Use example:
+# ./smd_daily_build {workspace_path} {branch_name} {dut_name} {ignore_compiling}
+#                          $1              $2          $3            $4 (optional)
+#                     shanghai_build      master       greece        true
+
+#=============================================================================
+
+# This script is used to do the daily build for SMD. It will get
+# the latest modification of branch ${branch_name} under the specified 
+# workspace ${workspace_path}, then switch to shanghai6 build host to
+# generate the rpm by command make. Finally, it will copy the rpm to
+# the specified dut ${dut_name}, and use it to replace the original.
+
+#=============================================================================
+
+$stdout.sync = true
+
+def get_arg(index)
+    ARGV[index].nil? ? nil : ARGV[index].chomp
+end
+
+def show_help
+    msg =<<EOF
+NAME
+    smd_daily_build
+
+SYNOPSIS
+    smd_daily_build <workspace> <branch> <DUT>
+
+DESCRIPTION
+    This script can install everrun to a DUT, compile source code if needed
+
+ARGUMENTS
+    <workspace>         The name of workspace
+    <branch>            The github branch
+    <DUT>               The name of DUT
+    <ignore_compiling>  Whether compiling is ignored (true/yes/y means compiling is needed)
+
+EOF
+    puts msg
+    exit(0)
+end
+
+if get_arg(0) == "-h" || get_arg(0) == "--help"
+    show_help
+end
+
+def exec_cmd(cmd, verbose=true)
+    puts "exec: #{cmd}"
+    IO.popen(cmd) { |io|
+      while line = io.gets
+        if verbose
+            puts line.chomp
+        end
+      end
+    }
+    $?.success?
+end
+
+WORKSPACE = get_arg(0)
+BRANCH = get_arg(1)
+DUT = get_arg(2)
+IGNORE_COMPILING = get_arg(3)
+
+def is_ignore_compiling?
+    IGNORE_COMPILING == "yes" || IGNORE_COMPILING == "y" || IGNORE_COMPILING == "true"
+end
+
+msg = "received args: WORKSPACE: #{WORKSPACE}, BRANCH: #{BRANCH}, DUT: #{DUT}"
+msg << "IGNORE_COMPILING: #{IGNORE_COMPILING}" if is_ignore_compiling?
+puts msg
+
+USER = ENV["USER"]
+CURRENT_DIR = Pathname.new(File.dirname(__FILE__)).realpath
+BUILD_SERVER = begin IO.read("#{CURRENT_DIR}/build_server").strip rescue nil end
+
+WORKSPACE_PATH = "/developer/#{USER}/#{WORKSPACE}"
+SOURCE_LOCATION = "#{WORKSPACE_PATH}/unity-stratus"
+
+unless File.exist?(WORKSPACE_PATH)
+    raise "workspace not found under '#{WORKSPACE_PATH}'"
+end
+
+if DUT.nil?
+    raise "must specify a DUT"
+else
+    raise "not a valid DUT: #{DUT}" unless exec_cmd("duthelp #{DUT}", false)
+end
+
+def pull_latest_code
+    puts "===================begin to pull the latest code========================"
+    FileUtils.cd(SOURCE_LOCATION) do
+        exec_cmd("git pull")
+        remote_name = %x{git remote -v | grep "fork" | grep -v "grep" | awk '{print $1}' | head -1}.chomp
+        unless remote_name.empty?
+            puts "will pull from remote #{remote_name}"
+            exec_cmd("git pull #{remote_name}")
+        end
+        exec_cmd("git checkout #{BRANCH}")
+        current_branch = %x{git branch | grep "* #{BRANCH}"}.chomp
+        puts "current branch is #{current_branch}"
+        if current_branch.empty?
+            puts "failed to checkout to branch #{BRANCH}"
+            exit(0)
+        end
+        if current_branch == "master"
+            exec_cmd("git pull origin master")
+        else
+            exec_cmd("git pull #{remote_name} #{BRANCH}")
+        end
+        exec_cmd("git branch")
+    end
+    puts "===================pulled successfully========================"
+end
+
+def compile
+    exec_cmd("ssh #{USER}@#{BUILD_SERVER} /developer/#{USER}/script/common/generate_smd_jar #{WORKSPACE}")
+end
+
+def deploy
+    puts "===================begin to use the latest jar instead of the old one========================"
+    exec_cmd("ftscp #{SOURCE_LOCATION}/unity-mgmt/sm/java/smd-main/dist/smd-main.jar root@node0.#{DUT}:/usr/smd/smd-main.jar")
+    exec_cmd("ftscp #{SOURCE_LOCATION}/unity-mgmt/sm/java/smd-main/dist/smd-main.jar root@node1.#{DUT}:/usr/smd/smd-main.jar")
+    exec_cmd("ftssh #{DUT} systemctl restart smd")
+    puts "===================replaced successfully========================"
+end
+
+def main
+    pull_latest_code
+    compile unless is_ignore_compiling?
+    deploy
+end
+
+if __FILE__ == $0
+    main
+end

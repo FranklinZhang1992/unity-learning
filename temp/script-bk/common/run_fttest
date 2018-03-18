@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#=============================================================================
+
+# Use example:
+# ./run_fttest {deploy folder}                       {dut name}
+#                  $1                                    $2
+#               /test_logs1/{username}/{workspace}      mali
+
+#=============================================================================
+
+# This script is used to run fttest under specified folder.
+
+#=============================================================================
+
+DEPLOY_DIR=$1
+DUT_NAME=$2
+USER_NAME=`whoami`
+cd $DEPLOY_DIR
+echo "run fttest under dir $DEPLOY_DIR"
+fttest sn/null,dut=$DUT_NAME,vms=1

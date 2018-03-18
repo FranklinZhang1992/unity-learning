@@ -1,0 +1,176 @@
+#!/usr/bin/ruby
+
+#=============================================================================
+
+# Use example:
+# ./unity_everrun_build {workspace_name} {dut_name}    {fttest extra parameters}
+#                              $1            $2           $3 (optional)
+#                        shanghai_build    greece        imageGroups=2
+
+#=============================================================================
+
+# This script is used to do the complete build for everrun.
+
+#=============================================================================
+
+require 'timeout'
+
+$stdout.sync = true
+
+$WORKSPACE_NAME = ARGV[0].to_s
+$DUT_NAME = ARGV[1].to_s
+$USER_NAME = %x{whoami}
+
+class Main
+  attr_accessor :workspace_name
+  attr_accessor :dut_name
+  attr_accessor :user_name
+  attr_accessor :build_server
+  def initialize
+    self.workspace_name = "#{$WORKSPACE_NAME}".chomp
+    self.dut_name = "#{$DUT_NAME}".chomp
+    self.user_name = "#{$USER_NAME}".chomp
+    self.build_server = begin IO.read("/developer/fzhang/script/centos7.3/build_server").strip rescue nil end
+    # check_params
+    show_params
+  end
+  DUT_RESERVER_REGEXP = "Reserved: ([a-zA-Z]{1,})[ ]"
+  def build_info_file() "/developer/#{self.user_name}/#{self.workspace_name}/unity-build/build_info.out" end
+  def kit_folder() "/developer/#{self.user_name}/#{self.workspace_name}/unity-build/kit" end
+  def deploy_folder() "/test_logs1/#{self.user_name}/#{self.workspace_name}" end
+  def backup_folder() "/test_logs1/#{self.user_name}/#{self.workspace_name}.backup" end
+  def show_params
+    puts "Received params: workspace path = #{self.workspace_name}, dut name = #{self.dut_name}, user name = #{self.user_name}, build server = #{self.build_server}"
+
+  end
+  def check_params
+    if self.workspace_name.empty? || self.dut_name.empty?
+      raise "Please input the parameters!"
+    end
+    if self.build_server.nil? || self.build_server.empty?
+      raise "Cannot find a build server"
+    end
+  end
+  def check_dut_available
+    puts "===================begin to check dut available========================"
+    rinfo_message = %x{rinfo | grep "^#{self.dut_name} *[0-9]*%" 2>&1}
+    dut_reserver_regexp = "Reserved: (#{self.user_name})[ ]"
+    if rinfo_message.nil?
+      raise "The dut #{self.dut_name} does not exist!"
+    elsif rinfo_message.match(dut_reserver_regexp)
+      puts "The dut is reserved by #{self.user_name}"
+    else
+      raise "You can only deploy everrun to DUT reserved by yourself"
+    end
+  end
+  def prepare_workspace
+    puts "===================prepare to workspace begin=========================="
+    %x{/developer/#{self.user_name}/script/current/prepare_workspace #{self.workspace_name}}
+    puts "===================prepare to workspace finished========================"
+  end
+  def ready_to_run_fttest?
+    local_file = "#{deploy_folder}/local"
+    project_file = "#{deploy_folder}/project"
+    if File.exist?(deploy_folder) && File.exist?(local_file) && File.exist?(project_file)
+      return true
+    else
+      return false
+    end
+  end
+  def compile_source_code
+    puts "===================begin to exec make (do not delete the file build_info.out generated in the source code folder)========================"
+    File.delete(build_info_file) if File.exist?(build_info_file)
+    IO.popen("ssh #{self.user_name}@#{self.build_server} /developer/#{self.user_name}/script/common/compile_everrun #{self.workspace_name}") { |io|
+      while line = io.gets
+        line.chomp!
+        puts line
+        File.open(build_info_file, "a") { |f|
+          f.write "#{line}\n"
+        }
+      end
+    }
+    puts "===================exec make finished, wait until the compile is done========================"
+  end
+  def prepare_fttest_folder
+    puts "===================prepare to run fttest========================"
+    %x{mkdir -p #{deploy_folder}}
+    %x{ln -s /test_logs/fttest2/unity/current #{deploy_folder}/project}
+    %x{ln -s /developer/#{self.user_name}/#{self.workspace_name}/unity-build #{deploy_folder}/local}
+    puts "===================prepare finished======================="
+  end
+  def source_code_exist?
+    workspace = "/developer/#{self.user_name}/#{self.workspace_name}"
+    source_code_folder = "#{workspace}/unity-build"
+    if File.exist?(workspace) &&  File.exist?(source_code_folder)
+      return true
+    elsif File.exist?(workspace)
+      %x{rm -rf #{workspace}}
+      return false
+    else
+      return false
+    end
+  end
+  def build_finished?
+    is_finished = false
+    if File.exist?(kit_folder)
+      kit_file = Dir.glob("#{kit_folder}/*.kit")
+      iso_file = Dir.glob("#{kit_folder}/*.iso")
+      if kit_file.length > 0 && iso_file.length > 0
+        is_finished = true
+      end
+    end
+    is_finished
+  end
+  def fttest_success?(dut_name)
+    %x{curl http://#{dut_name}.sn.stratus.com}
+    return $?.success?
+  end
+  def backup_origin_log
+    backup_folder = "/test_logs1/#{self.user_name}/"
+  end
+  def run_fttest
+    puts "===================begin to run fttest========================"
+    param_num = ARGV.length
+    run_fttest_cmd = "/developer/#{self.user_name}/script/common/execute_fttest_cmd #{deploy_folder} #{self.dut_name}"
+    if param_num > 2
+      for i in 2 .. param_num - 1
+        run_fttest_cmd += " #{ARGV[i]}"
+      end
+    end
+    puts "run_fttest_cmd: #{run_fttest_cmd}"
+    IO.popen(run_fttest_cmd) { |io|
+      while line = io.gets
+        line.chomp!
+        puts line
+      end
+    }
+    puts "===================deploy finished======================="
+  end
+  def run
+    check_dut_available
+    if source_code_exist?
+      compile_source_code
+    else
+      prepare_workspace
+    end
+    if ready_to_run_fttest?
+      puts "already ready to run fttest"
+    else
+      prepare_fttest_folder
+    end
+    run_fttest
+    # if !fttest_success?(self.dut_name)
+    #   puts "fttest failed, try for a second time"
+    #   backup_origin_log
+    #   run_fttest
+    # end
+  end
+
+end
+
+begin
+  main = Main.new
+  main.run
+rescue Exception => e
+  puts "Error occured during executing build => #{e}"
+end

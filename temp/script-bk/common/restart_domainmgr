@@ -1,0 +1,26 @@
+#!/bin/bash
+
+domainmgr_pid=`ps -ef | grep -i "service.domainmgr" | grep -v "grep" | awk '{print $2}' | head -1`
+if [ -z "$domainmgr_pid" ]
+then
+  domainmgr_pid=""
+fi
+echo "find domainmgr pid: $domainmgr_pid"
+if [ $domainmgr_pid ]
+then
+  echo "send HUP signal to domainmgr"
+  kill -HUP $domainmgr_pid
+fi
+domainmgr_new_pid=`ps -ef | grep -i "service.domainmgr" | grep -v "grep" | awk '{print $2}' | head -1`
+if [ -z "$domainmgr_new_pid" ]
+then
+  domainmgr_new_pid=""
+fi
+while [ "$domainmgr_pid" = "$domainmgr_new_pid" ]
+do
+  sleep 1
+  domainmgr_new_pid=`ps -ef | grep -i "service.domainmgr" | grep -v "grep" | awk '{print $2}' | head -1`
+  echo "waiting for domainmgr to restart"
+done
+echo "domainmgr restart successfully, new pid is $domainmgr_new_pid"
+

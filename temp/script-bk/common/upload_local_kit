@@ -1,0 +1,38 @@
+#!/bin/bash
+#=============================================================================
+
+# Use example:
+# ./upload_kit {mount_server} {kit_name}
+#                  $1              $2
+#                
+
+#=============================================================================
+
+# This script is used to upload a local kit via AVCLI
+#=============================================================================
+
+MOUNT_SERVER=$1
+KIT_NAME=$2
+
+date_str=$(date "+%Y%m%d%H%M%S")
+MOUNT_POINT="MOUNT_${date_str}"
+
+function do_prepare {
+    mkdir -p /mnt/$MOUNT_POINT
+}
+
+function do_mount {
+    echo "mount -r $MOUNT_SERVER /mnt/$MOUNT_POINT"
+    mount -r $MOUNT_SERVER /mnt/$MOUNT_POINT
+}
+
+function do_upload {
+    /usr/bin/avcli kit-add /mnt/$MOUNT_POINT/$KIT_NAME
+}
+
+function do_clean {
+    umount /mnt/$MOUNT_POINT
+    rmdir /mnt/$MOUNT_POINT
+}
+
+do_prepare && do_mount && do_upload && do_clean

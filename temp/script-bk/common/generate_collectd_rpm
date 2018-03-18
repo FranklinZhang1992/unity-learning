@@ -1,0 +1,21 @@
+#=============================================================================
+
+# Use example:
+# ./generate_collectd_rpm {workspace_path}
+#                             $1       
+#                        shanghai_build
+
+#=============================================================================
+
+# Generate the rpm in shanghai2 build host
+
+#=============================================================================
+workspace_path=$1
+user_name=`whoami`
+cd /developer/$user_name/${workspace_path}/unity-third-party/collectd
+echo "===========================begin to clean========================"
+make clean
+echo "===========================cleaned successfully========================"
+echo "===========================begin to complie========================"
+make
+echo "===========================compiled successfully========================"
