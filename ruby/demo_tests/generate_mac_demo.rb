@@ -219,4 +219,18 @@ def test6
     puts MACAddr.new(max_mac).is_marathon_mac?
 end
 
-test6
+def test7
+    $MAC_TYPE = :marathon
+    $SEED = 0
+    mac_base = ad_hoc_mac_base
+    mac = formatted_mac($MAC_TYPE, mac_base)
+    puts mac
+    puts MACAddr.new(mac).is_marathon_mac?
+    $SEED = 131071
+    mac_base = ad_hoc_mac_base
+    mac = formatted_mac($MAC_TYPE, mac_base)
+    puts mac
+    puts MACAddr.new(mac).is_marathon_mac?
+end
+
+test7
