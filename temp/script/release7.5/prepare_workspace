@@ -1,3 +1,29 @@
 #!/usr/bin/ruby
 
-require '../lib_prepare_workspace'
+require '../lib/lib_common'
+
+$workspace = ARGV.shift
+
+def validate(workspace)
+    raise CommandError, "workspace is required" if workspace.nil?
+end
+
+def prepare_workspace(workspace)
+    exec_cmd("./prepare_workspace_no_compile #{workspace}")
+end
+
+def compile(workspace)
+    compile_script = File.join(get_pool_base, "script", "assist_shells", "generic_compile")
+    workspace_full_path = File.join(get_pool_base, workspace)
+    exec_cmd("ssh #{current_user}@#{build_server} #{compile_script} #{workspace_full_path}")
+end
+
+begin
+    validate($workspace)
+    prepare_workspace($workspace)
+    compile($workspace)
+rescue CommandError => err
+    puts "#{err}"
+rescue Exception => err
+    log.error("#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}")
+end

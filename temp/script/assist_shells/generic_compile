@@ -1,0 +1,26 @@
+#!/bin/bash --login
+#=============================================================================
+
+# Use example:
+# ./generic_compile               {workspace_path}                   {do_clean}
+#                                         $1
+#                    /developer/fzhang/shanghai_build/unity-stratus    true
+
+#=============================================================================
+
+# Compile the source code of everrun in build host
+
+#=============================================================================
+workspace_path=$1
+do_clean=$2
+
+cd workspace_path
+if [ "$2" == "true" ]
+then
+    echo "=============================begin to clean============================"
+    make clean
+    echo "===========================cleaned successfully========================"
+fi
+echo "=============================begin to compile==========================="
+make
+echo "===========================compiled successfully========================"
