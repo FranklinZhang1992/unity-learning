@@ -4,8 +4,14 @@
 
 # This script is used to submit modified scripts to betsy, do not run this
 # script on betsy
-
+# Usage example:
+# ./submit         # Submit modified files
+# ./submit true    # Sublit all files to server. The existing files on server
+#                  # will be overwritten
 #=============================================================================
+
+overwrite=$1
+target_path="/developer"
 
 function update_timestamp() {
     current_time=`date +%s`;

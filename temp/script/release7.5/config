@@ -1,2 +1,12 @@
+# User repo
 user-repo fzhang unity-stratus git@github.com:Stratus-franklinzhang/unity-stratus.git
 user-repo fzhang unity-third-party git@github.com:Stratus-franklinzhang/unity-third-party.git
+
+# Major branch
+major-branch release.7.5
+
+# Build server
+build-server shanghai12
+
+# Base directory
+base /developer
