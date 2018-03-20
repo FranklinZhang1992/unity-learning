@@ -1,6 +1,10 @@
 require 'pathname'
 
-class CommandError < RuntimeError ;
+class CommandError < RuntimeError ; end
+
+def help?(args)
+    return args[0] == "-h" || args[0] == "--help"
+end
 
 class UserRepoConfig
     attr :user, :repo_name, :repo_url

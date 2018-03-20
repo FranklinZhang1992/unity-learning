@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/usr/bin/ruby
 
 #=============================================================================
 
@@ -10,59 +10,79 @@
 #                  # will be overwritten
 #=============================================================================
 
-overwrite=$1
-target_path="/developer"
+require 'pathname'
 
-function update_timestamp() {
-    current_time=`date +%s`;
-    echo "current time = $current_time"
-    timestamp_file=$current_folder/timestamp
-    if [ -f $timestamp_file ]
-    then
-        rm -f $timestamp_file
-    fi
-    echo $current_time > $timestamp_file
-    chmod 444 $timestamp_file
-}
+OVERWRITE = ARGV.shift
+CURRENT_PATH = Pathname.new(File.dirname(__FILE__)).realpath
+TARGET_PATH = "/developer"
+USER = "fzhang"
+SERVER = "betsy.sn.stratus.com"
+REPO = "script-new"
+TIMESTAMP_FILE_NAME = "timestamp"
 
-function submit() {
-    path=$1
-    parent_folder=${path##*/}
-    if [ "$parent_folder" == "tmp" ]
-    then
-        echo "ignored"
-        return
-    fi
-    for element in `ls $1`
-    do
-        current_file=$1/$element
-        last_modified_time=`stat -c %Y $current_file`;
-        if [ $[ $last_modified_time - $down_time ] -gt 0 ]
-        then
-            echo "submit $current_file to betsy:/developer/fzhang/script/$parent_folder"
-            scp -r $current_file fzhang@betsy.sn.stratus.com:/developer/fzhang/script/$parent_folder/
-        fi
-    done
-}
+class CommandError < RuntimeError ; end
 
-echo "starting sublimt"
-current_folder=`pwd`
-timestamp_file=$current_folder/timestamp
-down_time=`cat $timestamp_file`
-echo "download time = $down_time"
-folder_name=${current_folder##*/}
-if [ "$folder_name" = "script" ]
-then
-    for element in `ls $current_folder`
-    do
-        sub_folder="$current_folder/$element"
-        if [ -d $sub_folder ] && [ ! -L $sub_folder ]
-        then
-            echo "submit modified files in $sub_folder"
-            submit $sub_folder
-        fi
-    done
-fi
+def exec_cmd(cmd, report_error=true)
+    puts cmd
+    output = %x{#{cmd} 2>&1}
+    raise CommandError, "#{output}" unless $?.success? || report_error == false
+    output
+end
 
-update_timestamp
-echo "done"
+def local_timestamp() $LOCAL_TIMESTAMP ||= IO.read(File.join(CURRENT_PATH, TIMESTAMP_FILE_NAME)).strip.to_i rescue 0 end
+def server_timestamp() $SERVER_TIMESTAMP ||= exec_cmd("ssh #{USER}@#{SERVER} cat #{File.join(TARGET_PATH, USER, REPO, TIMESTAMP_FILE_NAME)}").to_i rescue raise end
+
+def submit_all(local_path, server_path)
+    timestamp_file = File.join(TARGET_PATH, USER, REPO, TIMESTAMP_FILE_NAME)
+    raise CommandError, "Your local source is not up to date, need pull lastest scripts from server" if server_timestamp > local_timestamp
+    exec_cmd("scp -r #{local_path} #{USER}@#{SERVER}:#{server_path}")
+end
+
+def submit_single_delta(local_path, server_path)
+    if File.file?(local_path)
+        file_mtime = File.mtime(local_path).to_i
+        exec_cmd("scp #{local_path} #{USER}@#{SERVER}:#{server_path}") if file_mtime > server_timestamp
+    end
+end
+
+def submit_delta(local_path, server_path)
+    raise CommandError, "This is possbility the first push, use ./submit true instead" if server_timestamp == 0
+    if File.directory?(local_path)
+        server_path = File.join(server_path, File.basename(local_path))
+        Dir.glob(File.join(local_path, "*")).each do |file|
+            submit_single_delta(file, server_path)
+        end
+    else
+        submit_single_delta(local_path, server_path)
+    end
+end
+
+def submit(overwrite=false)
+    ["submit", TIMESTAMP_FILE_NAME, "assist_shells", "common", "lib", "master", "release7.5"].each do |file|
+        server_path = File.join(TARGET_PATH, USER, REPO)
+        local_path = File.join(CURRENT_PATH, file)
+        next unless File.exist?(local_path)
+        if overwrite
+            submit_all(local_path, server_path)
+        else
+            submit_delta(local_path, server_path)
+        end
+    end
+end
+
+def update_timestamp
+    local_path = File.join(CURRENT_PATH, TIMESTAMP_FILE_NAME)
+    server_path = File.join(TARGET_PATH, USER, REPO)
+    %x{echo #{Time.now.to_i} > #{local_path}}
+    %x{scp #{local_path} #{USER}@#{SERVER}:#{server_path}}
+end
+
+begin
+    overwrite = OVERWRITE == "true" ? true : false
+    submit(overwrite)
+    update_timestamp
+rescue CommandError => err
+    puts "#{err}"
+rescue Exception => err
+    puts "#{err} (#{err.class})\n#{err.backtrace.join("\n\tfrom ")}"
+end

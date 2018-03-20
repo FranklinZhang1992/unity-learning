@@ -1,7 +1,6 @@
-
-
 require 'fileutils'
-require '../lib/lib_common'
+require 'pathname'
+require "#{File.join(Pathname.new(File.dirname(__FILE__)).realpath.parent, "lib")}/lib_common"
 
 def validate(workspace)
     raise CommandError, "workspace is required" if workspace.nil?
