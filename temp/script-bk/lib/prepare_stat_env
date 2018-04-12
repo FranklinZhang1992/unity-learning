@@ -1,4 +1,0 @@
-#!/bin/bash
-
-yum install -y epel-release.noarch
-yum install -y collectd collectd-virt
