@@ -16,12 +16,13 @@ void execute_cmd_with_system(char *cmd)
 void execute_cmd_with_popen(char *cmd)
 {
     FILE * fp;
-    char buffer[80];
+    char buffer[1024];
 
     printf("execute cmd with popen()\n");
     if ((fp = popen(cmd, "r") ) != NULL) {
-        fgets(buffer, sizeof(buffer), fp);
-        printf("%s\n", buffer);
+        while(fgets(buffer, sizeof(buffer), fp) != NULL) {
+            printf("%s", buffer);
+        }
         pclose(fp);
     }
 }
@@ -30,7 +31,7 @@ int main(int argc, char const *argv[])
 {
     char *cmd = NULL;
 
-    cmd = strdup("echo Hello!");
+    cmd = strdup("ls -la /tmp");
     execute_cmd_with_system(cmd);
     execute_cmd_with_popen(cmd);
     free(cmd);
