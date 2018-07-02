@@ -40,8 +40,8 @@ class Comparer
     return File.exist?(file)
   end
   def compare
-    first_content = []
-    second_contnt = []
+    first_content = Set.new
+    second_contnt = Set.new
     # Load first file
     File.open(self.first_file) { |f|
       while line = f.gets

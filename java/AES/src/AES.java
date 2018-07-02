@@ -7,7 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class AES {
 
 	private static final String ALGORITHM = "AES";
-	private static final int SECRET_KEY_LENGTH = 128;
+	private static final String DEFAULT_KEY = "0000000000000000";
 
 	/**
 	 * Extent the key to 128 bit
@@ -16,12 +16,18 @@ public class AES {
 	 * @return A 128 bit key
 	 */
 	protected static byte[] formatSecretKey(String key) {
+		byte[] defaultKeyByte = DEFAULT_KEY.getBytes(StandardCharsets.UTF_8);
 		byte[] keyByte = key.getBytes(StandardCharsets.UTF_8);
-		if (keyByte.length < SECRET_KEY_LENGTH) {
+		int defaultKeyByteLen = defaultKeyByte.length;
+		int keyByteLen = keyByte.length;
 
+		for (int i = 0; i < defaultKeyByteLen; i++) {
+			if (i < keyByteLen) {
+				defaultKeyByte[i] = keyByte[i];
+			}
 		}
-		// for ()
-		return keyByte;
+
+		return defaultKeyByte;
 	}
 
 	protected static String encrypt(String key, String plainText) throws Exception {
@@ -42,15 +48,23 @@ public class AES {
 		return new String(original);
 	}
 
-	public static void main(String[] args) throws Exception {
-		String encryptionKey = "MZygpewJsCpRrfOr";
-		// String encryptionKey = "fnki4obct0n8d";
-		String plainText = "Hello world!";
+	protected static String generateKey() {
+		AESKeyGenerator generator = new AESKeyGenerator();
+		String key = generator.generateKey();
+		System.out.println("key = " + key);
+		return key;
+	}
 
-		System.out.println("original string: " + plainText);
-		String cipherText = encrypt(encryptionKey, plainText);
-		System.out.println("ecrypted string: " + cipherText);
-		String decryptedCipherText = decrypt(encryptionKey, cipherText);
-		System.out.println("decrypted string: " + decryptedCipherText);
+	public static void main(String[] args) throws Exception {
+		generateKey();
+		// String encryptionKey = "569qjb7v65lpsdfgagfdgfdgsdfgsdgsfdg";
+		// // String encryptionKey = "fnki4obct0n8d";
+		// String plainText = "Hello world!";
+		//
+		// System.out.println("original string: " + plainText);
+		// String cipherText = encrypt(encryptionKey, plainText);
+		// System.out.println("ecrypted string: " + cipherText);
+		// String decryptedCipherText = decrypt(encryptionKey, cipherText);
+		// System.out.println("decrypted string: " + decryptedCipherText);
 	}
 }
