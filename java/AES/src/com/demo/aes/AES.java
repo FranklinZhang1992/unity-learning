@@ -2,6 +2,7 @@ package com.demo.aes;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -11,6 +12,8 @@ public class AES {
 	private static final String ALGORITHM = "AES";
 	private static final String DEFAULT_KEY = "0000000000000000";
 	private static final AES instance = new AES();
+	private static final int FIRST_LOWER_CASE_LETTER_ASCII = 65;
+	private static final int FIRST_UPPER_CASE_LETTER_ASCII = 97;
 
 	private AES() {
 	}
@@ -56,6 +59,22 @@ public class AES {
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
 		byte[] original = cipher.doFinal(Base64.getDecoder().decode(cipherText.getBytes(StandardCharsets.UTF_8)));
 		return new String(original);
+	}
+
+	public String genRandomString(int len) {
+		Random random = new Random();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < len; i++) {
+			boolean isChar = (random.nextInt(2) % 2 == 0);
+			if (isChar) {
+				int firstLetterAscii = random.nextInt(2) % 2 == 0 ? FIRST_LOWER_CASE_LETTER_ASCII
+						: FIRST_UPPER_CASE_LETTER_ASCII;
+				sb.append((char) (firstLetterAscii + random.nextInt(26)));
+			} else {
+				sb.append(Integer.toString(random.nextInt(10)));
+			}
+		}
+		return sb.toString();
 	}
 
 }
