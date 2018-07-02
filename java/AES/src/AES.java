@@ -51,20 +51,24 @@ public class AES {
 	protected static String generateKey() {
 		AESKeyGenerator generator = new AESKeyGenerator();
 		String key = generator.generateKey();
-		System.out.println("key = " + key);
 		return key;
 	}
 
+	protected static void test(String plainText) throws Exception {
+		System.out.println("original string: " + plainText);
+		String key = generateKey();
+		System.out.println("Generated key: " + key);
+		String encryptedStr = encrypt(key, plainText);
+		System.out.println("ecrypted string: " + encryptedStr);
+		String decryptedStr = decrypt(key, encryptedStr);
+		System.out.println("decrypted string: " + decryptedStr);
+	}
+
 	public static void main(String[] args) throws Exception {
-		generateKey();
-		// String encryptionKey = "569qjb7v65lpsdfgagfdgfdgsdfgsdgsfdg";
-		// // String encryptionKey = "fnki4obct0n8d";
-		// String plainText = "Hello world!";
-		//
-		// System.out.println("original string: " + plainText);
-		// String cipherText = encrypt(encryptionKey, plainText);
-		// System.out.println("ecrypted string: " + cipherText);
-		// String decryptedCipherText = decrypt(encryptionKey, cipherText);
-		// System.out.println("decrypted string: " + decryptedCipherText);
+		String plainText = "Hello world!";
+		test(plainText);
+		test(plainText);
+		test(plainText);
+		test(plainText);
 	}
 }

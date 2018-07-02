@@ -1,4 +1,3 @@
-import java.math.BigInteger;
 import java.util.Random;
 
 public class AESKeyGenerator {
@@ -7,10 +6,29 @@ public class AESKeyGenerator {
 	private static final char[] salt2 = "salt2".toCharArray();
 	private static final char[] secret = "ABC".toCharArray();
 
+	private static final int FIRST_LOWER_CASE_LETTER_ASCII = 65;
+	private static final int FIRST_UPPER_CASE_LETTER_ASCII = 97;
+
 	public AESKeyGenerator() {
 
 	}
-	
+
+	private String randomString(int len) {
+		Random random = new Random();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < len; i++) {
+			boolean isChar = (random.nextInt(2) % 2 == 0);
+			if (isChar) {
+				int firstLetterAscii = random.nextInt(2) % 2 == 0 ? FIRST_LOWER_CASE_LETTER_ASCII
+						: FIRST_UPPER_CASE_LETTER_ASCII;
+				sb.append((char) (firstLetterAscii + random.nextInt(26)));
+			} else {
+				sb.append(Integer.toString(random.nextInt(10)));
+			}
+		}
+		return sb.toString();
+	}
+
 	public String generateKey() {
 		return generateKey(null);
 	}
@@ -19,18 +37,24 @@ public class AESKeyGenerator {
 		if (seed != null) {
 			return seed;
 		}
-		return new BigInteger(128, new Random()).toString(32);
+		Random random = new Random();
+		int len = random.nextInt(10) + 10; // 10 ~ 20
+
+		return randomString(len);
 	}
 
-	/**
-	 * encryptMemoryBasic: Up to the specified amount of ebuffer bytes will be
-	 * encrypted;
-	 * 
-	 * @param ebuffer
-	 *            - buffer of memory with data to be encrypted
-	 * @param n_bytes
-	 *            - amount of bytes to encrypt in ebuffer
-	 **/
+	public String getEncryptedKey(String rawKey) {
+		char[] keyByte = rawKey.toCharArray();
+		encryptMemoryBasic(keyByte, keyByte.length);
+		return new String(keyByte);
+	}
+
+	public String getDecryptedKey(String encryptedKey) {
+		char[] keyByte = encryptedKey.toCharArray();
+		decryptMemoryBasic(keyByte, keyByte.length);
+		return new String(keyByte);
+	}
+
 	private void encryptMemoryBasic(char[] ebuffer, int n_bytes) {
 		// First Encrypt Step: salt the data to be encrypted
 		for (int i = 0; i < n_bytes; i++)
@@ -41,17 +65,8 @@ public class AESKeyGenerator {
 		// Third Encrypt Step: add second layer of salt
 		for (int i = 0; i < n_bytes; i++)
 			ebuffer[i] = (char) (ebuffer[i] ^ salt2[i % salt2.length]);
-	} // END OF ENCRYPTMEMORYBASIC
+	}
 
-	/**
-	 * decryptMemoryBasic: Up to the specified amount of ebuffer bytes will be
-	 * decrypted;
-	 *
-	 * @param ebuffer
-	 *            - buffer of memory with data to be decrypted
-	 * @param n_bytes
-	 *            - amount of bytes to decrypt in ebuffer
-	 **/
 	private void decryptMemoryBasic(char[] ebuffer, int n_bytes) {
 		// First Decrypt Step: undo 2nd salt
 		for (int i = 0; i < n_bytes; i++)
@@ -62,5 +77,5 @@ public class AESKeyGenerator {
 		// Third Decrypt Step: undo 1st layer of salt
 		for (int i = 0; i < n_bytes; i++)
 			ebuffer[i] = (char) (ebuffer[i] ^ salt1[i % salt1.length]);
-	} // END OF DECRYPTMEMORYBASIC
+	}
 }
