@@ -1,3 +1,4 @@
+package com.demo.aes;
 import java.util.Random;
 
 public class AESKeyGenerator {

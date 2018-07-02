@@ -1,3 +1,5 @@
+package com.demo.aes;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -8,6 +10,14 @@ public class AES {
 
 	private static final String ALGORITHM = "AES";
 	private static final String DEFAULT_KEY = "0000000000000000";
+	private static final AES instance = new AES();
+
+	private AES() {
+	}
+
+	public static AES getInstance() {
+		return instance;
+	}
 
 	/**
 	 * Extent the key to 128 bit
@@ -15,7 +25,7 @@ public class AES {
 	 * @param key
 	 * @return A 128 bit key
 	 */
-	protected static byte[] formatSecretKey(String key) {
+	public byte[] formatSecretKey(String key) {
 		byte[] defaultKeyByte = DEFAULT_KEY.getBytes(StandardCharsets.UTF_8);
 		byte[] keyByte = key.getBytes(StandardCharsets.UTF_8);
 		int defaultKeyByteLen = defaultKeyByte.length;
@@ -30,7 +40,7 @@ public class AES {
 		return defaultKeyByte;
 	}
 
-	protected static String encrypt(String key, String plainText) throws Exception {
+	public String encrypt(String key, String plainText) throws Exception {
 		byte[] formattedKey = formatSecretKey(key);
 		SecretKeySpec secretKey = new SecretKeySpec(formattedKey, ALGORITHM);
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -39,7 +49,7 @@ public class AES {
 		return Base64.getEncoder().encodeToString(encrypted);
 	}
 
-	protected static String decrypt(String key, String cipherText) throws Exception {
+	public String decrypt(String key, String cipherText) throws Exception {
 		byte[] formattedKey = formatSecretKey(key);
 		SecretKeySpec secretKey = new SecretKeySpec(formattedKey, ALGORITHM);
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -48,27 +58,4 @@ public class AES {
 		return new String(original);
 	}
 
-	protected static String generateKey() {
-		AESKeyGenerator generator = new AESKeyGenerator();
-		String key = generator.generateKey();
-		return key;
-	}
-
-	protected static void test(String plainText) throws Exception {
-		System.out.println("original string: " + plainText);
-		String key = generateKey();
-		System.out.println("Generated key: " + key);
-		String encryptedStr = encrypt(key, plainText);
-		System.out.println("ecrypted string: " + encryptedStr);
-		String decryptedStr = decrypt(key, encryptedStr);
-		System.out.println("decrypted string: " + decryptedStr);
-	}
-
-	public static void main(String[] args) throws Exception {
-		String plainText = "Hello world!";
-		test(plainText);
-		test(plainText);
-		test(plainText);
-		test(plainText);
-	}
 }
