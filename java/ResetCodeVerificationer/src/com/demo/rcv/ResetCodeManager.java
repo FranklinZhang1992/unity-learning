@@ -2,7 +2,6 @@ package com.demo.rcv;
 
 public class ResetCodeManager {
 
-	private static final String encryptionKey = "ResetCodeManager";
 	private static final ResetCodeManager instance = new ResetCodeManager();
 
 	private ResetCodeManager() {
@@ -13,12 +12,10 @@ public class ResetCodeManager {
 	}
 
 	public String generateValidationCode() {
-		ValidationCodeTemplate vct = new ValidationCodeTemplate(ValidationCodeType.ADMIN_USER, encryptionKey);
+		ValidationCodeTemplate vct = new ValidationCodeTemplate(ValidationCodeType.ADMIN_USER);
 		String vc = vct.getValidationCode();
 		System.out.println("Get validation code: " + vc);
-		String evc = vct.getEncryptedValidationCode();
-		System.out.println("Get encrypted validation code: " + evc);
-		return evc;
+		return vc;
 	}
 
 	public String generateResetCodeByValidationCode() {
@@ -27,11 +24,9 @@ public class ResetCodeManager {
 
 	public String generateResetCodeByValidationCode(String validationCode) {
 		ResetCodeTemplate rct = new ResetCodeTemplate();
-		rct.init(validationCode, encryptionKey);
+		rct.init(validationCode);
 		String rc = rct.getResetCode();
 		System.out.println("Get reset code: " + rc);
-		String erc = rct.getEncryptedResetCode();
-		System.out.println("Get encrypted reset code: " + rc);
-		return erc;
+		return rc;
 	}
 }

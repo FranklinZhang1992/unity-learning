@@ -7,8 +7,8 @@ public class AESKeyGenerator {
 	private static final char[] salt2 = "salt2".toCharArray();
 	private static final char[] secret = "ABC".toCharArray();
 
-	private static final int FIRST_LOWER_CASE_LETTER_ASCII = 65;
-	private static final int FIRST_UPPER_CASE_LETTER_ASCII = 97;
+	private static final int FIRST_UPPER_CASE_LETTER_ASCII = 65;
+	private static final int FIRST_LOWER_CASE_LETTER_ASCII = 97;
 
 	public AESKeyGenerator() {
 
