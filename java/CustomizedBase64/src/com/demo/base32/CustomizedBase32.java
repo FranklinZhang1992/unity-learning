@@ -1,4 +1,5 @@
 package com.demo.base32;
+
 import java.util.Arrays;
 
 public class CustomizedBase32 {
@@ -6,18 +7,21 @@ public class CustomizedBase32 {
 	}
 
 	public static Encoder getEncoder() {
-		return Encoder.CUSTOMIZE;
+		return Encoder.NO_PADDING;
 	}
 
 	public static Decoder getDecoder() {
-		return Decoder.CUSTOMIZE;
+		return Decoder.DEFAULT;
 	}
 
 	public static class Encoder {
 
-		static final Encoder CUSTOMIZE = new Encoder();
+		static final Encoder DEFAULT = new Encoder(true);
+		static final Encoder NO_PADDING = new Encoder(false);
+		private boolean doPadding;
 
-		private Encoder() {
+		private Encoder(boolean doPadding) {
+			this.doPadding = doPadding;
 		}
 
 		private static final char[] toBase32 = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
@@ -67,10 +71,12 @@ public class CustomizedBase32 {
 				dst[dp++] = (byte) base32[b0 >>> 3];
 				if (sp == end) {
 					dst[dp++] = (byte) base32[(b0 << 2) & 0x1f];
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
+					if (doPadding) {
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+					}
 				}
 			}
 
@@ -80,9 +86,11 @@ public class CustomizedBase32 {
 				dst[dp++] = (byte) base32[(b1 >>> 1) & 0x1f];
 				if (sp == end) {
 					dst[dp++] = (byte) base32[(b1 << 4) & 0x1f];
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
+					if (doPadding) {
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+					}
 				}
 			}
 
@@ -91,8 +99,10 @@ public class CustomizedBase32 {
 				dst[dp++] = (byte) base32[(b1 << 4) & 0x10 | (b2 >>> 4)];
 				if (sp == end) {
 					dst[dp++] = (byte) base32[(b2 << 1) & 0x1f];
-					dst[dp++] = 'Z';
-					dst[dp++] = 'Z';
+					if (doPadding) {
+						dst[dp++] = 'Z';
+						dst[dp++] = 'Z';
+					}
 				}
 			}
 
@@ -102,7 +112,9 @@ public class CustomizedBase32 {
 				dst[dp++] = (byte) base32[(b3 >>> 2) & 0x1f];
 				if (sp == end) {
 					dst[dp++] = (byte) base32[(b3 << 3) & 0x1f];
-					dst[dp++] = 'Z';
+					if (doPadding) {
+						dst[dp++] = 'Z';
+					}
 				}
 			}
 
@@ -128,7 +140,7 @@ public class CustomizedBase32 {
 		private Decoder() {
 		}
 
-		static final Decoder CUSTOMIZE = new Decoder();
+		static final Decoder DEFAULT = new Decoder();
 
 		public byte[] decode(byte[] src) {
 			byte[] dst = new byte[outLength(src)];
@@ -152,8 +164,8 @@ public class CustomizedBase32 {
 			int len = src.length;
 			if (len == 0)
 				return 0;
-			if (len < 6) {
-				throw new IllegalArgumentException("Input byte[] should at least have 6 bytes for base32 bytes");
+			if (len < 2) {
+				throw new IllegalArgumentException("Input byte[] should at least have 2 bytes for base32 bytes");
 			}
 
 			for (int i = len - 1; i >= 0; i--) {

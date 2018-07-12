@@ -1,4 +1,5 @@
 package com.demo.base32;
+
 public class Main {
 
 	protected static void normalTest(String s) {
@@ -38,7 +39,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		test2();
+		test1();
 	}
 
 }
