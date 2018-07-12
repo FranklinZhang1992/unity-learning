@@ -20,12 +20,22 @@ public class Main {
 		System.out.println("decrypted string: " + decryptedStr);
 	}
 
+	protected static void test2(String plainText) throws Exception {
+		System.out.println("original string: " + plainText);
+		String key = generateKey();
+		System.out.println("Generated key: " + key);
+		String encryptedStr = aes.encryptWithCustomizedBase32(key, plainText);
+		System.out.println("ecrypted string: " + encryptedStr);
+		String decryptedStr = aes.decryptWithCustomizedBase32(key, encryptedStr);
+		System.out.println("decrypted string: " + decryptedStr);
+	}
+
 	public static void main(String[] args) throws Exception {
 		String plainText = "Hello world!";
-		test(plainText);
-		test(plainText);
-		test(plainText);
-		test(plainText);
+		test2(plainText);
+		test2(plainText);
+		test2(plainText);
+		test2(plainText);
 	}
 
 }

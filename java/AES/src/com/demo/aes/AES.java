@@ -7,6 +7,8 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.demo.base32.CustomizedBase32;
+
 public class AES {
 
 	private static final String ALGORITHM = "AES";
@@ -58,6 +60,25 @@ public class AES {
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
 		byte[] original = cipher.doFinal(Base64.getDecoder().decode(cipherText.getBytes(StandardCharsets.UTF_8)));
+		return new String(original);
+	}
+
+	public String encryptWithCustomizedBase32(String key, String plainText) throws Exception {
+		byte[] formattedKey = formatSecretKey(key);
+		SecretKeySpec secretKey = new SecretKeySpec(formattedKey, ALGORITHM);
+		Cipher cipher = Cipher.getInstance(ALGORITHM);
+		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+		byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+		return CustomizedBase32.getEncoder().encodeToString(encrypted);
+	}
+
+	public String decryptWithCustomizedBase32(String key, String cipherText) throws Exception {
+		byte[] formattedKey = formatSecretKey(key);
+		SecretKeySpec secretKey = new SecretKeySpec(formattedKey, ALGORITHM);
+		Cipher cipher = Cipher.getInstance(ALGORITHM);
+		cipher.init(Cipher.DECRYPT_MODE, secretKey);
+		byte[] original = cipher
+				.doFinal(CustomizedBase32.getDecoder().decode(cipherText.getBytes(StandardCharsets.UTF_8)));
 		return new String(original);
 	}
 
