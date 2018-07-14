@@ -1,11 +1,16 @@
 package com.demo.aes;
 
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 import java.util.Random;
+
+import com.demo.base32.CustomizedBase32;
 
 public class AESKeyGenerator {
 
-	private static final char[] salt1 = "salt1".toCharArray();
-	private static final char[] salt2 = "salt2".toCharArray();
+	private static final char[] salt1 = "salt11".toCharArray();
+	private static final char[] salt2 = "salt22".toCharArray();
 	private static final char[] secret = "ABC".toCharArray();
 
 	private static final int FIRST_UPPER_CASE_LETTER_ASCII = 65;
@@ -79,5 +84,44 @@ public class AESKeyGenerator {
 		// Third Decrypt Step: undo 1st layer of salt
 		for (int i = 0; i < n_bytes; i++)
 			ebuffer[i] = (char) (ebuffer[i] ^ salt1[i % salt1.length]);
+	}
+
+	public String format(String raw) {
+		if (raw.length() != 24) {
+			throw new RuntimeException("Invalid length " + raw.length());
+		}
+		StringBuilder sb = new StringBuilder();
+		List<String> list = new ArrayList<String>();
+		int i = 0;
+		for (char c : raw.toCharArray()) {
+			i++;
+			sb.append(c);
+			if (i % 6 == 0) {
+				list.add(sb.toString());
+				sb = new StringBuilder();
+			}
+		}
+		return String.join("-", list);
+	}
+
+	public static void main(String[] args) {
+		String s1 = "161a9d1c6b4";
+		String timeHex = Long.toHexString(System.currentTimeMillis());
+		System.out.println("timeHex = " + timeHex);
+		String s2 = timeHex.substring(timeHex.length() - 4, timeHex.length());
+		String data = s1 + s2;
+		System.out.println("data = " + data);
+		AESKeyGenerator ag = new AESKeyGenerator();
+		char[] buffer = data.toCharArray();
+		ag.encryptMemoryBasic(buffer, buffer.length);
+		System.out.println("Encrypted len: " + buffer.length);
+		byte[] bytes = String.valueOf(buffer).getBytes();
+		String stdEncoded = Base64.getEncoder().encodeToString(bytes);
+		String encoded = CustomizedBase32.getEncoder().encodeToString(bytes);
+		System.out.println("STD Encoded: " + stdEncoded);
+		System.out.println("STD Encoded len: " + stdEncoded.length());
+		System.out.println("Encoded: " + encoded);
+		System.out.println("Encoded len: " + encoded.length());
+		System.out.println("Formatted: " + ag.format(encoded));
 	}
 }
