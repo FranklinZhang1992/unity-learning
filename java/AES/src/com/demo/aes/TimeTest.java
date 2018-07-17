@@ -1,10 +1,7 @@
 package com.demo.aes;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Calendar;
-
-import com.demo.base32.CustomizedBase32;
 
 public class TimeTest {
 
