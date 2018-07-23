@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
    unsigned long outlen, y, ivsize, x, decrypt;
    symmetric_CTR ctr;
    int cipher_idx, hash_idx, ks;
-   char *infile, *outfile, *cipher;
+   char *infile, *outfile, *cipher, *ivfile;
    prng_state prng;
-   FILE *fdin, *fdout;
+   FILE *fdin, *fdout, *fivin, *fivout;
    int err;
 
    /* register algs, so they can be printed */
@@ -61,11 +61,13 @@ int main(int argc, char *argv[])
       cipher  = argv[2];
       infile  = argv[3];
       outfile = argv[4];
+      ivfile = argv[5];
    } else {
       decrypt = 0;
       cipher  = argv[1];
       infile  = argv[2];
       outfile = argv[3];
+      ivfile = argv[4];
    }
 
    /* file handles setup */
@@ -108,10 +110,17 @@ int main(int argc, char *argv[])
       printf("Error hashing key: %s\n", error_to_string(err));
       exit(-1);
    }
+   printf("Hashed key: %s\n", key);
 
    if (decrypt) {
+      fivin = fopen(ivfile,"rb");
+      if (fivin == NULL) {
+         perror("Can't open iv file for reading");
+         exit(-1);
+      }
+
       /* Need to read in IV */
-      if (fread(IV,1,ivsize,fdin) != ivsize) {
+      if (fread(IV,1,ivsize,fivin) != ivsize) {
          printf("Error reading IV from input.\n");
          exit(-1);
       }
@@ -137,23 +146,32 @@ int main(int argc, char *argv[])
       } while (y == sizeof(inbuf));
       fclose(fdin);
       fclose(fdout);
+      fclose(fivin);
 
    } else {  /* encrypt */
-      /* Setup yarrow for random bytes for IV */
-
-      if ((err = rng_make_prng(128, find_prng("yarrow"), &prng, NULL)) != CRYPT_OK) {
-         printf("Error setting up PRNG, %s\n", error_to_string(err));
-      }
-
-      /* You can use rng_get_bytes on platforms that support it */
-      /* x = rng_get_bytes(IV,ivsize,NULL);*/
-      x = yarrow_read(IV,ivsize,&prng);
-      if (x != ivsize) {
-         printf("Error reading PRNG for IV required.\n");
+      fivout = fopen(ivfile,"wb");
+      if (fivout == NULL) {
+         perror("Can't open iv file for writing");
          exit(-1);
       }
 
-      if (fwrite(IV,1,ivsize,fdout) != ivsize) {
+      /* Setup yarrow for random bytes for IV */
+
+      // if ((err = rng_make_prng(128, find_prng("yarrow"), &prng, NULL)) != CRYPT_OK) {
+      //    printf("Error setting up PRNG, %s\n", error_to_string(err));
+      // }
+
+      /* You can use rng_get_bytes on platforms that support it */
+      /* x = rng_get_bytes(IV,ivsize,NULL);*/
+      // x = yarrow_read(IV,ivsize,&prng);
+      // if (x != ivsize) {
+      //    printf("Error reading PRNG for IV required.\n");
+      //    exit(-1);
+      // }
+
+      sscanf("8e52e5be7356e438","%s", &IV);
+      printf("Use IV %s\n", IV);
+      if (fwrite(IV,1,ivsize,fivout) != ivsize) {
          printf("Error writing IV to output.\n");
          exit(-1);
       }
@@ -178,6 +196,7 @@ int main(int argc, char *argv[])
       } while (y == sizeof(inbuf));
       fclose(fdout);
       fclose(fdin);
+      fclose(fivout);
    }
    return 0;
 }
