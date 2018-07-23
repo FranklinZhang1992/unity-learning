@@ -1,4 +1,5 @@
 OBJ := encryptor
+OBJ2 := main
 LIB := libtomcrypt.a
 CC := gcc
 CFLAGS = -I./headers
@@ -8,5 +9,9 @@ CFLAGS = -I./headers
 default: $(OBJ).c
 	gcc $(CFLAGS) $(OBJ).c $(LIB) -L. -o $(OBJ).o
 
+demo: $(OBJ2).c
+	gcc $(CFLAGS) $(OBJ2).c $(LIB) -L. -o $(OBJ2).o
+
 clean:
 	-rm -f $(OBJ).o
+	-rm -f $(OBJ2).o
