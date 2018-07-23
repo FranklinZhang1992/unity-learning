@@ -44,9 +44,24 @@ public class Main {
         System.out.println("decrypted string (Base32): " + decryptedStr);
     }
 
+    protected static void test4() throws Exception {
+        String key = generateKey();
+        System.out.println("Generated key: " + key);
+        String plainText = "6afa31dba6598";
+        System.out.println("original string: " + plainText);
+        String encryptedStr = aes.encrypt(key, plainText);
+        System.out.println("ecrypted string (Base64): " + encryptedStr);
+
+        plainText = "6afa31dba6599";
+        System.out.println("original string: " + plainText);
+        encryptedStr = aes.encrypt(key, plainText);
+        System.out.println("ecrypted string (Base64): " + encryptedStr);
+    }
+
     public static void main(String[] args) throws Exception {
         String plainText = "Hello world!";
-        test3(plainText);
+//        test3(plainText);
+        test4();
     }
 
 }
