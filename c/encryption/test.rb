@@ -7,11 +7,15 @@ require 'fileutils'
 INFILE = "infile"
 OUTFILE = "outfile"
 IVFILE = "ivfile"
+TMPFILE = "tmpfile"
+
+ALGO = "blowfish"
 
 def write(content)
-    File.open("infile", 'w') do |f|
-        f.puts content
-    end
+    %x{echo '#{content}' > #{INFILE}}
+    # File.open("infile", 'w') do |f|
+    #     f.puts content
+    # end
 end
 
 def read(file)
@@ -22,26 +26,42 @@ def clean
     %x{rm -f #{INFILE}}
     %x{rm -f #{OUTFILE}}
     %x{rm -f #{IVFILE}}
+    %x{rm -f #{TMPFILE}}
 end
 
 def prep
     %x{touch #{INFILE}}
     %x{touch #{OUTFILE}}
     %x{touch #{IVFILE}}
+    %x{touch #{TMPFILE}}
+end
+
+def encode64
+    encrypted = read(OUTFILE).chomp
+    encoded = Base64.encode64(encrypted).chomp
+end
+
+def encode32
+    output = %x{java -jar Base32.jar -e #{OUTFILE} #{TMPFILE}}.chomp
+    encoded = read(TMPFILE).chomp
 end
 
 def test_encrypt(plaintext)
     puts "Encrypting #{plaintext}, len: #{plaintext.length}"
-    write(plaintext)
-    output = %x{./main.o aes #{INFILE} #{OUTFILE} #{IVFILE}}
+    # write(plaintext)
+    output = %x{./main.o #{ALGO} #{plaintext} 2>&1}.chomp
     puts output
-    encrypted = read(OUTFILE).chomp
-    puts "After encrypt, len = #{encrypted.length}"
-    encoded = Base64.encode64(encrypted).chomp
-    puts "After encode: #{encoded}, len: #{encoded.length}"
-    output = %x{./main.o -d aes #{OUTFILE} #{INFILE} #{IVFILE}}
-    decrypted = read(INFILE).chomp
-    puts "After decrypt: #{decrypted}"
+    encrypted = nil
+    if output =~ /After encode: ([0-9A-Z]*), len: [0-9]*/
+        encrypted = $1
+    end
+    output = %x{./main.o -d #{ALGO} #{encrypted}}
+    puts output
+    decrypted = nil
+    if output =~ /After decrypt: ([0-9A-Za-z]*), len: [0-9]*/
+        decrypted = $1
+    end
+    puts "[FAIL]" unless decrypted == plaintext
     puts "###########################################"
 end
 

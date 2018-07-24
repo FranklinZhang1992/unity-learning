@@ -40,7 +40,8 @@ typedef enum {
    BASE32_RFC4648   = 0,
    BASE32_BASE32HEX = 1,
    BASE32_ZBASE32   = 2,
-   BASE32_CROCKFORD = 3
+   BASE32_CROCKFORD = 3,
+   BASE32_TBIRD = 4
 } base32_alphabet;
 int base32_encode(const unsigned char *in,  unsigned long inlen,
                                  char *out, unsigned long *outlen,
