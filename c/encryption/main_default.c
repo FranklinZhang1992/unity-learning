@@ -15,17 +15,19 @@ int usage(char *name)
 
 int main(int argc, char *argv[])
 {
-   unsigned char plaintext[512],ciphertext[512];
+   unsigned char plaintext[512],ciphertext[512],tmp[512];
    unsigned char tmpkey[512], key[MAXBLOCKSIZE], IV[MAXBLOCKSIZE];
    unsigned char inbuf[512]; /* i/o block size */
-   unsigned long outlen, y, ivsize, x, decrypt;
+   unsigned long outlen, y, ivsize, x, decrypt, reserved_size, tmp_len;
    symmetric_CTR ctr;
    int cipher_idx, hash_idx, ks;
    char *infile, *outfile, *cipher;
    prng_state prng;
    FILE *fdin, *fdout;
-   int err;
+   int err, i;
    const char *global_key = "161a9d1c15d5esdf";
+
+   reserved_size = 2;
 
    /* register algs, so they can be printed */
    register_all_ciphers();
@@ -111,10 +113,14 @@ int main(int argc, char *argv[])
 
    if (decrypt) {
       /* Need to read in IV */
-      if (fread(IV,1,ivsize,fdin) != ivsize) {
+      if (fread(IV,1,reserved_size,fdin) != reserved_size) {
          printf("Error reading IV from input.\n");
          exit(-1);
       }
+      for (i = reserved_size; i < ivsize; i++) {
+         IV[i] = 'a';
+      }
+      IV[ivsize] = '\0';
 
       if ((err = ctr_start(cipher_idx,IV,key,ks,0,CTR_COUNTER_LITTLE_ENDIAN,&ctr)) != CRYPT_OK) {
          printf("ctr_start error: %s\n",error_to_string(err));
@@ -148,16 +154,20 @@ int main(int argc, char *argv[])
 
       /* You can use rng_get_bytes on platforms that support it */
       /* x = rng_get_bytes(IV,ivsize,NULL);*/
-      x = yarrow_read(IV,ivsize,&prng);
-      if (x != ivsize) {
+      x = yarrow_read(IV,reserved_size,&prng);
+      if (x != reserved_size) {
          printf("Error reading PRNG for IV required.\n");
          exit(-1);
       }
 
-      if (fwrite(IV,1,ivsize,fdout) != ivsize) {
+      if (fwrite(IV,1,reserved_size,fdout) != reserved_size) {
          printf("Error writing IV to output.\n");
          exit(-1);
       }
+      for (i = reserved_size; i < ivsize; i++) {
+         IV[i] = 'a';
+      }
+      IV[ivsize] = '\0';
 
       if ((err = ctr_start(cipher_idx,IV,key,ks,0,CTR_COUNTER_LITTLE_ENDIAN,&ctr)) != CRYPT_OK) {
          printf("ctr_start error: %s\n",error_to_string(err));
@@ -166,14 +176,12 @@ int main(int argc, char *argv[])
 
       do {
          y = fread(inbuf,1,sizeof(inbuf),fdin);
-         printf("Before encrypt: %s, len: %d\n", inbuf, strlen((char *) inbuf));
 
          if ((err = ctr_encrypt(inbuf,ciphertext,y,&ctr)) != CRYPT_OK) {
             printf("ctr_encrypt error: %s\n", error_to_string(err));
             exit(-1);
          }
 
-         printf("After encrypt, len: %d, IV len: %d\n", strlen((char *) ciphertext), strlen((char *) IV));
          if (fwrite(ciphertext,1,y,fdout) != y) {
             printf("Error writing to output.\n");
             exit(-1);
@@ -181,6 +189,20 @@ int main(int argc, char *argv[])
       } while (y == sizeof(inbuf));
       fclose(fdout);
       fclose(fdin);
+
+      fdin = fopen(outfile,"rb");
+      if (fdin == NULL) {
+         perror("Can't open output for reading");
+         exit(-1);
+      }
+      y = fread(inbuf,1,sizeof(inbuf),fdin);
+
+      tmp_len = sizeof(tmp);
+      if ((err = base32_encode(inbuf, y, tmp, &tmp_len, BASE32_CROCKFORD)) != CRYPT_OK) {
+         printf("ctr_encode error: %s\n", error_to_string(err));
+         return -1;
+      }
+      printf("Encoded: %s, len: %d\n", tmp, strlen((char *) tmp));
    }
    return 0;
 }

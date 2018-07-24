@@ -69,10 +69,10 @@ def test_encrypt2(plaintext)
     write(plaintext)
     output = %x{./main_default.o #{ALGO} #{INFILE} #{OUTFILE} 2>&1}.chomp
     puts output
-    e64 = encode64
-    puts "#{e64}, len: #{e64.length}"
+    # e64 = encode64
+    # puts "#{e64}, len: #{e64.length}"
     output = %x{./main_default.o -d #{ALGO} #{OUTFILE} #{INFILE}}
-    puts output
+    # puts output
     decrypted = read(INFILE)
     puts "[FAIL]" unless decrypted == plaintext
     puts "###########################################"
