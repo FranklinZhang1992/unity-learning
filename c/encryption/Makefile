@@ -1,5 +1,5 @@
 OBJ := encryptor
-OBJ2 := main
+OBJ2 := main_default
 LIB := libtomcrypt.a
 CC := gcc
 CFLAGS = -I./headers

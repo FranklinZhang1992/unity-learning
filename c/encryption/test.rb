@@ -12,8 +12,8 @@ TMPFILE = "tmpfile"
 ALGO = "blowfish"
 
 def write(content)
-    %x{echo '#{content}' > #{INFILE}}
-    # File.open("infile", 'w') do |f|
+    %x{echo -n '#{content}' > #{INFILE}}
+    # File.open(INFILE, 'w') do |f|
     #     f.puts content
     # end
 end
@@ -65,13 +65,26 @@ def test_encrypt(plaintext)
     puts "###########################################"
 end
 
+def test_encrypt2(plaintext)
+    write(plaintext)
+    output = %x{./main_default.o #{ALGO} #{INFILE} #{OUTFILE} 2>&1}.chomp
+    puts output
+    e64 = encode64
+    puts "#{e64}, len: #{e64.length}"
+    output = %x{./main_default.o -d #{ALGO} #{OUTFILE} #{INFILE}}
+    puts output
+    decrypted = read(INFILE)
+    puts "[FAIL]" unless decrypted == plaintext
+    puts "###########################################"
+end
+
 def main
     FileUtils.cd(Pathname.new(File.dirname(__FILE__)).realpath) do
         clean
         prep
         %x{make demo}
-        test_encrypt("6afa31dba6598")
-        test_encrypt("6afa31dba6599")
+        test_encrypt2("6afa31dba6598")
+        test_encrypt2("6afa31dba6599")
         clean
     end
 end
