@@ -6,10 +6,10 @@ public class Entanglor {
 
 	private static final int USE_FIRST_N = 9;
 
-	private String toBinaryStr(byte[] bytes) {
+	private String toBinaryStr(char[] chars) {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < bytes.length; i++) {
-			sb.append(fill0(Integer.toBinaryString(bytes[i])));
+		for (int i = 0; i < chars.length; i++) {
+			sb.append(fill0(Integer.toBinaryString(chars[i])));
 		}
 		return sb.toString();
 	}
@@ -41,8 +41,8 @@ public class Entanglor {
 		return String.valueOf(ret);
 	}
 
-	private byte[] subByteArray(byte[] bytes, int beginIndex, int length) {
-		byte[] ret = new byte[length];
+	private char[] subByteArray(char[] bytes, int beginIndex, int length) {
+		char[] ret = new char[length];
 		int j = 0;
 		for (int i = beginIndex; i < beginIndex + length; i++) {
 			ret[j++] = bytes[i];
@@ -50,13 +50,14 @@ public class Entanglor {
 		return ret;
 	}
 
-	private byte[] interweave(byte[] plaintext) {
+	private byte[] interweave(char[] plaintext) {
 		byte[] interweaved = new byte[plaintext.length];
-		byte[] requestId = subByteArray(plaintext, 0, USE_FIRST_N);
-		byte[] requestTime = subByteArray(plaintext, USE_FIRST_N, plaintext.length - USE_FIRST_N);
+		char[] requestId = subByteArray(plaintext, 0, USE_FIRST_N);
+		char[] requestTime = subByteArray(plaintext, USE_FIRST_N, plaintext.length - USE_FIRST_N);
 
 		char[] requestIdBins = toBinaryStr(requestId).toCharArray();
 		char[] requestTimeBins = toBinaryStr(requestTime).toCharArray();
+		// System.out.println(new String(requestTimeBins));
 
 		int p0 = 0;
 		int p1 = 0;
@@ -71,50 +72,59 @@ public class Entanglor {
 			}
 		}
 		String retStr = new String(ret);
+		// System.out.println(retStr);
 		interweaved = toByteArray(retStr);
+
 		return interweaved;
 
 	}
 
 	public void test(String systemUuid) {
 		long epoch = System.currentTimeMillis();
-		byte[] milliBytes = String.valueOf(epoch).getBytes();
-		int milliBytesLen = milliBytes.length;
-		byte[] timeChangingBytes = new byte[4];
+		char[] timeChangingChars = new char[4];
 
 		// Extract last 4 bytes in reverse order
+		System.out.print("Last 4 bytes of timestamp: ");
+		System.out.print("0x");
 		for (int i = 0; i < 4; i++) {
-			timeChangingBytes[i] = milliBytes[milliBytesLen - i - 1];
+			timeChangingChars[i] = (char) ((epoch >>> (i * 8)) & 0xff);
+			// System.out.print(fill0(Integer.toBinaryString(timeChangingChars[i]))
+			// + " ");
+			System.out.print(Integer.toHexString(timeChangingChars[i]));
 		}
+		System.out.println();
 
-		byte[] plaintext = new byte[USE_FIRST_N + 4];
+		char[] plaintext = new char[USE_FIRST_N + 4];
 
 		char[] systemUuidChars = systemUuid.toCharArray();
 
 		// Get first 9 bytes from system uuid
+		System.out.print("First 9 characters of system uuid: ");
 		int j = 0;
 		for (int i = 0; i < systemUuidChars.length; i++) {
 			if (j < USE_FIRST_N && systemUuidChars[i] != '-') {
-				plaintext[j] = (byte) systemUuidChars[i];
+				plaintext[j] = systemUuidChars[i];
+				System.out.print(plaintext[j]);
 				j++;
 			}
 		}
+		System.out.println();
 
 		for (int i = 0; i < 4; i++) {
-			plaintext[i + USE_FIRST_N] = timeChangingBytes[i];
+			plaintext[i + USE_FIRST_N] = timeChangingChars[i];
 		}
 
-		System.out.println("Raw code: " + new String(plaintext));
+		// System.out.println("Raw code: " + new String(plaintext));
 		System.out.println("After entangle(Base64): " + Base64.getEncoder().encodeToString(interweave(plaintext)));
 		try {
 			Thread.sleep(1);
 		} catch (InterruptedException e) {
 		}
+		System.out.println("---------------------------------------------");
 	}
 
 	public static void main(String[] args) {
 		Entanglor entangle = new Entanglor();
-		entangle.test("161a9d1c6b434e998e52e5be7356e438");
 		entangle.test("161a9d1c6b434e998e52e5be7356e438");
 		entangle.test("161a9d1c6b434e998e52e5be7356e438");
 		entangle.test("161a9d1c6b434e998e52e5be7356e438");
