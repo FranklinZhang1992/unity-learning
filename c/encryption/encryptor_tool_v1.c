@@ -8,9 +8,11 @@
  * make tool
  *
  * Usage: ./encryptor_tool_v1.o -e blowfish 161a9d1c6b434e998e52e5be7356e438 -v
- *        IV: 1001010011110100110001011000110100010100010001001011000110000101
- *      CODE: QRDA7F-XE9MF7-1KHH33-S6H2Y2
- *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 QRDA7F-XE9MF7-1KHH33-S6H2Y2 -v
+ *         IV: 0101010000110100100001011000110110010100000001000011000111000101
+ *   Raw Code: 64V32R9SCGRP6DNXJP6DP
+ * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
+ *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
+ *   Raw Code: 64V32R9SCGRP6DNXJP6DP
  *
  */
 
@@ -199,6 +201,21 @@ int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_s
    return ret;
 }
 
+void print_raw_code(unsigned char *raw_code)
+{
+   unsigned char encoded_code[512];
+   unsigned long raw_code_len, encoded_code_len;
+   int err;
+
+   encoded_code_len = sizeof(encoded_code);
+   raw_code_len = strlen((char *) raw_code);
+   if ((err = base32_encode(raw_code, raw_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
+      printf("base32 encode error: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("[Raw code] %s\n", encoded_code);
+}
+
 void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *ciphertext)
 {
    unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
@@ -268,7 +285,9 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
       printf("ctr_decrypt error: %s\n", error_to_string(err));
       exit(-1);
    }
-   printf("[CODE] %s\n", raw_code);
+
+   /* Print raw code with Base32 bacause it contains unprintalbe characters */
+   print_raw_code(raw_code);
 }
 
 void encrypt_code(unsigned char *key, char *system_uuid)
@@ -321,6 +340,9 @@ void encrypt_code(unsigned char *key, char *system_uuid)
       printf("ctr_start error: %s\n",error_to_string(err));
       exit(-1);
    }
+
+   /* Print raw code with Base32 bacause it contains unprintalbe characters */
+   print_raw_code(raw_code);
 
    /* Encrypt */
    if ((err = ctr_encrypt(raw_code, encrypted_code, raw_code_len, &ctr)) != CRYPT_OK) {
