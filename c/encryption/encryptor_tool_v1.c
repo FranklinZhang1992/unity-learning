@@ -7,8 +7,10 @@
 /*
  * make tool
  *
- * Usage: ./encryptor_tool_v1.o -e blowfish 161a9d1c6b434e998e52e5be7356e438
- *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 AVVJ7B-8D7521-K5K3JP-25W1GG -v
+ * Usage: ./encryptor_tool_v1.o -e blowfish 161a9d1c6b434e998e52e5be7356e438 -v
+ *        IV: 1001010011110100110001011000110100010100010001001011000110000101
+ *      CODE: QRDA7F-XE9MF7-1KHH33-S6H2Y2
+ *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 QRDA7F-XE9MF7-1KHH33-S6H2Y2 -v
  *
  */
 
@@ -212,7 +214,6 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    len = strlen(ciphertext);
    p = 0;
    for (i = 0; i < len; i++) {
-      printf("i = %d\n", i);
       if (ciphertext[i] == '-')
          continue;
       encoded_code[p++] = ciphertext[i];
@@ -231,6 +232,8 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
       exit(-1);
    }
 
+   /* Extract IV */
+   iv_prefix_size = 2;
    for (i = 0; i < iv_prefix_size; i++) {
       iv_pre[i] = cooked_encrypted_code[i];
    }
@@ -242,7 +245,7 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    iv_suf[i] = '\0';
 
    /* Setup IV*/
-   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i - iv_prefix_size, IV);
+   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i, IV);
    if (ret != ivsize) {
       printf("Error setting IV\n");
       exit(-1);
@@ -254,10 +257,11 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    }
 
    /* Extract encrypted code */
+   p = 0;
    for (i = iv_prefix_size; i < cooked_encrypted_code_len; i++) {
-      encrypted_code[i - iv_prefix_size] = cooked_encrypted_code[i];
+      encrypted_code[p++] = cooked_encrypted_code[i];
    }
-   raw_code_len = cooked_encrypted_code_len - iv_prefix_size;
+   raw_code_len = p;
 
    /* Decrypt */
    if ((err = ctr_decrypt(encrypted_code, raw_code, raw_code_len, &ctr)) != CRYPT_OK) {
