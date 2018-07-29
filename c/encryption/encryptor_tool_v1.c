@@ -7,29 +7,26 @@
 /*
  * make tool
  *
- * Usage: ./encryptor_tool_v1.o -e blowfish 161a9d1c6b434e998e52e5be7356e438 -v
+ * Usage: ./encryptor_tool_v1.o -e 161a9d1c6b434e998e52e5be7356e438 -v
  *         IV: 0101010000110100100001011000110110010100000001000011000111000101
  *   Raw Code: 64V32R9SCGRP6DNXJP6DP
  * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
- *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
+ *        ./encryptor_tool_v1.o -d 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
  *   Raw Code: 64V32R9SCGRP6DNXJP6DP
  *
  */
 
 int verbose = 0;
 const unsigned char *iv_suf_template = "SAMPLEIVSUFFIX";
+const char *cipher = "blowfish";
 int cipher_idx, hash_idx, ks, ivsize;
 
 int usage(char *name)
 {
    int x;
 
-   printf("Usage encrypt: %s -e cipher system_uuid\n", name);
-   printf("Usage decrypt: %s -d cipher system_uuid ciphertext(Base32)\n", name);
-   printf("Usage test:    %s -t cipher\nCiphers:\n", name);
-   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
-      printf("%s\n",cipher_descriptor[x].name);
-   }
+   printf("Usage encrypt: %s -e system_uuid\n", name);
+   printf("Usage decrypt: %s -d system_uuid ciphertext(Base32)\n", name);
    exit(1);
 }
 
@@ -383,7 +380,7 @@ void encrypt_code(unsigned char *key, char *system_uuid)
 int main(int argc, char *argv[])
 {
    unsigned char tmpkey[512], key[512];
-   char *cipher, *sys_uuid, *plaintext, *ciphertext;
+   char *sys_uuid, *plaintext, *ciphertext;
    int decrypt, err;
    unsigned long outlen;
 
@@ -392,43 +389,20 @@ int main(int argc, char *argv[])
    register_all_hashes();
    register_all_prngs();
 
-   if (argc < 4) {
-      if ((argc > 2) && (!strcmp(argv[1], "-t"))) {
-        cipher  = argv[2];
-        cipher_idx = find_cipher(cipher);
-        if (cipher_idx == -1) {
-          printf("Invalid cipher %s entered on command line.\n", cipher);
-          exit(-1);
-        } /* if */
-        if (cipher_descriptor[cipher_idx].test)
-        {
-          if (cipher_descriptor[cipher_idx].test() != CRYPT_OK)
-          {
-            printf("Error when testing cipher %s.\n", cipher);
-            exit(-1);
-          }
-          else
-          {
-            printf("Testing cipher %s succeeded.\n", cipher);
-            exit(0);
-          } /* if ... else */
-        } /* if */
-      }
+   if (argc < 3) {
       return usage(argv[0]);
    }
 
    /* Handle arguments */
    if (!strcmp(argv[1], "-d")) {
       decrypt = 1;
-      cipher  = argv[2];
-      sys_uuid  = argv[3];
-      ciphertext = argv[4];
+      sys_uuid  = argv[2];
+      ciphertext = argv[3];
    } else if (!strcmp(argv[1], "-e")) {
       decrypt = 0;
-      cipher  = argv[2];
-      sys_uuid  = argv[3];
+      sys_uuid  = argv[2];
    } else {
-      printf("invalid option %s (expected -e, -d or -t)\n", argv[1]);
+      printf("invalid option %s (expected -e or -d)\n", argv[1]);
       exit(-1);
    }
 
