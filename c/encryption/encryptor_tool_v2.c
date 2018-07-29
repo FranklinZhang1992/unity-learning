@@ -7,25 +7,26 @@
 /*
  * make tool
  *
- * Usage: ./encryptor_tool_v1.o -e blowfish 161a9d1c6b434e998e52e5be7356e438
- *        ./encryptor_tool_v1.o -d blowfish 161a9d1c6b434e998e52e5be7356e438 AVVJ7B-8D7521-K5K3JP-25W1GG -v
+ * Usage: ./encryptor_tool_v1.o -e 161a9d1c6b434e998e52e5be7356e438 -v
+ *         IV: 0101010000110100100001011000110110010100000001000011000111000101
+ *   Raw Code: 64V32R9SCGRP6DNXJP6DP
+ * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
+ *        ./encryptor_tool_v1.o -d 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
+ *   Raw Code: 64V32R9SCGRP6DNXJP6DP
  *
  */
 
 int verbose = 0;
 const unsigned char *iv_suf_template = "SAMPLEIVSUFFIX";
+const char *cipher = "blowfish";
 int cipher_idx, hash_idx, ks, ivsize;
 
 int usage(char *name)
 {
    int x;
 
-   printf("Usage encrypt: %s -e cipher system_uuid\n", name);
-   printf("Usage decrypt: %s -d cipher system_uuid ciphertext(Base32)\n", name);
-   printf("Usage test:    %s -t cipher\nCiphers:\n", name);
-   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
-      printf("%s\n",cipher_descriptor[x].name);
-   }
+   printf("Usage encrypt: %s -e system_uuid\n", name);
+   printf("Usage decrypt: %s -d system_uuid ciphertext(Base32)\n", name);
    exit(1);
 }
 
@@ -65,40 +66,26 @@ void int64_to_bin_digit(uint64_t in, unsigned char *out, int nbytes)
     }
 }
 
-int get_raw_code(char *system_uuid, uint64_t systime, unsigned char *out)
+int get_raw_code(char *system_uuid, unsigned char *out)
 {
-    const int use_first_n = 9;
-    const int use_last_n = 4;
+    const int use_first_n = 8;
     int i, len;
-    int buffer_len = use_first_n + use_last_n + 1;
+    int buffer_len = use_first_n + 1;
     unsigned char buffer[buffer_len];
-    unsigned char *time_bytes;
 
     if (strlen(system_uuid) != 32) {
         printf("invalid system uuid: %s\n", system_uuid);
         exit(-1);
     }
 
-    // Use first 9 characters of system uuid
+    // Use first 8 characters of system uuid
     for (i = 0; i < use_first_n; i++) {
         buffer[i] = system_uuid[i];
     }
-
-    len = sizeof(systime);
-    time_bytes = malloc(sizeof(int) * len);
-    int64_to_bin_digit(systime, time_bytes, len);
-    if (verbose)
-      print_unchar_array("System time bytes:", time_bytes, len);
-
-    // Use last 4 bytes of system time (in reverse)
-    for (i = 0; i < use_last_n; i++ ) {
-        buffer[i + use_first_n] = time_bytes[len - i - 1];
-    }
-    buffer[buffer_len] = '\0';
+    buffer[i] = '\0';
 
     memcpy(out, buffer, strlen(buffer));
 
-    free(time_bytes);
     return strlen(out);
 }
 
@@ -197,6 +184,21 @@ int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_s
    return ret;
 }
 
+void print_raw_code(unsigned char *raw_code)
+{
+   unsigned char encoded_code[512];
+   unsigned long raw_code_len, encoded_code_len;
+   int err;
+
+   encoded_code_len = sizeof(encoded_code);
+   raw_code_len = strlen((char *) raw_code);
+   if ((err = base32_encode(raw_code, raw_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
+      printf("base32 encode error: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("[Raw code] %s\n", encoded_code);
+}
+
 void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *ciphertext)
 {
    unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
@@ -212,7 +214,6 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    len = strlen(ciphertext);
    p = 0;
    for (i = 0; i < len; i++) {
-      printf("i = %d\n", i);
       if (ciphertext[i] == '-')
          continue;
       encoded_code[p++] = ciphertext[i];
@@ -231,6 +232,8 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
       exit(-1);
    }
 
+   /* Extract IV */
+   iv_prefix_size = 4;
    for (i = 0; i < iv_prefix_size; i++) {
       iv_pre[i] = cooked_encrypted_code[i];
    }
@@ -242,7 +245,7 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    iv_suf[i] = '\0';
 
    /* Setup IV*/
-   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i - iv_prefix_size, IV);
+   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i, IV);
    if (ret != ivsize) {
       printf("Error setting IV\n");
       exit(-1);
@@ -254,17 +257,20 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    }
 
    /* Extract encrypted code */
+   p = 0;
    for (i = iv_prefix_size; i < cooked_encrypted_code_len; i++) {
-      encrypted_code[i - iv_prefix_size] = cooked_encrypted_code[i];
+      encrypted_code[p++] = cooked_encrypted_code[i];
    }
-   raw_code_len = cooked_encrypted_code_len - iv_prefix_size;
+   raw_code_len = p;
 
    /* Decrypt */
    if ((err = ctr_decrypt(encrypted_code, raw_code, raw_code_len, &ctr)) != CRYPT_OK) {
       printf("ctr_decrypt error: %s\n", error_to_string(err));
       exit(-1);
    }
-   printf("[CODE] %s\n", raw_code);
+
+   /* Print raw code with Base32 bacause it contains unprintalbe characters */
+   print_raw_code(raw_code);
 }
 
 void encrypt_code(unsigned char *key, char *system_uuid)
@@ -275,9 +281,10 @@ void encrypt_code(unsigned char *key, char *system_uuid)
    unsigned char IV[512], iv_pre[128], iv_suf[128];
    unsigned long cooked_encrypted_code_len, encoded_code_len;
    int raw_code_len, iv_prefix_size;
-   int i, p, ret, err;
+   int i, p, ret, err, len;
    prng_state prng;
    symmetric_CTR ctr;
+   unsigned char *time_bytes;
 
    systime = getCurrentTime();
 
@@ -285,20 +292,18 @@ void encrypt_code(unsigned char *key, char *system_uuid)
       printf("[Encrypting] System Uuid: %s, systime: %Ld\n", system_uuid, systime);
 
    /* Get Raw code */
-   raw_code_len = get_raw_code(system_uuid, systime, raw_code);
+   raw_code_len = get_raw_code(system_uuid, raw_code);
 
-   /* Setup yarrow for random bytes for IV */
-   if ((err = rng_make_prng(128, find_prng("yarrow"), &prng, NULL)) != CRYPT_OK) {
-      printf("Error setting up PRNG, %s\n", error_to_string(err));
-   }
+   /* Get last 4 bytes of system time */
+   len = sizeof(systime);
+   time_bytes = malloc(sizeof(unsigned char) * len);
+   int64_to_bin_digit(systime, time_bytes, len);
+   if (verbose)
+      print_unchar_array("System time bytes:", time_bytes, len);
 
-   /* You can use rng_get_bytes on platforms that support it */
-   /* ret = rng_get_bytes(IV,ivsize,NULL);*/
-   iv_prefix_size = 2;
-   ret = yarrow_read(iv_pre, iv_prefix_size, &prng);
-   if (ret != iv_prefix_size) {
-      printf("Error reading PRNG for IV required.\n");
-      exit(-1);
+   iv_prefix_size = 4;
+   for (i = 0; i < iv_prefix_size; i++) {
+      iv_pre[i] = time_bytes[len - i - 1]
    }
 
    for (i = 0; i < ivsize - iv_prefix_size && i < strlen(iv_suf_template); i++) {
@@ -317,6 +322,9 @@ void encrypt_code(unsigned char *key, char *system_uuid)
       printf("ctr_start error: %s\n",error_to_string(err));
       exit(-1);
    }
+
+   /* Print raw code with Base32 bacause it contains unprintalbe characters */
+   print_raw_code(raw_code);
 
    /* Encrypt */
    if ((err = ctr_encrypt(raw_code, encrypted_code, raw_code_len, &ctr)) != CRYPT_OK) {
@@ -357,7 +365,7 @@ void encrypt_code(unsigned char *key, char *system_uuid)
 int main(int argc, char *argv[])
 {
    unsigned char tmpkey[512], key[512];
-   char *cipher, *sys_uuid, *plaintext, *ciphertext;
+   char *sys_uuid, *plaintext, *ciphertext;
    int decrypt, err;
    unsigned long outlen;
 
@@ -366,43 +374,20 @@ int main(int argc, char *argv[])
    register_all_hashes();
    register_all_prngs();
 
-   if (argc < 4) {
-      if ((argc > 2) && (!strcmp(argv[1], "-t"))) {
-        cipher  = argv[2];
-        cipher_idx = find_cipher(cipher);
-        if (cipher_idx == -1) {
-          printf("Invalid cipher %s entered on command line.\n", cipher);
-          exit(-1);
-        } /* if */
-        if (cipher_descriptor[cipher_idx].test)
-        {
-          if (cipher_descriptor[cipher_idx].test() != CRYPT_OK)
-          {
-            printf("Error when testing cipher %s.\n", cipher);
-            exit(-1);
-          }
-          else
-          {
-            printf("Testing cipher %s succeeded.\n", cipher);
-            exit(0);
-          } /* if ... else */
-        } /* if */
-      }
+   if (argc < 3) {
       return usage(argv[0]);
    }
 
    /* Handle arguments */
    if (!strcmp(argv[1], "-d")) {
       decrypt = 1;
-      cipher  = argv[2];
-      sys_uuid  = argv[3];
-      ciphertext = argv[4];
+      sys_uuid  = argv[2];
+      ciphertext = argv[3];
    } else if (!strcmp(argv[1], "-e")) {
       decrypt = 0;
-      cipher  = argv[2];
-      sys_uuid  = argv[3];
+      sys_uuid  = argv[2];
    } else {
-      printf("invalid option %s (expected -e, -d or -t)\n", argv[1]);
+      printf("invalid option %s (expected -e or -d)\n", argv[1]);
       exit(-1);
    }
 

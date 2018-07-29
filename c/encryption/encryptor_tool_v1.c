@@ -86,7 +86,7 @@ int get_raw_code(char *system_uuid, uint64_t systime, unsigned char *out)
     }
 
     len = sizeof(systime);
-    time_bytes = malloc(sizeof(int) * len);
+    time_bytes = malloc(sizeof(unsigned char) * len);
     int64_to_bin_digit(systime, time_bytes, len);
     if (verbose)
       print_unchar_array("System time bytes:", time_bytes, len);
