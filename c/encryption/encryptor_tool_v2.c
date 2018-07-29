@@ -25,8 +25,8 @@ int usage(char *name)
 {
    int x;
 
-   printf("Usage encrypt: %s -e system_uuid\n", name);
-   printf("Usage decrypt: %s -d system_uuid ciphertext(Base32)\n", name);
+   printf("Usage encrypt: %s -e uuid\n", name);
+   printf("Usage decrypt: %s -d uuid ciphertext(Base32)\n", name);
    exit(1);
 }
 
@@ -66,21 +66,21 @@ void int64_to_bin_digit(uint64_t in, unsigned char *out, int nbytes)
     }
 }
 
-int get_raw_code(char *system_uuid, unsigned char *out)
+int get_raw_code(char *uuid, unsigned char *out)
 {
     const int use_first_n = 8;
     int i, len;
     int buffer_len = use_first_n + 1;
     unsigned char buffer[buffer_len];
 
-    if (strlen(system_uuid) != 32) {
-        printf("invalid system uuid: %s\n", system_uuid);
+    if (strlen(uuid) != 32) {
+        printf("invalid UUID: %s\n", uuid);
         exit(-1);
     }
 
-    // Use first 8 characters of system uuid
+    // Use first 8 characters of uuid
     for (i = 0; i < use_first_n; i++) {
-        buffer[i] = system_uuid[i];
+        buffer[i] = uuid[i];
     }
     buffer[i] = '\0';
 
@@ -199,7 +199,7 @@ void print_raw_code(unsigned char *raw_code)
    printf("[Raw code] %s\n", encoded_code);
 }
 
-void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *ciphertext)
+void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
 {
    unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
    unsigned char IV[512], iv_pre[128], iv_suf[128];
@@ -209,7 +209,7 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    symmetric_CTR ctr;
 
    if (verbose)
-      printf("[Decrypting] System Uuid: %s, code: %s\n", system_uuid, ciphertext);
+      printf("[Decrypting] UUID: %s, code: %s\n", uuid, ciphertext);
 
    len = strlen(ciphertext);
    p = 0;
@@ -273,7 +273,7 @@ void decrypt_code(unsigned char *key, char *system_uuid, unsigned char *cipherte
    print_raw_code(raw_code);
 }
 
-void encrypt_code(unsigned char *key, char *system_uuid)
+void encrypt_code(unsigned char *key, char *uuid)
 {
    uint64_t systime;
    unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
@@ -289,10 +289,10 @@ void encrypt_code(unsigned char *key, char *system_uuid)
    systime = getCurrentTime();
 
    if (verbose)
-      printf("[Encrypting] System Uuid: %s, systime: %Ld\n", system_uuid, systime);
+      printf("[Encrypting] UUID: %s, systime: %Ld\n", uuid, systime);
 
    /* Get Raw code */
-   raw_code_len = get_raw_code(system_uuid, raw_code);
+   raw_code_len = get_raw_code(uuid, raw_code);
 
    /* Get last 4 bytes of system time */
    len = sizeof(systime);
@@ -365,7 +365,7 @@ void encrypt_code(unsigned char *key, char *system_uuid)
 int main(int argc, char *argv[])
 {
    unsigned char tmpkey[512], key[512];
-   char *sys_uuid, *plaintext, *ciphertext;
+   char *uuid, *plaintext, *ciphertext;
    int decrypt, err;
    unsigned long outlen;
 
@@ -381,11 +381,11 @@ int main(int argc, char *argv[])
    /* Handle arguments */
    if (!strcmp(argv[1], "-d")) {
       decrypt = 1;
-      sys_uuid  = argv[2];
+      uuid  = argv[2];
       ciphertext = argv[3];
    } else if (!strcmp(argv[1], "-e")) {
       decrypt = 0;
-      sys_uuid  = argv[2];
+      uuid  = argv[2];
    } else {
       printf("invalid option %s (expected -e or -d)\n", argv[1]);
       exit(-1);
@@ -397,7 +397,7 @@ int main(int argc, char *argv[])
    }
 
    if (verbose)
-      printf("System Uuid: %s\n", sys_uuid);
+      printf("UUID: %s\n", uuid);
 
    cipher_idx = find_cipher(cipher);
    if (cipher_idx == -1) {
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
       exit(-1);
    }
 
-   substring(sys_uuid, tmpkey, 0, 16); // Pick index 0 ~ 15 of sys uuid as key
+   substring(uuid, tmpkey, 0, 16); // Pick index 0 ~ 15 of uuid as key
    outlen = sizeof(key);
    if ((err = hash_memory(hash_idx, tmpkey, strlen((char *)tmpkey), key, &outlen)) != CRYPT_OK) {
       printf("Error hashing key: %s\n", error_to_string(err));
@@ -426,9 +426,9 @@ int main(int argc, char *argv[])
    }
 
    if (decrypt) {
-      decrypt_code(key, sys_uuid, ciphertext);
+      decrypt_code(key, uuid, ciphertext);
    } else {
-      encrypt_code(key, sys_uuid);
+      encrypt_code(key, uuid);
    }
 
    return 0;
