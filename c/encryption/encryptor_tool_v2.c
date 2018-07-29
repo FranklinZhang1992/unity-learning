@@ -7,12 +7,12 @@
 /*
  * make tool
  *
- * Usage: ./encryptor_tool_v1.o -e 161a9d1c6b434e998e52e5be7356e438 -v
- *         IV: 0101010000110100100001011000110110010100000001000011000111000101
- *   Raw Code: 64V32R9SCGRP6DNXJP6DP
- * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
- *        ./encryptor_tool_v1.o -d 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
- *   Raw Code: 64V32R9SCGRP6DNXJP6DP
+ * Usage: ./encryptor_tool_v2.o -e 161a9d1c6b434e998e52e5be7356e438 -v
+ *         IV: 1110010100000011101101000001000111110100010011011110010101010000
+ *   Raw Code: 64V32R9SCGRP6
+ * Final Code: W2RZ9-SBRXW-B5GY4-9H2AG
+ *        ./encryptor_tool_v2.o -d 161a9d1c6b434e998e52e5be7356e438 W2RZ9-SBRXW-B5GY4-9H2AG -v
+ *   Raw Code: 64V32R9SCGRP6
  *
  */
 
@@ -303,7 +303,7 @@ void encrypt_code(unsigned char *key, char *uuid)
 
    iv_prefix_size = 4;
    for (i = 0; i < iv_prefix_size; i++) {
-      iv_pre[i] = time_bytes[len - i - 1]
+      iv_pre[i] = time_bytes[len - i - 1];
    }
 
    for (i = 0; i < ivsize - iv_prefix_size && i < strlen(iv_suf_template); i++) {
@@ -351,10 +351,11 @@ void encrypt_code(unsigned char *key, char *uuid)
       printf("Encoded: %s, len: %d\n", encoded_code, encoded_code_len);
    }
 
+   // Format code
    p = 0;
    for (i = 0; i < encoded_code_len; i++) {
       final_code[p++] = encoded_code[i];
-      if ((i + 1) % 6 == 0 && (i + 1) != encoded_code_len) {
+      if ((i + 1) % 5 == 0 && (i + 1) != encoded_code_len) {
          final_code[p++] = '-';
       }
    }

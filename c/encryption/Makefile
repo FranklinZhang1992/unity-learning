@@ -16,7 +16,7 @@ demo: $(OBJ2).c
 
 tool: $(OBJ3).c $(OBJ4).c
 	gcc $(CFLAGS) $(OBJ3).c $(LIB) -L. -o $(OBJ3).o
-	# gcc $(CFLAGS) $(OBJ4).c $(LIB) -L. -o $(OBJ4).o
+	gcc $(CFLAGS) $(OBJ4).c $(LIB) -L. -o $(OBJ4).o
 
 clean:
 	-rm -f *.o

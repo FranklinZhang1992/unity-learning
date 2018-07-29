@@ -366,6 +366,7 @@ void encrypt_code(unsigned char *key, char *uuid)
       printf("Encoded: %s, len: %d\n", encoded_code, encoded_code_len);
    }
 
+   // Format code
    p = 0;
    for (i = 0; i < encoded_code_len; i++) {
       final_code[p++] = encoded_code[i];
