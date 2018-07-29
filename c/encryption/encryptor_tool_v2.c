@@ -5,7 +5,8 @@
 #include <string.h>
 
 /*
- * make tool
+ * Compile:
+ *     make
  *
  * Usage: ./encryptor_tool_v2.o -e 161a9d1c6b434e998e52e5be7356e438 -v
  *         IV: 1110010100000011101101000001000111110100010011011110010101010000
