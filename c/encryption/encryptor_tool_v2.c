@@ -324,7 +324,8 @@ void encrypt_code(unsigned char *key, char *uuid)
    }
 
    /* Print raw code with Base32 bacause it contains unprintalbe characters */
-   print_raw_code(raw_code);
+   if (verbose)
+      print_raw_code(raw_code);
 
    /* Encrypt */
    if ((err = ctr_encrypt(raw_code, encrypted_code, raw_code_len, &ctr)) != CRYPT_OK) {
