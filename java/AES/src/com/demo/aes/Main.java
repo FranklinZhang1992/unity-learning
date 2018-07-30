@@ -60,9 +60,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String plainText = "Hello world!";
-//        test3(plainText);
+        test3(plainText);
 //        test4();
-        System.out.println("64V32R9SCGRP6DPXS0VYM".length());
     }
 
 }
