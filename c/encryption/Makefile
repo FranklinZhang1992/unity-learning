@@ -1,5 +1,4 @@
-TOOL_V1 := encryptor_tool_v1
-TOOL_V2 := encryptor_tool_v2
+OBJECTS := encryptor_tool_v1.o encryptor_tool_v2.o encryptor_tool_v3.o
 LIB := libtomcrypt.a
 CC := gcc
 CFLAGS = -I./headers
@@ -8,14 +7,14 @@ DST ?= dst
 
 INSTALL         = install
 INSTALL_PROGRAM = $(INSTALL) --mode=755
-INSTALL_DATA    = $(INSTALL) --mode=644
 INSTALL_DIR     = $(INSTALL) -d --mode=755
 
 .PHONY: clean
 
-default: $(TOOL_V1).c $(TOOL_V2).c
-	gcc $(CFLAGS) $(TOOL_V1).c $(LIB) -L. -o $(TOOL_V1).o
-	gcc $(CFLAGS) $(TOOL_V2).c $(LIB) -L. -o $(TOOL_V2).o
+default: $(OBJECTS)
+
+$(OBJECTS): %.o: %.c
+	$(CC) $(CFLAGS) $< $(LIB) -L. -o $@
 
 install:
 	mkdir -p $(DST)

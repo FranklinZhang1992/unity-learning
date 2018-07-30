@@ -8,7 +8,7 @@
  * Compile:
  *     make
  *
- * Usage: ./encryptor_tool_v1.o -e 161a9d1c6b434e998e52e5be7356e438 -v
+ * Usage: ./encryptor_tool_v3.o -e 161a9d1c6b434e998e52e5be7356e438 -v
  *         IV: 0101010000110100100001011000110110010100000001000011000111000101
  *   Raw Code: 64V32R9SCGRP6DNXJP6DP
  * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
@@ -31,7 +31,7 @@ int usage(char *name)
    exit(1);
 }
 
-void print_int_array(const char *title, int *arr, int len)
+void print_int_array(const char *title, unsigned int *arr, int len)
 {
     int i;
     printf("%s: ", title);
@@ -44,7 +44,7 @@ void print_int_array(const char *title, int *arr, int len)
 void print_unchar_array(const char *title, unsigned char *arr, int len)
 {
     int i;
-    printf("%s\n", title);
+    printf("%s:\n", title);
     for (i = 0; i < len; i++) {
         printf("%d ", arr[i]);
     }
@@ -67,9 +67,83 @@ void int64_to_bin_digit(uint64_t in, unsigned char *out, int nbytes)
     }
 }
 
+int char_arr_to_bin_arr(unsigned char *in, int in_len, unsigned int *out)
+{
+    int i, j, k, nbits;
+
+    j = 0;
+    for (i = 0; i < in_len; i++) {
+        nbits = sizeof(in[i]) * 8; // 1byte = 8 bits
+        for (k = 0; k < nbits; k++) {
+            out[j] = (in[i] >> (nbits - (k % nbits) - 1)) & 1ULL;
+            j++;
+        }
+    }
+    return j;
+}
+
+int bin_arr_to_char_arr(int *in, int in_len, unsigned char *out)
+{
+    int i, j;
+    if (in_len % 8 != 0) {
+        printf("invalid bin array length %d\n", in_len);
+        return -1;
+    }
+
+    memset(out, 0, sizeof(out) - 1);
+    for (i = j = 0; i < in_len; i++) { // 1byte = 8 bits
+        out[j] |= (in[i] << (8 - i % 8 -1));
+        if ((i + 1) % 8 == 0)
+            j++;
+    }
+    out[j] = '\0';
+    return j;
+}
+
+void substring(char *in, unsigned char *out, int in_start_Index, int in_end_index, int out_start_index)
+{
+   int total_len;
+   int i, j;
+
+   total_len = strlen(in);
+   if (in_end_index > total_len) {
+      printf("invalid end index: %d\n", in_end_index);
+      return;
+   }
+   if (in_start_Index < 0 ) {
+      printf("invalid start index: %d\n", in_start_Index);
+      return;
+   }
+   if (out_start_index < 0 ) {
+      printf("invalid start index: %d\n", out_start_index);
+      return;
+   }
+
+   j = out_start_index;
+   for (i = in_start_Index; i < in_end_index; i++) {
+      out[j++] = in[i];
+   }
+   out[j] = '\0';
+}
+
+void print_raw_code(unsigned char *raw_code)
+{
+   unsigned char encoded_code[512];
+   unsigned long raw_code_len, encoded_code_len;
+   int err;
+
+   encoded_code_len = sizeof(encoded_code);
+   raw_code_len = strlen((char *) raw_code);
+   if ((err = base32_encode(raw_code, raw_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
+      printf("base32 encode error: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("[Raw code] %s\n", encoded_code);
+}
+
 int get_raw_code(char *uuid, uint64_t systime, unsigned char *out)
 {
-    const int use_first_n = 9;
+    const int use_first_n = 6;
     const int use_last_n = 4;
     int i, len;
     int buffer_len = use_first_n + use_last_n + 1;
@@ -104,75 +178,28 @@ int get_raw_code(char *uuid, uint64_t systime, unsigned char *out)
     return strlen(out);
 }
 
-void substring(char *in, unsigned char *out, int start_Index, int end_index)
+int entangle_iv(unsigned int *iv_pre_bits,
+                         int iv_pre_bits_len,
+                unsigned int *iv_suf_bits,
+                         int iv_suf_bits_len,
+                unsigned char *iv_out)
 {
-   int total_len;
-   int i, j;
-
-   total_len = strlen(in);
-   if (end_index > total_len) {
-      printf("invalid end index: %d\n", end_index);
-      return;
-   }
-   if (start_Index < 0) {
-      printf("invalid start index: %d\n", start_Index);
-      return;
-   }
-
-   j = 0;
-   for (i = start_Index; i < end_index; i++) {
-      out[j++] = in[i];
-   }
-   out[j] = '\0';
-}
-
-int char_arr_to_bin_arr(unsigned char *in, int in_len, int *out)
-{
-    int i, j, k, nbits;
-
-    j = 0;
-    for (i = 0; i < in_len; i++) {
-        nbits = sizeof(in[i]) * 8; // 1byte = 8 bits
-        for (k = 0; k < nbits; k++) {
-            out[j] = (in[i] >> (nbits - (k % nbits) - 1)) & 1ULL;
-            j++;
-        }
-    }
-    return j;
-}
-
-int bin_arr_to_char_arr(int *in, int in_len, unsigned char *out)
-{
-    int i, j;
-    if (in_len % 8 != 0) {
-        printf("invalid bin array length %d\n", in_len);
-        return -1;
-    }
-
-    memset(out, 0, sizeof(out) - 1);
-    for (i = j = 0; i < in_len; i++) { // 1byte = 8 bits
-        out[j] |= (in[i] << (8 - i % 8 -1));
-        if ((i + 1) % 8 == 0)
-            j++;
-    }
-    out[j] = '\0';
-    return j;
-}
-
-int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_suf, int iv_suf_bytes_len, unsigned char *iv_out)
-{
-   int iv_pre_bits[1024], iv_suf_bits[1024], buffer_bits[2048];
-   int iv_pre_bits_len, iv_suf_bits_len;
+   unsigned int buffer_bits[1024];
    int i, j, p0, p1, p2;
    int ret;
 
-   if (verbose) {
-      printf("IV prefix len: %d, IV suffix len: %d\n", iv_pre_bytes_len, iv_suf_bytes_len);
+   if (iv_pre_bits_len != 20) {
+      printf("Invalid IV prefix bits length: %d\n", iv_pre_bits_len);
+      exit(-1);
+   }
+   if (iv_suf_bits != 44) {
+      printf("Invalid IV suffix bits length: %d\n", iv_suf_bits);
+      exit(-1);
    }
 
-   /* Convert to bits */
-   iv_pre_bits_len = char_arr_to_bin_arr(iv_pre, iv_pre_bytes_len, iv_pre_bits);
-   iv_suf_bits_len = char_arr_to_bin_arr(iv_suf, iv_suf_bytes_len, iv_suf_bits);
+   if (verbose) {
+      printf("IV prefix len: %d, IV suffix len: %d\n", iv_pre_bits, iv_suf_bits);
+   }
 
    if (verbose) {
       printf("Before Entangle:\n");
@@ -182,11 +209,11 @@ int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_s
 
    /* entangle */
    p0 = p1 = p2 = 0;
-   for (i = 0; i < 8; i++) { // 1 byte = 8 bits
-      for (j = 0; j < iv_pre_bytes_len; j++) {
+   for (i = 0; i < 4; i++) { // 1 byte = 8 bits
+      for (j = 0; j < 5; j++) {
          buffer_bits[p0++] = iv_pre_bits[p1++];
       }
-      for (j = 0; j < iv_suf_bytes_len; j++) {
+      for (j = 0; j < 11; j++) {
          buffer_bits[p0++] = iv_suf_bits[p2++];
       }
    }
@@ -195,23 +222,29 @@ int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_s
       print_int_array("IV bits", buffer_bits, p0);
    }
 
-   ret = bin_arr_to_char_arr(buffer_bits, p0, iv_out);
-   return ret;
+   return bin_arr_to_char_arr(buffer_bits, p0, iv_out);
 }
 
-void print_raw_code(unsigned char *raw_code)
+int encode_5bit(unsigned int *in,  int inlen,
+                        char *out, int *outlen)
 {
-   unsigned char encoded_code[512];
-   unsigned long raw_code_len, encoded_code_len;
-   int err;
-
-   encoded_code_len = sizeof(encoded_code);
-   raw_code_len = strlen((char *) raw_code);
-   if ((err = base32_encode(raw_code, raw_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
-      printf("base32 encode error: %s\n", error_to_string(err));
-      exit(-1);
+   int i, j, p;
+   if (inlen % 5 != 0) {
+      printf("Invalid input binary array length:%d\n", inlen);
+      return -1;
    }
-   printf("[Raw code] %s\n", encoded_code);
+
+   memset(array, 0, ARRAY_SIZE_MAX);
+   p = 0;
+   for (i = 0; i < inlen;) {
+      for (j = 0; j < 3; j++)
+        out[p++] = 0;
+
+      for (j = 0; j < 5; j++)
+        out[p++] = in[i++];
+   }
+   // TODO
+
 }
 
 void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
@@ -291,12 +324,13 @@ void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
 void encrypt_code(unsigned char *key, char *uuid)
 {
    uint64_t systime;
-   unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
+   unsigned char raw_code[512], encrypted_code[512], encoded_code[512];
    unsigned char final_code[512];
-   unsigned char IV[512], iv_pre[128], iv_suf[128];
-   unsigned long cooked_encrypted_code_len, encoded_code_len;
-   int raw_code_len, iv_prefix_size;
-   int i, p, ret, err;
+   unsigned char IV[512], iv_pre_bytes[128], iv_suf_bytes[128];
+   unsigned int iv_pre_bits[512], iv_suf_bits[512], cooked_encrypted_code_bits[512], encrypted_code_bits[512];
+   unsigned long cooked_encrypted_code_bits_len, encoded_code_len;
+   int raw_code_len, iv_prefix_overhead_size, iv_pre_bits_len, iv_suf_bits_len;
+   int i, p, ret, err, encrypted_code_bits_len;
    prng_state prng;
    symmetric_CTR ctr;
 
@@ -318,20 +352,31 @@ void encrypt_code(unsigned char *key, char *uuid)
 
    /* You can use rng_get_bytes on platforms that support it */
    /* ret = rng_get_bytes(IV,ivsize,NULL);*/
-   iv_prefix_size = 2;
-   ret = yarrow_read(iv_pre, iv_prefix_size, &prng);
-   if (ret != iv_prefix_size) {
+   iv_prefix_overhead_size = 3;
+   iv_pre_bits_len = 20;
+   ret = yarrow_read(iv_pre_bytes, iv_prefix_overhead_size, &prng);
+   if (ret != iv_prefix_overhead_size) {
       printf("Error reading PRNG for IV required.\n");
       exit(-1);
    }
 
-   for (i = 0; i < ivsize - iv_prefix_size && i < strlen(iv_suf_template); i++) {
-      iv_suf[i] = iv_suf_template[i];
+   /* Get a bit array longer than 20 */
+   ret = char_arr_to_bin_arr(iv_pre_bytes, iv_prefix_overhead_size, iv_pre_bits);
+   if (ret < iv_pre_bits_len) {
+      printf("Not enough bits for IV prefix, expected: %d (actual %d)\n", iv_pre_bits_len, ret);
+      exit(-1);
    }
-   iv_suf[i] = '\0';
+
+   /* Get a bit array of IV template, longer than 44*/
+   iv_suf_bits_len = 44;
+   ret = char_arr_to_bin_arr(iv_suf_template, strlen(iv_suf_template), iv_suf_bits);
+   if (ret < iv_suf_bits_len) {
+      printf("Not enough bits for IV suffix, expected: %d (actual %d)\n", iv_suf_bits_len, ret);
+      exit(-1);
+   }
 
    /* Setup IV*/
-   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i, IV);
+   ret = entangle_iv(iv_pre_bits, iv_pre_bits_len, iv_suf_bits, iv_suf_bits_len, IV);
    if (ret != ivsize) {
       printf("Error setting IV, expected: %d (actual: %d)\n", ivsize, ret);
       exit(-1);
@@ -352,12 +397,25 @@ void encrypt_code(unsigned char *key, char *uuid)
       exit(-1);
    }
 
-   /* Cook, add IV as prefix */
-   for (i = 0; i < iv_prefix_size; i++) {
-      cooked_encrypted_code[i] = iv_pre[i];
+   /* Convert encrypted code from bytes to bits */
+   ret = char_arr_to_bin_arr(encrypted_code, raw_code_len, encrypted_code_bits);
+   if (ret != raw_code_len * 8) {
+      printf("failed to convert encrypted code to bits\n");
+      exit(-1);
    }
-   for (i = 0; i < raw_code_len; i++) {
-      cooked_encrypted_code[i + iv_prefix_size] = encrypted_code[i];
+   encrypted_code_bits_len = ret;
+
+   /* Cook, add IV bits as prefix */
+   for (i = 0; i < iv_pre_bits_len; i++) {
+      cooked_encrypted_code_bits[i] = iv_pre_bits[i];
+   }
+   for (i = 0; i < encrypted_code_bits_len; i++) {
+      cooked_encrypted_code_bits[i + iv_pre_bits_len] = encrypted_code_bits[i];
+   }
+   cooked_encrypted_code_bits_len = i + iv_pre_bits_len;
+   if (cooked_encrypted_code_bits_len != 100) {
+      printf("Invalid cooked encrypted code bits len: %d\n", cooked_encrypted_code_bits_len);
+      exit(-1);
    }
 
    /* Encode with Base32 */
@@ -385,6 +443,7 @@ void encrypt_code(unsigned char *key, char *uuid)
 
 int main(int argc, char *argv[])
 {
+   const char *key_prefix = "Request";
    unsigned char tmpkey[512], key[512];
    char *uuid, *plaintext, *ciphertext;
    int decrypt, err;
@@ -439,7 +498,11 @@ int main(int argc, char *argv[])
       exit(-1);
    }
 
-   substring(uuid, tmpkey, 0, 16); // Pick index 0 ~ 15 of uuid as key
+   memcpy(tmpkey, key_prefix, strlen(key_prefix));
+   substring(uuid, tmpkey, 0, 16, strlen(key_prefix)); // Pick index 0 ~ 15 of uuid as key
+   if (verbose) {
+      printf("Encryption key (Before Hash): %s\n", tmpkey);
+   }
    outlen = sizeof(key);
    if ((err = hash_memory(hash_idx, tmpkey, strlen((char *)tmpkey), key, &outlen)) != CRYPT_OK) {
       printf("Error hashing key: %s\n", error_to_string(err));

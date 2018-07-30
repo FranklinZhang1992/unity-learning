@@ -72,7 +72,6 @@ int get_raw_code(char *uuid, unsigned char *out)
     const int use_first_n = 8;
     int i, len;
     int buffer_len = use_first_n + 1;
-    unsigned char buffer[buffer_len];
 
     if (strlen(uuid) != 32) {
         printf("invalid UUID: %s\n", uuid);
@@ -81,11 +80,9 @@ int get_raw_code(char *uuid, unsigned char *out)
 
     // Use first 8 characters of uuid
     for (i = 0; i < use_first_n; i++) {
-        buffer[i] = uuid[i];
+        out[i] = uuid[i];
     }
-    buffer[i] = '\0';
-
-    memcpy(out, buffer, strlen(buffer));
+    out[i] = '\0';
 
     return strlen(out);
 }
@@ -294,6 +291,8 @@ void encrypt_code(unsigned char *key, char *uuid)
 
    /* Get Raw code */
    raw_code_len = get_raw_code(uuid, raw_code);
+   if (verbose)
+      printf("Raw code len: %d\n", raw_code_len);
 
    /* Get last 4 bytes of system time */
    len = sizeof(systime);
