@@ -392,7 +392,7 @@ void encrypt_code(unsigned char *key, char *uuid)
    p = 0;
    for (i = 0; i < encoded_code_len; i++) {
       final_code[p++] = encoded_code[i];
-      if ((i + 1) % 6 == 0 && (i + 1) != encoded_code_len) {
+      if ((i + 1) % 4 == 0 && (i + 1) != encoded_code_len) {
          final_code[p++] = '-';
       }
    }
