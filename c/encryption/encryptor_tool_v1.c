@@ -44,7 +44,7 @@ void print_int_array(const char *title, int *arr, int len)
 void print_unchar_array(const char *title, unsigned char *arr, int len)
 {
     int i;
-    printf("%s\n", title);
+    printf("%s: ", title);
     for (i = 0; i < len; i++) {
         printf("%d ", arr[i]);
     }
@@ -90,7 +90,7 @@ int get_raw_code(char *uuid, uint64_t systime, unsigned char *out)
     time_bytes = malloc(sizeof(unsigned char) * len);
     int64_to_bin_digit(systime, time_bytes, len);
     if (verbose)
-      print_unchar_array("System time bytes:", time_bytes, len);
+      print_unchar_array("System time bytes", time_bytes, len);
 
     // Use last 4 bytes of system time (in reverse)
     for (i = 0; i < use_last_n; i++ ) {
@@ -203,7 +203,7 @@ void print_raw_code(unsigned char *raw_code)
 {
    unsigned char encoded_code[512];
    unsigned long raw_code_len, encoded_code_len;
-   int err;
+   int err, i, len, uuid_bytes, time_bytes;
 
    encoded_code_len = sizeof(encoded_code);
    raw_code_len = strlen((char *) raw_code);
@@ -212,6 +212,23 @@ void print_raw_code(unsigned char *raw_code)
       exit(-1);
    }
    printf("[Raw code] %s\n", encoded_code);
+
+   uuid_bytes = 9;
+   time_bytes = 4;
+   len = strlen((char *) raw_code);
+   if (len != (uuid_bytes + time_bytes)) {
+      printf("Invalid raw code length: %d\n", len);
+      exit(-1);
+   }
+   printf("First %d bytes of UUID: ", uuid_bytes);
+   for (i = 0; i < uuid_bytes; i++) {
+      printf("%c", raw_code[i]);
+   }
+   printf("\nLast %d bytes of time (in decimal): ", time_bytes);
+   for (i = uuid_bytes; i < uuid_bytes + time_bytes; i++) {
+      printf("%d ", raw_code[i]);
+   }
+   printf("\n");
 }
 
 void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
