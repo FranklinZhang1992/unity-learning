@@ -44,7 +44,7 @@ void print_int_array(const char *title, int *arr, int len)
 void print_unchar_array(const char *title, unsigned char *arr, int len)
 {
     int i;
-    printf("%s\n", title);
+    printf("%s: ", title);
     for (i = 0; i < len; i++) {
         printf("%d ", arr[i]);
     }
@@ -184,17 +184,7 @@ int entangle_iv(unsigned char *iv_pre, int iv_pre_bytes_len, unsigned char *iv_s
 
 void print_raw_code(unsigned char *raw_code)
 {
-   unsigned char encoded_code[512];
-   unsigned long raw_code_len, encoded_code_len;
-   int err;
-
-   encoded_code_len = sizeof(encoded_code);
-   raw_code_len = strlen((char *) raw_code);
-   if ((err = base32_encode(raw_code, raw_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
-      printf("base32 encode error: %s\n", error_to_string(err));
-      exit(-1);
-   }
-   printf("[Raw code] %s\n", encoded_code);
+   printf("[Raw code] %s\n", raw_code);
 }
 
 void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
@@ -299,7 +289,7 @@ void encrypt_code(unsigned char *key, char *uuid)
    time_bytes = malloc(sizeof(unsigned char) * len);
    int64_to_bin_digit(systime, time_bytes, len);
    if (verbose)
-      print_unchar_array("System time bytes:", time_bytes, len);
+      print_unchar_array("System time bytes", time_bytes, len);
 
    iv_prefix_size = 4;
    for (i = 0; i < iv_prefix_size; i++) {

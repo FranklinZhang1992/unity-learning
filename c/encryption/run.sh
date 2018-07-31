@@ -31,7 +31,7 @@ def main
     if ARGV.nil? || ARGV.length == 0
         usage = <<EOT
 Usage: ./run.sh <version> <test_count>
-    <version>             v1 or v2
+    <version>             v1, v2 or v3
     <test_count>          test count
 EOT
         puts usage
@@ -39,7 +39,7 @@ EOT
     end
     version = ARGV[0].to_sym
     count = ARGV[1].to_i == 0 ? 1 : ARGV[1].to_i
-    raise "Invalid version (expected: v1 or v2)" unless version == :v1 || version == :v2
+    raise "Invalid version (expected: v1, v2 or v3)" unless version == :v1 || version == :v2 || version == :v3
     run(version, count)
 end
 

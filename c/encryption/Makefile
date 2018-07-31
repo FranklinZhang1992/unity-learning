@@ -20,6 +20,7 @@ install:
 	mkdir -p $(DST)
 	$(INSTALL_PROGRAM) *.o $(DST)
 	$(INSTALL_PROGRAM) run.sh $(DST)
+	$(CURDIR)/pkg.sh $(DST)
 
 clean:
 	-rm -f *.o

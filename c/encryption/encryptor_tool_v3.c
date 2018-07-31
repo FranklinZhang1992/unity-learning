@@ -9,11 +9,11 @@
  *     make
  *
  * Usage: ./encryptor_tool_v3.o -e 161a9d1c6b434e998e52e5be7356e438 -v
- *         IV: 0101010000110100100001011000110110010100000001000011000111000101
- *   Raw Code: 64V32R9SCGRP6DNXJP6DP
- * Final Code: 9A1WX1-K9ZADN-M41WJD-8GRP60
- *        ./encryptor_tool_v1.o -d 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
- *   Raw Code: 64V32R9SCGRP6DNXJP6DP
+ *         IV: 1111101010011010011110000101001101100010101000000111110011000100
+ *   Raw Code: 64V32R9SCK4ZSNQE
+ * Final Code: YFCF1-QS5BS-QJH78-TB1ST
+ *        ./encryptor_tool_v3.o -d 161a9d1c6b434e998e52e5be7356e438 9A1WX1-K9ZADN-M41WJD-8GRP60 -v
+ *   Raw Code: 64V32R9SCK4ZSNQE
  *
  */
 
@@ -21,6 +21,7 @@ int verbose = 0;
 const unsigned char *iv_suf_template = "SAMPLEIVSUFFIX";
 const char *cipher = "blowfish";
 int cipher_idx, hash_idx, ks, ivsize;
+const char *encode_array = "0123456789ABCDEFGHJKMNPQRSTUVWXY";
 
 int usage(char *name)
 {
@@ -82,22 +83,68 @@ int char_arr_to_bin_arr(unsigned char *in, int in_len, unsigned int *out)
     return j;
 }
 
-int bin_arr_to_char_arr(int *in, int in_len, unsigned char *out)
+int char_to_bits(unsigned char in, unsigned int *out, int *out_len)
 {
     int i, j;
+    j = 0;
+    for (i = 0; i < 8; i++) {
+        out[j++] = (in >> (8 - i - 1)) & 1ULL;
+    }
+    *out_len = j;
+    return 0;
+}
+
+int int_to_bits(unsigned int in, unsigned int *out, int *out_len)
+{
+    int i, j;
+    j = 0;
+    for (i = 0; i < 8; i++) {
+        out[j++] = (in >> (8 - i - 1)) & 1ULL;
+    }
+    *out_len = j;
+    return 0;
+}
+
+int bits_to_char(int *in, int in_len, unsigned char *out)
+{
+    int i;
+    unsigned int t;
     if (in_len % 8 != 0) {
-        printf("invalid bin array length %d\n", in_len);
+        printf("invalid bit array length %d\n", in_len);
+        return -1;
+    }
+    t = 0;
+    for (i = 0; i < in_len; i++) {
+        t |= (in[i] << (8 - i -1));
+    }
+    *out = t;
+    return 0;
+}
+
+int bin_arr_to_char_arr(int *in, int in_len, unsigned char *out)
+{
+    int i, j, k, ret;
+    int tmp[8];
+    unsigned char c;
+    if (in_len % 8 != 0) {
+        printf("invalid bin array length: %d\n", in_len);
         return -1;
     }
 
-    memset(out, 0, sizeof(out) - 1);
-    for (i = j = 0; i < in_len; i++) { // 1byte = 8 bits
-        out[j] |= (in[i] << (8 - i % 8 -1));
-        if ((i + 1) % 8 == 0)
-            j++;
+    memset(tmp, 0, sizeof(tmp));
+    for (i = j = k = 0; i < in_len; i++) { // 1byte = 8 bits
+        tmp[j++] = in[i];
+        if (j == 8) {
+            j = 0;
+            if ((ret = bits_to_char(tmp, 8, &c)) != 0) {
+                printf("failed converting bits to char\n");
+                return -1;
+            }
+            out[k++] = c;
+        }
     }
-    out[j] = '\0';
-    return j;
+    out[k] = '\0';
+    return k;
 }
 
 void substring(char *in, unsigned char *out, int in_start_Index, int in_end_index, int out_start_index)
@@ -130,7 +177,7 @@ void print_raw_code(unsigned char *raw_code)
 {
    unsigned char encoded_code[512];
    unsigned long raw_code_len, encoded_code_len;
-   int err;
+   int err, i, len, uuid_bytes, time_bytes;
 
    encoded_code_len = sizeof(encoded_code);
    raw_code_len = strlen((char *) raw_code);
@@ -139,6 +186,23 @@ void print_raw_code(unsigned char *raw_code)
       exit(-1);
    }
    printf("[Raw code] %s\n", encoded_code);
+
+   uuid_bytes = 6;
+   time_bytes = 4;
+   len = strlen((char *) raw_code);
+   if (len != (uuid_bytes + time_bytes)) {
+      printf("Invalid raw code length: %d\n", len);
+      exit(-1);
+   }
+   printf("First %d bytes of UUID: ", uuid_bytes);
+   for (i = 0; i < uuid_bytes; i++) {
+      printf("%c", raw_code[i]);
+   }
+   printf("\nLast %d bytes of time (in decimal): ", time_bytes);
+   for (i = uuid_bytes; i < uuid_bytes + time_bytes; i++) {
+      printf("%d ", raw_code[i]);
+   }
+   printf("\n");
 }
 
 int get_raw_code(char *uuid, uint64_t systime, unsigned char *out)
@@ -192,13 +256,13 @@ int entangle_iv(unsigned int *iv_pre_bits,
       printf("Invalid IV prefix bits length: %d\n", iv_pre_bits_len);
       exit(-1);
    }
-   if (iv_suf_bits != 44) {
-      printf("Invalid IV suffix bits length: %d\n", iv_suf_bits);
+   if (iv_suf_bits_len != 44) {
+      printf("Invalid IV suffix bits length: %d\n", iv_suf_bits_len);
       exit(-1);
    }
 
    if (verbose) {
-      printf("IV prefix len: %d, IV suffix len: %d\n", iv_pre_bits, iv_suf_bits);
+      printf("IV prefix len: %d, IV suffix len: %d\n", iv_pre_bits_len, iv_suf_bits_len);
    }
 
    if (verbose) {
@@ -226,33 +290,105 @@ int entangle_iv(unsigned int *iv_pre_bits,
 }
 
 int encode_5bit(unsigned int *in,  int inlen,
-                        char *out, int *outlen)
+                        char *out)
 {
-   int i, j, p;
+   int i, j, p, len, ret;
+   unsigned int tmp[1024];
+   unsigned char tmp2[1024];
    if (inlen % 5 != 0) {
-      printf("Invalid input binary array length:%d\n", inlen);
+      printf("Invalid input binary array length: %d\n", inlen);
       return -1;
    }
 
-   memset(array, 0, ARRAY_SIZE_MAX);
    p = 0;
    for (i = 0; i < inlen;) {
       for (j = 0; j < 3; j++)
-        out[p++] = 0;
+        tmp[p++] = 0;
 
       for (j = 0; j < 5; j++)
-        out[p++] = in[i++];
+        tmp[p++] = in[i++];
    }
-   // TODO
+   len = p;
+   ret = bin_arr_to_char_arr(tmp, len, tmp2);
+   if (ret != len / 8) {
+      printf("Invalid char array lengh: %d\n", ret);
+      return -1;
+   }
+   len = ret;
+   for (i = 0; i < len; i++) {
+      out[i] = encode_array[tmp2[i]];
+   }
+   out[i] = '\0';
+   return i;
+}
 
+int decode_5bit(unsigned char *in,  int inlen,
+                unsigned int *out, int *outlen)
+{
+    int i, j, out_len, r, err, p;
+    int decode_array[512];
+    unsigned int tmp[8];
+
+    memset(decode_array, -1, sizeof(decode_array));
+    for (i = 0; i < strlen(encode_array); i++) {
+        decode_array[encode_array[i]] = i;
+    }
+
+    p = 0;
+    for (i = 0; i < inlen; i++) {
+        r = decode_array[in[i]];
+        if (r == -1) {
+          printf("failed to find symbol in decode array: %d\n", in[i]);
+          return -1;
+        }
+        if ((err = int_to_bits(r, tmp, &out_len))!= 0) {
+          printf("failed to convert int to bits\n");
+          return -1;
+        }
+        if (out_len != 8) {
+            printf("failed converting int to bits\n");
+            return -1;
+        }
+        for (j = 3; j < 8; j++) {
+            out[p++] = tmp[j];
+        }
+    }
+    *outlen = p;
+    return 0;
+}
+
+int extract_code_from_code_bits(unsigned int *code_bits,
+                                         int bits_len,
+                                         int reserved_bits,
+                                unsigned char *encrypted_code,
+                                unsigned long *encrypted_code_len)
+{
+    int i,len, ret;
+    unsigned int tmp[512];
+
+    for (i = reserved_bits; i < bits_len; i++) {
+        tmp[i - reserved_bits] = code_bits[i];
+    }
+    len = i - reserved_bits;
+
+    ret = bin_arr_to_char_arr(tmp, len, encrypted_code);
+    if (ret != len / 8) {
+       printf("Invalid char array lengh: %d\n", ret);
+       return -1;
+    }
+    *encrypted_code_len = ret;
+
+    return 0;
 }
 
 void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
 {
    unsigned char raw_code[512], encrypted_code[512], cooked_encrypted_code[512], encoded_code[512];
-   unsigned char IV[512], iv_pre[128], iv_suf[128];
+   unsigned char IV[512], iv_pre[128], iv_suf[128], iv_suf_bytes[128];
+   unsigned int cooked_encrypted_code_bits[512], iv_pre_bits[512], iv_suf_bits[512];
+   int cooked_encrypted_code_bits_len;
    unsigned long cooked_encrypted_code_len, raw_code_len;
-   int encoded_code_len, iv_prefix_size;
+   int encoded_code_len, iv_prefix_size, iv_pre_bits_len, iv_suf_bits_len;
    int i, p, ret, len, err;
    symmetric_CTR ctr;
 
@@ -274,28 +410,34 @@ void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
 
    /* Decode */
    encoded_code_len = strlen(encoded_code);
-   cooked_encrypted_code_len = sizeof(cooked_encrypted_code);
-   if ((err = base32_decode(encoded_code, encoded_code_len, cooked_encrypted_code, &cooked_encrypted_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
-      printf("ctr_decode error: %s\n", error_to_string(err));
+   cooked_encrypted_code_bits_len = sizeof(cooked_encrypted_code_bits);
+   if ((err = decode_5bit(encoded_code,
+                          encoded_code_len,
+                          cooked_encrypted_code_bits,
+                          &cooked_encrypted_code_bits_len)) != CRYPT_OK) {
+      printf("ctr_decode error\n");
       exit(-1);
    }
 
    /* Extract IV */
-   iv_prefix_size = 2;
-   for (i = 0; i < iv_prefix_size; i++) {
-      iv_pre[i] = cooked_encrypted_code[i];
+   iv_pre_bits_len = 20;
+   for (i = 0; i < iv_pre_bits_len; i++) {
+      iv_pre_bits[i] = cooked_encrypted_code_bits[i];
    }
-   iv_pre[i] = '\0';
 
-   for (i = 0; i < ivsize - iv_prefix_size && i < strlen(iv_suf_template); i++) {
-      iv_suf[i] = iv_suf_template[i];
+   /* Get a bit array of IV template, longer than 44 */
+   iv_suf_bits_len = 44;
+   memcpy(iv_suf_bytes, iv_suf_template, strlen(iv_suf_template));
+   ret = char_arr_to_bin_arr(iv_suf_bytes, strlen(iv_suf_bytes), iv_suf_bits);
+   if (ret < iv_suf_bits_len) {
+      printf("Not enough bits for IV suffix, expected: %d (actual %d)\n", iv_suf_bits_len, ret);
+      exit(-1);
    }
-   iv_suf[i] = '\0';
 
    /* Setup IV*/
-   ret = entangle_iv(iv_pre, iv_prefix_size, iv_suf, i, IV);
+   ret = entangle_iv(iv_pre_bits, iv_pre_bits_len, iv_suf_bits, iv_suf_bits_len, IV);
    if (ret != ivsize) {
-      printf("Error setting IV\n");
+      printf("Error setting IV, expected: %d (actual: %d)\n", ivsize, ret);
       exit(-1);
    }
 
@@ -305,11 +447,13 @@ void decrypt_code(unsigned char *key, char *uuid, unsigned char *ciphertext)
    }
 
    /* Extract encrypted code */
-   p = 0;
-   for (i = iv_prefix_size; i < cooked_encrypted_code_len; i++) {
-      encrypted_code[p++] = cooked_encrypted_code[i];
+   if ((err = extract_code_from_code_bits(cooked_encrypted_code_bits,
+                                          cooked_encrypted_code_bits_len,
+                                          iv_pre_bits_len, encrypted_code,
+                                          &raw_code_len)) != 0) {
+      printf("failed extracting code from code bits\n");
+      exit(-1);
    }
-   raw_code_len = p;
 
    /* Decrypt */
    if ((err = ctr_decrypt(encrypted_code, raw_code, raw_code_len, &ctr)) != CRYPT_OK) {
@@ -367,9 +511,10 @@ void encrypt_code(unsigned char *key, char *uuid)
       exit(-1);
    }
 
-   /* Get a bit array of IV template, longer than 44*/
+   /* Get a bit array of IV template, longer than 44 */
    iv_suf_bits_len = 44;
-   ret = char_arr_to_bin_arr(iv_suf_template, strlen(iv_suf_template), iv_suf_bits);
+   memcpy(iv_suf_bytes, iv_suf_template, strlen(iv_suf_template));
+   ret = char_arr_to_bin_arr(iv_suf_bytes, strlen(iv_suf_bytes), iv_suf_bits);
    if (ret < iv_suf_bits_len) {
       printf("Not enough bits for IV suffix, expected: %d (actual %d)\n", iv_suf_bits_len, ret);
       exit(-1);
@@ -418,13 +563,8 @@ void encrypt_code(unsigned char *key, char *uuid)
       exit(-1);
    }
 
-   /* Encode with Base32 */
-   encoded_code_len = sizeof(encoded_code);
-   cooked_encrypted_code_len = raw_code_len + iv_prefix_size;
-   if ((err = base32_encode(cooked_encrypted_code, cooked_encrypted_code_len, encoded_code, &encoded_code_len, BASE32_CROCKFORD)) != CRYPT_OK) {
-      printf("base32 encode error: %s\n", error_to_string(err));
-      exit(-1);
-   }
+   /* 5-bit Encode */
+   encoded_code_len = encode_5bit(cooked_encrypted_code_bits, cooked_encrypted_code_bits_len, encoded_code);
    if (verbose) {
       printf("Encoded: %s, len: %d\n", encoded_code, encoded_code_len);
    }
@@ -433,7 +573,7 @@ void encrypt_code(unsigned char *key, char *uuid)
    p = 0;
    for (i = 0; i < encoded_code_len; i++) {
       final_code[p++] = encoded_code[i];
-      if ((i + 1) % 6 == 0 && (i + 1) != encoded_code_len) {
+      if ((i + 1) % 5 == 0 && (i + 1) != encoded_code_len) {
          final_code[p++] = '-';
       }
    }
