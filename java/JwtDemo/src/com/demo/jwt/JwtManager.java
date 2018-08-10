@@ -1,9 +1,12 @@
 package com.demo.jwt;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -12,7 +15,7 @@ public class JwtManager {
     private static final long MAX_INTERVAL = 1000 * 60 * 30;
     private static JwtManager instance;
 
-    private KeyPair keyPair;
+    private Key key;
 
     public synchronized static JwtManager getInstance() throws NoSuchAlgorithmException {
         if (instance == null) {
@@ -22,16 +25,29 @@ public class JwtManager {
     }
 
     public JwtManager() throws NoSuchAlgorithmException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(2048, new FixedSecureRandom());
-        keyPair = generator.generateKeyPair();
-
+        key = Keys.hmacShaKeyFor("677d150f153f46f3afb49412755951ae".getBytes());
     }
 
-    public String generate() {
-        return Jwts.builder().setSubject("Joe").signWith(keyPair.getPrivate()).compact();
+    public String generate(String sid) {
+        return Jwts.builder().claim("sid", sid).setIssuedAt(new Date()).signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    // public boolean verify(String token) {
-    // }
+    public boolean verify(String token) {
+
+        Jws<Claims> jws = null;
+        try {
+            jws = Jwts.parser().requireSubject("sid").setSigningKey(key).parseClaimsJws(token);
+        } catch (JwtException e) {
+            System.err.println(e.getMessage());
+        }
+        if (jws == null) {
+            return false;
+        }
+        Date issuedAt = jws.getBody().getIssuedAt();
+        if ((System.currentTimeMillis() - issuedAt.getTime()) > MAX_INTERVAL) {
+            throw new RuntimeException("Token expired");
+        }
+        return true;
+    }
 }
