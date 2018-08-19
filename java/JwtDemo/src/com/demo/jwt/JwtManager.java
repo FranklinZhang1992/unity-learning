@@ -1,59 +1,53 @@
 package com.demo.jwt;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 public class JwtManager {
-	private static final long MAX_INTERVAL = 1000 * 60 * 30;
-	private RSAPublicKey publicKey;
-	private RSAPrivateKey privateKey;
-	private static JwtManager instance;
+    private static final long MAX_INTERVAL = 1000 * 60 * 30;
+    private static JwtManager instance;
 
-	public synchronized static JwtManager getInstance() throws NoSuchAlgorithmException {
-		if (instance == null) {
-			instance = new JwtManager();
-		}
-		return instance;
-	}
+    private Key key;
 
-	public JwtManager() throws NoSuchAlgorithmException {
-		KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-		generator.initialize(2048, new FixedSecureRandom());
-		KeyPair keyPair = generator.generateKeyPair();
+    public synchronized static JwtManager getInstance() throws NoSuchAlgorithmException {
+        if (instance == null) {
+            instance = new JwtManager();
+        }
+        return instance;
+    }
 
-		publicKey = (RSAPublicKey) keyPair.getPublic();
-		privateKey = (RSAPrivateKey) keyPair.getPrivate();
-	}
+    public JwtManager() throws NoSuchAlgorithmException {
+        key = Keys.hmacShaKeyFor("677d150f153f46f3afb49412755951ae".getBytes());
+    }
 
-	public String generate() throws NoSuchAlgorithmException {
-		Algorithm algorithm = Algorithm.RSA256(publicKey, privateKey);
-		String token = JWT.create().withAudience("userA").withIssuedAt(new Date()).sign(algorithm);
-		return token;
-	}
+    public String generate(String sid) {
+        return Jwts.builder().claim("sid", sid).setIssuedAt(new Date()).signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
 
-	public boolean verify(String token) {
-		try {
-			Algorithm algorithm = Algorithm.RSA256(publicKey, privateKey);
-			JWTVerifier verifier = JWT.require(algorithm).withIssuer("userA").build();
-			DecodedJWT jwt = verifier.verify(token);
-			Date issuedDate = jwt.getIssuedAt();
-			if ((System.currentTimeMillis() - issuedDate.getTime()) < MAX_INTERVAL) {
-				System.err.println("Expired token");
-				return true;
-			}
-		} catch (JWTVerificationException exception) {
-			System.err.println("Invalid token");
-		}
-		return false;
-	}
+    public boolean verify(String token) {
+
+        Jws<Claims> jws = null;
+        try {
+            jws = Jwts.parser().requireSubject("sid").setSigningKey(key).parseClaimsJws(token);
+        } catch (JwtException e) {
+            System.err.println(e.getMessage());
+        }
+        if (jws == null) {
+            return false;
+        }
+        Date issuedAt = jws.getBody().getIssuedAt();
+        if ((System.currentTimeMillis() - issuedAt.getTime()) > MAX_INTERVAL) {
+            throw new RuntimeException("Token expired");
+        }
+        return true;
+    }
 }
