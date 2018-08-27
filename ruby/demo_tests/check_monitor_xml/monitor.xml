@@ -1,0 +1,67 @@
+<Monitoring>
+    <OS type="Host" name="node0">
+        <services>
+            <service type="HostOS" name="System">
+                <description>Host OS statistics</description>
+                <stats>
+                    <stat>
+                        <name>CPU</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                    <stat>
+                        <name>Memory</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                </stats>
+            </service>
+        </services>
+    </OS>
+    <OS type="Guest" name="cobra1ab1">
+        <services>
+            <service type="GuestOS" name="System">
+                <description>Guest OS statistics</description>
+                <stats>
+                    <stat>
+                        <name>CPU</name>
+                        <value>55</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                    <stat>
+                        <name>Memory</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                    <stat>
+                        <name>Disk</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                </stats>
+            </service>
+            <service type="GuestApp" name="app_exe">
+                <description>Guest App statistics</description>
+                <stats>
+                    <stat>
+                        <name>CPU</name>
+                        <value>66</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                    <stat>
+                        <name>Memory</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>warning</status>
+                    </stat>
+                </stats>
+            </service>
+        </services>
+    </OS>
+</Monitoring>
