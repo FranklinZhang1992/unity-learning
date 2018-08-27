@@ -4,6 +4,11 @@ module SuperNova
 	def SuperNova.ser() Service.instance end
 	class Service
 		include Singleton
+
+		def initialize
+			puts "initialize"
+		end
+
 		def change(param = "default")
 			@singleParam = param
 		end
