@@ -2801,7 +2801,8 @@
                 </q-link>
             </q-links>
             <apps>
-                <app name="app_exe">
+                <app>
+                    <name>app_exe</name>>
                     <hmr-events>
                         <event type="GuestApp">
                             <name>Guest CPU usage</name>

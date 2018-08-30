@@ -14,7 +14,7 @@
                         <name>Memory</name>
                         <value>32.76</value>
                         <units>pc</units>
-                        <status>warning</status>
+                        <status>normal</status>
                     </stat>
                 </stats>
             </service>
@@ -35,13 +35,13 @@
                         <name>Memory</name>
                         <value>32.76</value>
                         <units>pc</units>
-                        <status>warning</status>
+                        <status>normal</status>
                     </stat>
                     <stat>
                         <name>Disk</name>
                         <value>32.76</value>
                         <units>pc</units>
-                        <status>warning</status>
+                        <status>normal</status>
                     </stat>
                 </stats>
             </service>
@@ -58,7 +58,24 @@
                         <name>Memory</name>
                         <value>32.76</value>
                         <units>pc</units>
+                        <status>normal</status>
+                    </stat>
+                </stats>
+            </service>
+            <service type="GuestApp" name="app_exe2">
+                <description>Guest App statistics</description>
+                <stats>
+                    <stat>
+                        <name>CPU</name>
+                        <value>77</value>
+                        <units>pc</units>
                         <status>warning</status>
+                    </stat>
+                    <stat>
+                        <name>Memory</name>
+                        <value>32.76</value>
+                        <units>pc</units>
+                        <status>normal</status>
                     </stat>
                 </stats>
             </service>

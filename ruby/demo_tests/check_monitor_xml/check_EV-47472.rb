@@ -1,6 +1,9 @@
 require 'singleton'
+require 'rexml/document'
+include REXML
 
 DST_FILE = 'mockup'
+DST_FILE_PEER = 'mockup.peer'
 
 def output_format(src)
     formatted = ""
@@ -171,12 +174,9 @@ class MonitoringXMLProvider
                 srv_name = service.name
                 service.stats.each do |stat|
                     next unless stat.warning?
-                    expected << "\tOS type: #{output_format(os_type)}, OS name: #{output_format(os_name)}, Service type: #{output_format(srv_type)}, Service name: #{output_format(srv_name)}, Stat :#{output_format(stat.description)}\n"
+                    expected << "\tOS type: #{output_format(os_type)}, OS name: #{output_format(os_name)}, Service type: #{output_format(srv_type)}, Service name: #{output_format(srv_name)}, Stat: #{output_format(stat.description)}\n"
                 end
             end
-        end
-        unless expected == ""
-            expected << "=======================================================\n"
         end
         expected
     end
@@ -229,30 +229,88 @@ class Tester
     end
 
     def spine_topology
-        output = %x{curl http://localhost:8999/topology.xml}
+        # output = %x{curl http://localhost:8999/topology.xml}
+        output = %x{cat spine_topo.xml}
+    end
+
+    def analyze_hmr_event_topo(event_parent_topo, entity_name)
+        msg = ""
+        event_parent_topo.each_element("hmr-events/event") do |hmr_event_ele|
+            event_type = hmr_event_ele.attributes["type"]
+            event_name = hmr_event_ele.elements["name"].text
+            event_status = hmr_event_ele.elements["status"].text
+            if event_status == "warning"
+                msg << "Entity name: #{entity_name}, event_type: #{event_type}, event_name: #{event_name}\n"
+            end
+        end
+        msg
+    end
+
+    def analyze_spine_topo(spine_topo_doc, node_name, domain_name)
+        msg = ""
+        spine_topo_doc.each_element("//nodes/node") do |node_ele|
+            next unless node_ele.elements["name"].text == node_name
+            msg << analyze_hmr_event_topo(node_ele, node_name)
+        end
+        spine_topo_doc.each_element("//protected-virtual-machines/protected-virtual-machine") do |domain_ele|
+            next unless domain_ele.elements["name"].text == domain_name
+            msg << analyze_hmr_event_topo(domain_ele, domain_name)
+            domain_ele.each_element("//apps/app") do |app_ele|
+                app_name = app_ele.elements["name"].text
+                msg << analyze_hmr_event_topo(app_ele, app_name)
+            end
+        end
+        msg
     end
 
     def node0_xml_actual(spine_topo_doc)
-        spine_topo_doc.elements("nodes/node").each do |node_ele|
-            next unless node_ele.elements["name"] == "node0"
-            node_ele.elements("hmr-events/event").each do |hmr_event_ele|
-                
-            end
-        end
+        msg = ""
+        msg << analyze_spine_topo(spine_topo_doc, "node0", "greece1")
+        msg
     end
     def node1_xml_actual(spine_topo_doc)
-        spine_topo_doc.elements("nodes/node").each do |node_ele|
-            next unless node_ele.elements["name"] == "node1"
-        end
+        msg = ""
+        msg << analyze_spine_topo(spine_topo_doc, "node1", "greece2")
+        msg
     end
 
     def run
+        # Prepare mock ups
         node0_provider = node0_xml_mockup
+        node1_provider = node1_xml_mockup
+
+        # Write mock up file for node0
         %x{echo '#{node0_provider.to_xml}' > #{DST_FILE}}
-        puts "Node0 expected:\n#{node0_provider.expected_result}"
+
+        # Write mock up file for node1
+        # %x{echo '#{node0_provider.to_xml}' > #{DST_FILE_PEER}}
+        # %x{scp #{DST_FILE_PEER} root@peer:#{DST_FILE}}
+        # %x{rm -f #{DST_FILE_PEER}}
+
+        # Pause and wait for Spine's handling
+        # sleep 5
+
+        # Fetch Spine topology
         spine_topo_doc = Document.new(spine_topology).root
+
+        # Print expected results and actual results
+        puts "Node0 expected:\n#{node0_provider.expected_result}"
+        puts "Node0 actual:\n#{node0_xml_actual(spine_topo_doc)}"
+
+        puts "------------------------------------------------------------------------------------------------------------------------"
+
+        puts "Node1 expected:\n#{node1_provider.expected_result}"
+        puts "Node1 actual:\n#{node1_xml_actual(spine_topo_doc)}"
+
+        puts "========================================================================================================================"
+
     end
 end
 
-t = Tester.new
-t.run
+N = 5
+for i in 0...N do
+    t = Tester.new
+    t.run
+    sleep 1
+end
+
