@@ -1,0 +1,2956 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type="text/xsl" href="/style/spine.xsl"?>
+<cluster id="1a50c2fa-226d-4cdc-9308-1523c54aafe1">
+    <name>avance</name>
+    <version build='30' distro='0' maint='0' major='7' minor='6' num='1976921906741278' patch='0' ztcRelease='1.3.0-30'>7.6.0-30</version>
+    <ip_config>
+        <protocol>static</protocol>
+        <address family='ipv4' prefix='16'>10.86.4.96</address>
+    </ip_config>
+    <spine_active_mode_enabled>true</spine_active_mode_enabled>
+    <dom0_memory_target unit = "MB">2048</dom0_memory_target>
+    <dom0_vcpus_target>2</dom0_vcpus_target>
+    <dom0_pinned_target>true</dom0_pinned_target>
+    <periodic_reporting_enabled>false</periodic_reporting_enabled>
+    <iptables-security>
+        <enabled>false</enabled>
+    </iptables-security>
+    <kits>
+        <kit id="ee08f945-798c-4bf3-bfbc-e5440e2c10b0">
+            <state>ready</state>
+            <upgradeType>reboot</upgradeType>
+            <md5>bcbf8f2437a1518a400668bfaca2707a</md5>
+            <product>
+                <short_desc>everRun</short_desc>
+                <version>
+                    <name>7.6.0-30</name>
+                    <number>1976921906741278</number>
+                    <major>7</major>
+                    <minor>6</minor>
+                    <maint>0</maint>
+                    <patch>0</patch>
+                    <distro>0</distro>
+                    <build>30</build>
+                </version>
+                <beta>0</beta>
+                <ztcRelease>1.3.0-30</ztcRelease>
+            </product>
+            <upgrade>
+                <from>
+                    <major>7</major>
+                </from>
+                <exclude>
+                    <major>7</major>
+                    <minor>3</minor>
+                    <maint>3</maint>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>3</minor>
+                    <maint>2</maint>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>3</minor>
+                    <maint>1</maint>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>3</minor>
+                    <maint>0</maint>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>2</minor>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>1</minor>
+                </exclude>
+                <exclude>
+                    <major>7</major>
+                    <minor>0</minor>
+                </exclude>
+            </upgrade>
+        </kit>
+    </kits>
+    <lans>
+        <lan id="e213e963-0c6b-4650-89e6-0a855f7c5d14"/>
+        <lan id="65b13bc7-1255-40a3-b2b4-41ab8e15247b"/>
+        <lan id="78760342-370c-4c83-8a6c-2b9f90484cfb"/>
+        <lan id="65a0e960-e03d-464d-a3d8-103beb275215"/>
+    </lans>
+    <nodes>
+        <node id="94dddf08-ef98-4384-983b-bb61b9246708" primary="true">
+            <name>node0</name>
+            <state>running</state>
+            <cluster ref="1a50c2fa-226d-4cdc-9308-1523c54aafe1"/>
+            <version build='30' distro='0' maint='0' major='7' minor='6' num='1976921906741278' patch='0' ztcRelease='1.3.0-30'>7.6.0-30</version>
+            <membership>full</membership>
+            <kit ref="ee08f945-798c-4bf3-bfbc-e5440e2c10b0"/>
+            <platform_variant>everRun</platform_variant>
+            <spectre-v2-enabled>false</spectre-v2-enabled>
+            <meltdown-enabled>true</meltdown-enabled>
+            <hmr-events>
+                <event type="HostOS">
+                    <name>Host CPU usage</name>
+                    <status>warning</status>
+                </event>
+                <event type="HostOS">
+                    <name>Host Mem usage</name>
+                    <status>warning</status>
+                </event>
+            </hmr-events>
+            <manufacturer enum="unknown">Dell Inc.</manufacturer>
+            <model enum="unknown">PowerEdge T310</model>
+            <serial>3CG71L1</serial>
+            <bios>
+                <nx/>
+                <vmx/>
+                <vapic_secondary_exec/>
+            </bios>
+            <led-state>on</led-state>
+            <system-healthcheck>
+                <base>0w9wbwaw5xet8y6v0v7u4tdsdw0set7w7u7v3z4zex5w4w7tew3xfz1uaveubt4t</base>
+                <bios>4w1s1vcz5s0xcvasdv8z6sft1w8t0v1u6t3s1v9s8u6z2sas5t5t1yavbt0s5ufx</bios>
+                <chassis>1u7vevcucvbs8t6s7wbz8v6y5u3v7xcw1sct1z7v9y8zbvcx3wds7w9u9y4y2u1y</chassis>
+                <disk>fw1v5sdt6x2s5v3x2u1x5t0sdtat8w3vcv2x5wctct2t3z5tctbs5u1ses7z0t9t</disk>
+                <memory/>
+                <network>ez5y6ufv5z2vdu4v3zeycu0yfu8v3z1v7u4v8u2v3zby2u5v9u2y6u0v2u9y9u6v</network>
+                <os>cxex1x3v9udu9u9y9u4y2w8s7t2v0yeu1v8vdv4y7sdsfs0vcu4u9zev9zbv7t1s</os>
+                <proc-fid>0tew1tew8x9t2ydz8uev7wbsewcs8t2w0uezbv6v2set4w4wct3s9zdvbzcvfw2t</proc-fid>
+                <proc>atdtesfs9sdtcx6udzeuayfx8w9t7s0w8w3t0vcz0v1y4wbtax7t7w0xfw8z8z8u</proc>
+                <prod>0uby0v4zbv6u6v2vau9uevbvdyczez4veudz1uazdv2u1z5v7v0ybzfzav0y5uey</prod>
+                <quorum>1t8sez5y6w6sfsbv6t5s1y8w2tes3uauex7sby5ucs8t8xaxex7s4vdy1sdycv4z</quorum>
+                <snap>awcxey6ufw1y5u6u3sazds5tbtet8scsdu5y0s6s3u6z9sfy4vcybxcv7sds4t5s</snap>
+                <status>3v6y5x2y5s8xftdtbu9sfvdzcsds1ydv1t9w1u7vdt3y3t5xds2x0u8tevev2xew</status>
+                <version>ax0way1v1xdw4v7scvfz6t4s9t1s2u1vcv3x5s8s5v1y3s4wfs1xdx0v9ses4sat</version>
+            </system-healthcheck>
+            <pxe-services-running>false</pxe-services-running>
+            <boot_time>1535510371</boot_time>
+            <boot_count>1</boot_count>
+            <graceful_reboot>true</graceful_reboot>
+            <maintenance>false</maintenance>
+            <connectivity>good</connectivity>
+            <mode>duplex</mode>
+            <upgrade_state/>
+            <bmc>
+                <dedicated>true</dedicated>
+                <connectivity>none</connectivity>
+                <available>false</available>
+            </bmc>
+            <memory unit="bytes">8579448832</memory>
+            <cpu_socket_count>1</cpu_socket_count>
+            <dom0_memory unit="MB" actual="2048" desired="1024" default="2048" min="768"/>
+            <dom0_pinned>true</dom0_pinned>
+            <dom0_vcpus actual="2" desired="2" min="2" max="8"/>
+            <max_interfaces_per_domain>9999</max_interfaces_per_domain>
+            <max_memory_per_domain unit="MB">1073741824</max_memory_per_domain>
+            <max_volumes_per_domain>9999</max_volumes_per_domain>
+            <min_memory_per_domain unit="MB">1</min_memory_per_domain>
+            <total_cpu_sockets>1</total_cpu_sockets>
+            <total_dom0_vcpus>2</total_dom0_vcpus>
+            <total_guest_interfaces>64</total_guest_interfaces>
+            <total_guest_memory unit="MB" actual="5927" desired="6943" default="5927" max="7197">5927</total_guest_memory>
+            <total_hardware_threads_for_vcpus>8</total_hardware_threads_for_vcpus>
+            <total_shared_storage_regions>9999</total_shared_storage_regions>
+            <total_vcpus>8</total_vcpus>
+            <sensors>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:HostOS:Host CPU usage">
+                    <name>ARM HostOS Host CPU usage check</name>
+                    <type>arm</type>
+                    <status>warning</status>
+                    <current unit="pc">96</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:HostOS:Host Mem usage">
+                    <name>ARM HostOS Host Mem usage check</name>
+                    <type>arm</type>
+                    <status>warning</status>
+                    <current unit="pc">95</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:GuestOS:Guest CPU usage">
+                    <name>ARM GuestOS Guest CPU usage check</name>
+                    <type>arm</type>
+                    <status>warning</status>
+                    <current unit="pc">87</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:GuestOS:Guest Mem usage">
+                    <name>ARM GuestOS Guest Mem usage check</name>
+                    <type>arm</type>
+                    <status>normal</status>
+                    <current unit="pc">32.76</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:GuestOS:Guest Disk usage">
+                    <name>ARM GuestOS Guest Disk usage check</name>
+                    <type>arm</type>
+                    <status>normal</status>
+                    <current unit="pc">32.76</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:GuestApp:Guest CPU usage">
+                    <name>ARM GuestApp Guest CPU usage check</name>
+                    <type>arm</type>
+                    <status>warning</status>
+                    <current unit="pc">97</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+                <sensor id="av:6f287587-7c83-4889-9b6a-edbd760b7c7f:arm_sensor:GuestApp:Guest App statistics">
+                    <name>ARM GuestApp Guest App statistics check</name>
+                    <type>arm</type>
+                    <status>normal</status>
+                    <current unit="pc">32.76</current>
+                    <device ref="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c"/>
+                </sensor>
+            </sensors>
+            <networks>
+                <local-network id="48396042-635a-4f93-9075-81a88dea9291">
+                    <name>p2p2</name>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620334</linkEpoch>
+                    <device ref="163ced6e-8329-413f-8f4f-b2597e79e63d"/>
+                    <lan ref="65a0e960-e03d-464d-a3d8-103beb275215"/>
+                    <ip_config/>
+                </local-network>
+                <local-network id="62294798-52dd-43fa-bd76-96ee475a2e27">
+                    <name>p2p1</name>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620329</linkEpoch>
+                    <device ref="4da5266a-dc8f-43bf-83a9-dabc0fc85c3a"/>
+                    <lan ref="e213e963-0c6b-4650-89e6-0a855f7c5d14"/>
+                    <ip_config/>
+                </local-network>
+                <local-network id="65965af8-e228-4376-ab64-527907c936b4">
+                    <name>priv0</name>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620319</linkEpoch>
+                    <device ref="92c0b47a-b28f-46a8-b2a6-fa3f21c25d9f"/>
+                    <lan ref="78760342-370c-4c83-8a6c-2b9f90484cfb"/>
+                    <ip_config>
+                        <address family="ipv4" prefix="16">169.254.88.201</address>
+                        <dns_servers/>
+                    </ip_config>
+                </local-network>
+                <local-network id="d6976248-8d28-44d1-8d01-cce2dcf04c50">
+                    <name>ibiz0</name>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620324</linkEpoch>
+                    <link-condition>healthy</link-condition>
+                    <device ref="49a3016b-4585-4b1c-8771-08c04efbc617"/>
+                    <lan ref="65b13bc7-1255-40a3-b2b4-41ab8e15247b"/>
+                    <ip_config>
+                        <protocol>dhcp</protocol>
+                        <address family="ipv4" prefix="16">10.86.4.97</address>
+                        <address family="ipv4" prefix="16">10.86.4.96</address>
+                        <gateway family="ipv4">10.86.0.1</gateway>
+                        <dns_servers>
+                            <dns_server family="ipv4">134.111.24.248</dns_server>
+                            <dns_server family="ipv4">134.111.24.254</dns_server>
+                        </dns_servers>
+                    </ip_config>
+                </local-network>
+            </networks>
+            <virtual-machines>
+                <virtual-machine id="a3f9d830-28fe-4d87-834b-30a1bb4abf33">
+                    <name>greece1</name>
+                    <mode>duplex</mode>
+                    <state>running</state>
+                    <state-reason>running</state-reason>
+                    <active-state>true</active-state>
+                    <enabled>true</enabled>
+                    <memory>2062</memory>
+                    <vcpus>1</vcpus>
+                    <availability>FT</availability>
+                    <quorumServerPrimary>8d6f9e78-be1a-4a9e-9a38-7f77c9961171</quorumServerPrimary>
+                    <quorumServerSecondary/>
+                    <quorumServerPrimaryReachable>true</quorumServerPrimaryReachable>
+                    <quorumServerSecondaryReachable>false</quorumServerSecondaryReachable>
+                    <config-vhost-net>true</config-vhost-net>
+                    <disable-vhost-net/>
+                    <protected-virtual-machine ref="06a43cf3-b46d-4e3a-8f47-79ca115a9dd1"/>
+                    <pvm-ax-state>Degraded</pvm-ax-state>
+                </virtual-machine>
+                <virtual-machine id="30e0dd7b-40ec-41c5-8942-af9003b045d1">
+                    <name>greece2</name>
+                    <mode>duplex</mode>
+                    <state>running</state>
+                    <state-reason>running</state-reason>
+                    <active-state>false</active-state>
+                    <enabled>true</enabled>
+                    <memory>2774</memory>
+                    <vcpus>2</vcpus>
+                    <availability>HA</availability>
+                    <quorumServerPrimary>8d6f9e78-be1a-4a9e-9a38-7f77c9961171</quorumServerPrimary>
+                    <quorumServerSecondary/>
+                    <quorumServerPrimaryReachable>true</quorumServerPrimaryReachable>
+                    <quorumServerSecondaryReachable>false</quorumServerSecondaryReachable>
+                    <config-vhost-net>true</config-vhost-net>
+                    <disable-vhost-net/>
+                    <protected-virtual-machine ref="0784a272-1b92-48cc-ae6f-be43864681f5"/>
+                    <pvm-ax-state>Degraded</pvm-ax-state>
+                </virtual-machine>
+            </virtual-machines>
+            <devices>
+                <chassis id="ad77bdc0-6a16-42da-b9eb-c1ed10617d2c">
+                    <status>normal</status>
+                    <vendor>Dell Inc.</vendor>
+                    <model>PowerEdge T310</model>
+                    <serialNumber>3CG71L1</serialNumber>
+                </chassis>
+                <processor id="77e2aa4e-5fd5-49c4-8b7a-01cf87e4103e">
+                    <status>normal</status>
+                    <index>0</index>
+                    <family>6</family>
+                    <model>30</model>
+                    <modelname>Intel(R) Xeon(R) CPU X3440 @ 2.53GHz</modelname>
+                </processor>
+                <card id="2e4cff08-3f02-4a8e-a9d8-f23a4d218faf">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="4511e9ef-642f-4397-a3b5-ea48c82abfd1">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="82e03bfd-eed8-43b1-959a-493a9c04341a">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="dd010b5c-6214-4ac4-9881-407828a53664">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <port id="49a3016b-4585-4b1c-8771-08c04efbc617">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:26:b9:2a:a9:17</address>
+                    <mtu>1500</mtu>
+                    <device>ibiz0</device>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <card ref="4511e9ef-642f-4397-a3b5-ea48c82abfd1"/>
+                    <slot>0</slot>
+                    <port>2</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="4da5266a-dc8f-43bf-83a9-dabc0fc85c3a">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:10:18:98:3d:7c</address>
+                    <mtu>1500</mtu>
+                    <device>p2p1</device>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <card ref="82e03bfd-eed8-43b1-959a-493a9c04341a"/>
+                    <slot>2</slot>
+                    <port>1</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="163ced6e-8329-413f-8f4f-b2597e79e63d">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:10:18:98:3d:7e</address>
+                    <mtu>1500</mtu>
+                    <device>p2p2</device>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <card ref="dd010b5c-6214-4ac4-9881-407828a53664"/>
+                    <slot>2</slot>
+                    <port>2</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="92c0b47a-b28f-46a8-b2a6-fa3f21c25d9f">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:26:b9:2a:a9:16</address>
+                    <mtu>1500</mtu>
+                    <device>priv0</device>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <card ref="2e4cff08-3f02-4a8e-a9d8-f23a4d218faf"/>
+                    <slot>0</slot>
+                    <port>1</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+            </devices>
+            <storage-devices>
+                <storage-controllers>
+                    <storage-controller id='2dac25a1-0c7c-4590-a2e5-bfbb15704593'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller rev -r05</name>
+                        <type>USB controller</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset USB2 Enhanced Host Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>unknown</driver-rev>
+                        <driver-name>ehci-pci</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <removable-disks/>
+                    </storage-controller>
+                    <storage-controller id='2638ebc9-ac00-45b5-bc02-92431c3f544c'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller rev -r05</name>
+                        <type>USB controller</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset USB2 Enhanced Host Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>unknown</driver-rev>
+                        <driver-name>ehci-pci</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <removable-disks/>
+                    </storage-controller>
+                    <storage-controller id='214c702f-7b7b-4683-ac18-0b32e1f1f366'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset 4 port SATA IDE Controller rev -r05</name>
+                        <type>IDE interface</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset 4 port SATA IDE Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>2.13</driver-rev>
+                        <driver-name>ata_piix</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='42136b57-f2e4-42d6-8335-79b19929c999'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset 2 port SATA IDE Controller rev -r05</name>
+                        <type>IDE interface</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset 2 port SATA IDE Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>2.13</driver-rev>
+                        <driver-name>ata_piix</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='f08c1098-f790-4153-a2e2-a0a6f0c45a61'>
+                        <name>LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] rev -r02</name>
+                        <type>Serial Attached SCSI controller</type>
+                        <status>normal</status>
+                        <vendor>LSI Logic / Symbios Logic</vendor>
+                        <model>SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon]</model>
+                        <hw-rev>-r02</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>20.103.00.00</driver-rev>
+                        <driver-name>mpt2sas</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks>
+                            <logical-disk id='e264cdf7-772d-4502-80cf-e814912ff7c8' uuid='e264cdf7-772d-4502-80cf-e814912ff7c8'>
+                                <name>Logical Disk - 0</name>
+                                <device-number>0</device-number>
+                                <status>normal</status>
+                                <system-disk>true</system-disk>
+                                <status-epoch>1535510424</status-epoch>
+                                <device-path>/dev/sda</device-path>
+                                <vendor-status/>
+                                <vendor-state/>
+                                <size>159450660864</size>
+                                <phys-sector-size>512</phys-sector-size>
+                                <partitions>sda1,sda2,sda4</partitions>
+                                <data-partition>/dev/sda4</data-partition>
+                                <part-table>gpt</part-table>
+                                <is-foreign>false</is-foreign>
+                                <scsi-id>3600508e00000000073738af26fce940b</scsi-id>
+                                <logical-size>158393696256</logical-size>
+                            </logical-disk>
+                            <internal-path id='6e472fc9-19b6-41bd-81f5-17e9a74af24a'>
+                                <logical-disk ref='3600508e00000000073738af26fce940b'/>
+                            </internal-path>
+                            <logical-disk id='3290d3ac-86da-493c-a69b-c1e69aaaf160' uuid='3290d3ac-86da-493c-a69b-c1e69aaaf160'>
+                                <name>Logical Disk - 1</name>
+                                <device-number>1</device-number>
+                                <status>normal</status>
+                                <system-disk>true</system-disk>
+                                <status-epoch>1535510424</status-epoch>
+                                <device-path>/dev/sdb</device-path>
+                                <vendor-status/>
+                                <vendor-state/>
+                                <size>159450660864</size>
+                                <phys-sector-size>512</phys-sector-size>
+                                <partitions>sdb1,sdb2,sdb4</partitions>
+                                <data-partition>/dev/sdb4</data-partition>
+                                <part-table>gpt</part-table>
+                                <is-foreign>false</is-foreign>
+                                <scsi-id>3600508e000000000bf236af7fb1eb507</scsi-id>
+                                <logical-size>158393696256</logical-size>
+                            </logical-disk>
+                            <internal-path id='0fa8a2f8-d100-48ac-8319-1e9ec25344a2'>
+                                <logical-disk ref='3600508e000000000bf236af7fb1eb507'/>
+                            </internal-path>
+                        </logical-disks>
+                    </storage-controller>
+                    <storage-controller id='f32c6dc3-7720-424b-8c08-0cff4df25e49'>
+                        <name>Software iSCSI Initiator</name>
+                        <type>Software iSCSI Initiator</type>
+                        <status>normal</status>
+                        <vendor/>
+                        <model/>
+                        <hw-rev/>
+                        <firmware-rev/>
+                        <driver-rev/>
+                        <driver-name/>
+                        <vendor-state/>
+                        <vendor-status/>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='8a9277d2-2d4f-4a56-80d2-eae8891ccc60'>
+                        <name>Device Mapper Multipath</name>
+                        <type>Device Mapper Multipath</type>
+                        <status>normal</status>
+                        <vendor/>
+                        <model/>
+                        <hw-rev/>
+                        <firmware-rev/>
+                        <driver-rev/>
+                        <driver-name/>
+                        <vendor-state/>
+                        <vendor-status/>
+                        <logical-disks/>
+                    </storage-controller>
+                </storage-controllers>
+                <volume-groups>
+                    <volume-group id='Lk5hj5-oHyt-yAQA-Guv9-eEQu-NzXZ-iivtlr'>
+                        <name>everrun</name>
+                        <is-activated>true</is-activated>
+                        <physical-volume id='BD3kgn-Kxyj-x828-yFnt-Zu0C-2dKR-4S3Ozb'>
+                            <device-name>/dev/sda4</device-name>
+                        </physical-volume>
+                        <physical-volume id='HMTtoi-jOaD-cC5F-X2sg-jx2e-Plc7-Q1b8Q7'>
+                            <device-name>/dev/sdb4</device-name>
+                        </physical-volume>
+                    </volume-group>
+                </volume-groups>
+            </storage-devices>
+            <storage>
+                <local-image-container id="e47e7c7d-8daa-40f4-9574-29e6f0753a42">
+                    <image-container ref="1e361b99-a430-40ed-96d7-df5b0cff8027"/>
+                    <name>datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node0</name>
+                    <path>/mnt/everrun/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>645988352</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <image-container id="0f86a82f-3a72-4481-8530-d42ef37102c2">
+                    <name>diagdata</name>
+                    <size>8594128896</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <disk-image id="3ceeb562-32a9-49ed-898e-e9f96195d6af">
+                    <local-image-container ref="fa8d0c0a-7f02-436f-b977-e29c9ae11ad2"/>
+                    <volume>c943e9d3-6ec3-4cff-99e6-55c353ffab2b</volume>
+                    <path>/mnt/everrun/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node0/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_b1eef280-22a6-4012-89cc-5c1b8b987764</path>
+                    <size>2326097920</size>
+                    <virtual-size>17179869184</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517351197</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_b1eef280-22a6-4012-89cc-5c1b8b987764</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="59a0b745-7125-4c46-a60a-43516489ff52">
+                    <image-container ref="0f86a82f-3a72-4481-8530-d42ef37102c2"/>
+                    <name>diagdata_rimage_0</name>
+                    <path>/dev/everrun/diagdata_rimage_0</path>
+                    <device-size>8594128896</device-size>
+                    <logical-size>8594128896</logical-size>
+                    <used-size>8594128896</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="e2dc9e6c-3b4b-466d-ad3f-07aead602837">
+                    <local-image-container ref="fa8d0c0a-7f02-436f-b977-e29c9ae11ad2"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>18295554048</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="11677536-2da0-4ed3-ac66-88db2b309411">
+                    <local-image-container ref="59a0b745-7125-4c46-a60a-43516489ff52"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>8594128896</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="cdd7d2df-8d20-4d86-b00d-677b1b739edb">
+                    <local-image-container ref="e47e7c7d-8daa-40f4-9574-29e6f0753a42"/>
+                    <volume>30a9ff5e-8a0d-4906-84c2-9632330166a5</volume>
+                    <path>/mnt/everrun/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node0/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_a5618a4a-3623-45c7-9385-b31e915c054a</path>
+                    <size>612245504</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535518005390</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece22_5a56118f-719b-4905-9542-c250839d8b60_a5618a4a-3623-45c7-9385-b31e915c054a</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <disk-image id="4326f14a-45b4-43ce-9308-485b963b1694">
+                    <local-image-container ref="59a0b745-7125-4c46-a60a-43516489ff52"/>
+                    <volume>053407ff-6d5a-452e-9739-4a533893d34a</volume>
+                    <path>/dev/everrun/diagdata_rimage_0</path>
+                    <size>8594128896</size>
+                    <virtual-size>8594128896</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512595376</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>diagdata</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="822bb1b2-b646-4a64-a492-f37d7bb65296">
+                    <local-image-container ref="6b2265d0-3193-4aff-8b98-a37f854b6fd0"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>18295554048</size>
+                </local-image-container-logical-disk-association>
+                <unity-volume id="053407ff-6d5a-452e-9739-4a533893d34a">
+                    <image-container ref="0f86a82f-3a72-4481-8530-d42ef37102c2"/>
+                    <name>diagdata</name>
+                    <size>8594128896</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535512595373</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <disk-image id="77bd52d9-fcea-460e-bc43-329eaa2b021b">
+                    <local-image-container ref="6b2265d0-3193-4aff-8b98-a37f854b6fd0"/>
+                    <volume>31590c23-743d-4770-84c7-b6e176c1a1d3</volume>
+                    <path>/mnt/everrun/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node0/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_f0c314f1-0c1c-4955-8835-d4f144c9a348</path>
+                    <size>3082940416</size>
+                    <virtual-size>17179869184</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517979265</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_f0c314f1-0c1c-4955-8835-d4f144c9a348</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <image-container id="cce7ceae-23ed-4636-bc7f-b1af6d41f8eb">
+                    <name>root</name>
+                    <size>21479030784</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <local-image-container id="0b73322c-933a-4787-ab1e-1b9c1e6dd0e6">
+                    <image-container ref="2846c28c-0063-40aa-a9c6-d6a1500dc6ce"/>
+                    <name>datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node0</name>
+                    <path>/mnt/everrun/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>469368832</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container id="20c7e6e3-7ca9-48a0-bdb9-1fca1ddbb4ed">
+                    <image-container ref="cce7ceae-23ed-4636-bc7f-b1af6d41f8eb"/>
+                    <name>root_rimage_0</name>
+                    <path>/dev/everrun/root_rimage_0</path>
+                    <device-size>21479030784</device-size>
+                    <logical-size>21479030784</logical-size>
+                    <used-size>21479030784</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="dc488b96-e015-4b74-9af9-6329650df5e5">
+                    <local-image-container ref="0b73322c-933a-4787-ab1e-1b9c1e6dd0e6"/>
+                    <volume>977aaa1f-38a1-42ba-a51b-ff50a1f55cc6</volume>
+                    <path>/mnt/everrun/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node0/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_d65c663b-0058-406e-b5f8-4dd01991dd8f</path>
+                    <size>435625984</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517372361</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_d65c663b-0058-406e-b5f8-4dd01991dd8f</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="082c5221-1458-4416-80c4-25e045ada38f">
+                    <local-image-container ref="20c7e6e3-7ca9-48a0-bdb9-1fca1ddbb4ed"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>21479030784</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="a2e71e86-b31d-4e7b-bef4-ae3deef87315">
+                    <local-image-container ref="e47e7c7d-8daa-40f4-9574-29e6f0753a42"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="af7bfa7d-ba45-4d84-8051-e399e17bc401">
+                    <local-image-container ref="20c7e6e3-7ca9-48a0-bdb9-1fca1ddbb4ed"/>
+                    <volume>40951aae-55c9-46aa-9593-d6a7dc90b00e</volume>
+                    <path>/dev/everrun/root_rimage_0</path>
+                    <size>21479030784</size>
+                    <virtual-size>21479030784</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535513439222</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>root</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="b4f7de9d-3e44-4df0-9998-cab2ccc0a53b">
+                    <local-image-container ref="0b73322c-933a-4787-ab1e-1b9c1e6dd0e6"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <unity-volume id="40951aae-55c9-46aa-9593-d6a7dc90b00e">
+                    <image-container ref="cce7ceae-23ed-4636-bc7f-b1af6d41f8eb"/>
+                    <name>root</name>
+                    <size>21479030784</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535513439219</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <local-image-container id="0f01741c-f3d4-421e-814d-35d9e6e18d1a">
+                    <image-container ref="46f1a258-ba3a-479d-ace7-76ef608ccc30"/>
+                    <name>datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node0</name>
+                    <path>/mnt/everrun/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>465920000</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <image-container id="30294ce2-7504-4246-ae6b-683d28d08771">
+                    <name>swap</name>
+                    <size>2151677952</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <local-image-container id="7aa3963e-3f58-4d4d-a692-269d3371ef80">
+                    <image-container ref="30294ce2-7504-4246-ae6b-683d28d08771"/>
+                    <name>swap_rimage_0</name>
+                    <path>/dev/everrun/swap_rimage_0</path>
+                    <device-size>2151677952</device-size>
+                    <logical-size>2151677952</logical-size>
+                    <used-size>2151677952</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="fe61ed31-4846-40c9-b231-a5ca66308b0f">
+                    <local-image-container ref="7aa3963e-3f58-4d4d-a692-269d3371ef80"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>2151677952</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="8f8f81f2-1e48-412a-9b16-fbd661596f36">
+                    <image-container ref="72a3ff6f-5fde-408b-9a57-f470c79b664a"/>
+                    <name>datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node0</name>
+                    <path>/mnt/everrun/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253845504</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="ed80e00b-b08c-4804-be7e-76006bf77f9d">
+                    <local-image-container ref="7aa3963e-3f58-4d4d-a692-269d3371ef80"/>
+                    <volume>3668b56c-bae0-4ac3-a23f-43aa2ac209f4</volume>
+                    <path>/dev/everrun/swap_rimage_0</path>
+                    <size>2151677952</size>
+                    <virtual-size>2151677952</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512171781</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>swap</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="49ce150f-3b99-4d29-8e71-99acdc8e5670">
+                    <local-image-container ref="0f01741c-f3d4-421e-814d-35d9e6e18d1a"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <unity-volume id="3668b56c-bae0-4ac3-a23f-43aa2ac209f4">
+                    <image-container ref="30294ce2-7504-4246-ae6b-683d28d08771"/>
+                    <name>swap</name>
+                    <size>2151677952</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535512171777</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <disk-image id="2db5026f-b54b-498d-a553-8f5b401ddaf3">
+                    <local-image-container ref="0f01741c-f3d4-421e-814d-35d9e6e18d1a"/>
+                    <volume>28a56488-b0b0-4b01-af18-6e895a94b478</volume>
+                    <path>/mnt/everrun/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node0/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_fda0a8bc-bbae-4c02-8edb-1b6ea24e575a</path>
+                    <size>432177152</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517369269</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_fda0a8bc-bbae-4c02-8edb-1b6ea24e575a</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="94f5a51d-85ee-4225-8990-4af37e8c45c9">
+                    <image-container ref="89dd2c7b-22cd-4c9f-a06a-6c316c012e31"/>
+                    <name>shared.fs</name>
+                    <path>/dev/everrun/shared.fs</path>
+                    <device-size>1073741824</device-size>
+                    <logical-size>1073741824</logical-size>
+                    <used-size>1073741824</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="9d558b09-97fe-401a-9e9e-9eeb7e4e4fd3">
+                    <local-image-container ref="94f5a51d-85ee-4225-8990-4af37e8c45c9"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>1073741824</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="8d676d66-f2cb-47ea-9e88-c9d499daa25f">
+                    <local-image-container ref="8f8f81f2-1e48-412a-9b16-fbd661596f36"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="d5a9d9f7-4b3a-4f86-b82f-834857e4ce3a">
+                    <local-image-container ref="94f5a51d-85ee-4225-8990-4af37e8c45c9"/>
+                    <volume>c9223b67-21da-40ab-bc31-836ebff75eed</volume>
+                    <path>/dev/everrun/shared.fs</path>
+                    <size>1073741824</size>
+                    <virtual-size>1073741824</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535510467830</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>shared.fs</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <disk-image id="527cbee0-ccc5-4e15-b768-89a79d8dac03">
+                    <local-image-container ref="8f8f81f2-1e48-412a-9b16-fbd661596f36"/>
+                    <volume>83bac6c5-02bb-4e65-89f6-d9a6cc838fc6</volume>
+                    <path>/mnt/everrun/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node0/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_c872f913-6ed9-403a-a203-734cf9e88c02</path>
+                    <size>220102656</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517996340</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_c872f913-6ed9-403a-a203-734cf9e88c02</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="30ce81c7-5da0-45ea-b491-40c7ca98712f">
+                    <image-container ref="0f86a82f-3a72-4481-8530-d42ef37102c2"/>
+                    <name>diagdata_rimage_1</name>
+                    <path>/dev/everrun/diagdata_rimage_1</path>
+                    <device-size>8594128896</device-size>
+                    <logical-size>8594128896</logical-size>
+                    <used-size>8594128896</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container id="45d3f061-9645-449d-9739-5dd575583320">
+                    <image-container ref="8cde439c-facc-4643-8643-32d2ea572664"/>
+                    <name>datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node0</name>
+                    <path>/mnt/everrun/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253845504</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="1e76fb3d-d689-4044-8890-ef57b92963b2">
+                    <local-image-container ref="30ce81c7-5da0-45ea-b491-40c7ca98712f"/>
+                    <volume>053407ff-6d5a-452e-9739-4a533893d34a</volume>
+                    <path>/dev/everrun/diagdata_rimage_1</path>
+                    <size>8594128896</size>
+                    <virtual-size>8594128896</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512595378</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>diagdata_6eb3e77b-2383-4d54-b81f-7fb863b325a1</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="0c4337ba-dab0-4cd6-823e-9577c4b9c672">
+                    <local-image-container ref="45d3f061-9645-449d-9739-5dd575583320"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="0f2c4101-6fe0-4b9e-be51-51dcd2a2f5b7">
+                    <local-image-container ref="30ce81c7-5da0-45ea-b491-40c7ca98712f"/>
+                    <logical-disk ref="3290d3ac-86da-493c-a69b-c1e69aaaf160"/>
+                    <size>8594128896</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="16a92368-6ad2-4bf9-8f66-9017ca149763">
+                    <local-image-container ref="45d3f061-9645-449d-9739-5dd575583320"/>
+                    <volume>70ad9419-a951-4dd2-9062-f4172f99546e</volume>
+                    <path>/mnt/everrun/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node0/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_9bc3fa6a-fa34-4238-9d10-0dfc68f632ac</path>
+                    <size>220102656</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517999355</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_9bc3fa6a-fa34-4238-9d10-0dfc68f632ac</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="bb3bfc1d-0372-4c47-a91e-5cec02995658">
+                    <image-container ref="30294ce2-7504-4246-ae6b-683d28d08771"/>
+                    <name>swap_rimage_1</name>
+                    <path>/dev/everrun/swap_rimage_1</path>
+                    <device-size>2151677952</device-size>
+                    <logical-size>2151677952</logical-size>
+                    <used-size>2151677952</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container id="2475e27f-7201-47c3-a244-ed7b5fffb1f3">
+                    <image-container ref="6fc22d94-6a81-4573-8def-c2f448358da0"/>
+                    <name>datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node0</name>
+                    <path>/mnt/everrun/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node0</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253841408</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="d86abe52-90fe-4ae7-aa5a-a56b62dcf4c6">
+                    <local-image-container ref="bb3bfc1d-0372-4c47-a91e-5cec02995658"/>
+                    <volume>3668b56c-bae0-4ac3-a23f-43aa2ac209f4</volume>
+                    <path>/dev/everrun/swap_rimage_1</path>
+                    <size>2151677952</size>
+                    <virtual-size>2151677952</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512171784</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>swap_d74579c7-7e57-43b0-908c-8805736fcc5e</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="29fe2695-5a95-41f3-9ba6-9d466f124d38">
+                    <local-image-container ref="2475e27f-7201-47c3-a244-ed7b5fffb1f3"/>
+                    <logical-disk ref="e264cdf7-772d-4502-80cf-e814912ff7c8"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="394fa951-2ca6-4e7a-8851-9ead912c0b56">
+                    <local-image-container ref="bb3bfc1d-0372-4c47-a91e-5cec02995658"/>
+                    <logical-disk ref="3290d3ac-86da-493c-a69b-c1e69aaaf160"/>
+                    <size>2151677952</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="7e7fa2c8-fdb9-4c09-b3d3-fdcfe5d2e251">
+                    <local-image-container ref="2475e27f-7201-47c3-a244-ed7b5fffb1f3"/>
+                    <volume>2fa60a5f-3275-427b-9f96-59774a6fa3c8</volume>
+                    <path>/mnt/everrun/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node0/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_ae2c6978-806c-40f8-bc4d-4f22ccf566ce</path>
+                    <size>220098560</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535518002375</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_ae2c6978-806c-40f8-bc4d-4f22ccf566ce</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="55e69268-ebe0-43fe-82ef-4a12770ae984">
+                    <image-container ref="cce7ceae-23ed-4636-bc7f-b1af6d41f8eb"/>
+                    <name>root_rimage_1</name>
+                    <path>/dev/everrun/root_rimage_1</path>
+                    <device-size>21479030784</device-size>
+                    <logical-size>21479030784</logical-size>
+                    <used-size>21479030784</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="06aed68d-df53-4fe3-8ace-108f6dc9e127">
+                    <local-image-container ref="55e69268-ebe0-43fe-82ef-4a12770ae984"/>
+                    <volume>40951aae-55c9-46aa-9593-d6a7dc90b00e</volume>
+                    <path>/dev/everrun/root_rimage_1</path>
+                    <size>21479030784</size>
+                    <virtual-size>21479030784</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535513439224</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>root_e9ee16f3-d09d-428a-a68b-f1ec78ae7b38</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="553471eb-7e7a-4df0-a935-3579d4a5333b">
+                    <local-image-container ref="55e69268-ebe0-43fe-82ef-4a12770ae984"/>
+                    <logical-disk ref="3290d3ac-86da-493c-a69b-c1e69aaaf160"/>
+                    <size>21479030784</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="fa8d0c0a-7f02-436f-b977-e29c9ae11ad2">
+                    <image-container ref="0522f4d0-68e2-49ec-b1f0-10956ca5ecc7"/>
+                    <name>rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node0</name>
+                    <path>/mnt/everrun/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node0</path>
+                    <device-size>18295554048</device-size>
+                    <logical-size>18285068288</logical-size>
+                    <used-size>2359840768</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container id="6b2265d0-3193-4aff-8b98-a37f854b6fd0">
+                    <image-container ref="064e1904-cd40-4435-a777-0ea6e4b6ab3d"/>
+                    <name>rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node0</name>
+                    <path>/mnt/everrun/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node0</path>
+                    <device-size>18295554048</device-size>
+                    <logical-size>18285068288</logical-size>
+                    <used-size>3116683264</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+            </storage>
+        </node>
+        <node id="ec9029bc-9206-4691-81d7-fdfa12401803" primary="false">
+            <name>node1</name>
+            <state>running</state>
+            <cluster ref="1a50c2fa-226d-4cdc-9308-1523c54aafe1"/>
+            <version build='30' distro='0' maint='0' major='7' minor='6' num='1976921906741278' patch='0' ztcRelease='1.3.0-30'>7.6.0-30</version>
+            <membership>full</membership>
+            <kit ref="ee08f945-798c-4bf3-bfbc-e5440e2c10b0"/>
+            <platform_variant>everRun</platform_variant>
+            <spectre-v2-enabled>false</spectre-v2-enabled>
+            <meltdown-enabled>true</meltdown-enabled>
+            <hmr-events/>
+            <manufacturer enum="unknown">Dell Inc.</manufacturer>
+            <model enum="unknown">PowerEdge T310</model>
+            <serial>4CG71L1</serial>
+            <bios>
+                <nx/>
+                <vmx/>
+                <vapic_secondary_exec/>
+            </bios>
+            <led-state>on</led-state>
+            <system-healthcheck>
+                <base>5t4t5w9t3x1tby6v5vfz2wbxcwbs8w3t5u5yfz3z1s4w5t3w1w0saz4z8vcuct0t</base>
+                <bios>4w1s1vcz5s0xcvasdv8z6sft1w8t0v1u6t3s1v9s8u6z2sas5t5t1yavbt0s5ufx</bios>
+                <chassis>3u9vby8z8ycs2w8s0tazcvfvauav4sdt4xdw7z2v9vfzcv4s9tas5wdzcy5y5z4v</chassis>
+                <disk>8w7v4s2t0x8x0v8s3ucsdw7sbwfw2t4yby6x4tbwdt9t0u2wcw7x6z1x0s4u1tdt</disk>
+                <memory/>
+                <network>ez5y6ufv5z2vdu4v3zeycu0yfu8v3z1v7u4v8u2v3zby2u5v9u2y6u0v2u9y9u6v</network>
+                <os>ax9s1x2yaucz8zaydz6vetfsat3v4ybu6v8v2y1v9xesfsav6u4uezevez4y2tbx</os>
+                <proc-fid>0tew1tew8x9t2ydz8uev7wbsewcs8t2w0uezbv6v2set4w4wct3s9zdvbzcvfw2t</proc-fid>
+                <proc>atdtesfs9sdtcx6udzeuayfx8w9t7s0w8w3t0vcz0v1y4wbtax7t7w0xfw8z8z8u</proc>
+                <prod>0uby0v4zbv6u6v2vau9uevbvdyczez4veudz1uazdv2u1z5v7v0ybzfzav0y5uey</prod>
+                <quorum>3t6sbu1v2t1s5x5v1w4s5y1tdt7s0zbzbs6xdy0ucxftfx2s4s0s6v9v4scyby1u</quorum>
+                <snap>awcxey6ufw1y5u6u3sazds5tbtet8scsdu5y0s6s3u6z9sfy4vcybxcv7sds4t5s</snap>
+                <status>3v6y5x2y5s8xftdtbu9sfvdzcsds1ydv1t9w1u7vdt3y3t5xds2x0u8tevev2xew</status>
+                <version>ax0way1v1xdw4v7scvfz6t4s9t1s2u1vcv3x5s8s5v1y3s4wfs1xdx0v9ses4sat</version>
+            </system-healthcheck>
+            <pxe-services-running/>
+            <boot_time>1535509687</boot_time>
+            <boot_count>1</boot_count>
+            <graceful_reboot>true</graceful_reboot>
+            <connectivity>good</connectivity>
+            <mode>duplex</mode>
+            <upgrade_state/>
+            <bmc>
+                <dedicated>true</dedicated>
+                <connectivity>none</connectivity>
+                <available>false</available>
+            </bmc>
+            <memory unit="bytes">8579448832</memory>
+            <cpu_socket_count>1</cpu_socket_count>
+            <dom0_memory unit="MB" actual="2048" desired="1024" default="2048" min="768"/>
+            <dom0_pinned>true</dom0_pinned>
+            <dom0_vcpus actual="2" desired="2" min="2" max="8"/>
+            <max_interfaces_per_domain>9999</max_interfaces_per_domain>
+            <max_memory_per_domain unit="MB">1073741824</max_memory_per_domain>
+            <max_volumes_per_domain>9999</max_volumes_per_domain>
+            <min_memory_per_domain unit="MB">1</min_memory_per_domain>
+            <total_cpu_sockets>1</total_cpu_sockets>
+            <total_dom0_vcpus>2</total_dom0_vcpus>
+            <total_guest_interfaces>64</total_guest_interfaces>
+            <total_guest_memory unit="MB" actual="5927" desired="6943" default="5927" max="7197">5927</total_guest_memory>
+            <total_hardware_threads_for_vcpus>8</total_hardware_threads_for_vcpus>
+            <total_shared_storage_regions>9999</total_shared_storage_regions>
+            <total_vcpus>8</total_vcpus>
+            <sensors/>
+            <networks>
+                <local-network id="108e50cf-aa1f-4188-a134-5146e38584cc">
+                    <name>ibiz0</name>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620332</linkEpoch>
+                    <link-condition>healthy</link-condition>
+                    <device ref="3aa37f0b-385c-4b08-b963-d9ca729ca56e"/>
+                    <lan ref="65b13bc7-1255-40a3-b2b4-41ab8e15247b"/>
+                    <ip_config>
+                        <protocol>dhcp</protocol>
+                        <address family="ipv4" prefix="16">10.86.4.98</address>
+                        <gateway family="ipv4">10.86.0.1</gateway>
+                        <dns_servers>
+                            <dns_server family="ipv4">134.111.24.248</dns_server>
+                            <dns_server family="ipv4">134.111.24.254</dns_server>
+                        </dns_servers>
+                    </ip_config>
+                </local-network>
+                <local-network id="292e842d-2124-41ec-89ba-a0232889da47">
+                    <name>p3p1</name>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620337</linkEpoch>
+                    <device ref="3afec789-7298-43ce-bd63-07a58bb5c43e"/>
+                    <lan ref="e213e963-0c6b-4650-89e6-0a855f7c5d14"/>
+                    <ip_config/>
+                </local-network>
+                <local-network id="332dc3be-06d6-4ca8-907e-8bd6857dee23">
+                    <name>p3p2</name>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620342</linkEpoch>
+                    <device ref="c977477b-e05f-4804-a030-06b7f1ea7e3e"/>
+                    <lan ref="65a0e960-e03d-464d-a3d8-103beb275215"/>
+                    <ip_config/>
+                </local-network>
+                <local-network id="470d0736-e0cf-460e-aee5-21ca72827775">
+                    <name>priv0</name>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <mtu>1500</mtu>
+                    <connectivity>good</connectivity>
+                    <linkEpoch>1535620327</linkEpoch>
+                    <device ref="cb158ec7-380a-4611-a287-ade11590636f"/>
+                    <lan ref="78760342-370c-4c83-8a6c-2b9f90484cfb"/>
+                    <ip_config>
+                        <address family="ipv4" prefix="16">169.254.174.166</address>
+                        <dns_servers/>
+                    </ip_config>
+                </local-network>
+            </networks>
+            <virtual-machines>
+                <virtual-machine id="bdd8c6fa-615c-4205-a20f-c7020eb88a5b">
+                    <name>greece1</name>
+                    <mode>duplex</mode>
+                    <state>running</state>
+                    <state-reason>running</state-reason>
+                    <active-state>false</active-state>
+                    <enabled>true</enabled>
+                    <memory>2062</memory>
+                    <vcpus>1</vcpus>
+                    <availability>FT</availability>
+                    <quorumServerPrimary>8d6f9e78-be1a-4a9e-9a38-7f77c9961171</quorumServerPrimary>
+                    <quorumServerSecondary/>
+                    <quorumServerPrimaryReachable>true</quorumServerPrimaryReachable>
+                    <quorumServerSecondaryReachable>false</quorumServerSecondaryReachable>
+                    <config-vhost-net>true</config-vhost-net>
+                    <disable-vhost-net/>
+                    <protected-virtual-machine ref="06a43cf3-b46d-4e3a-8f47-79ca115a9dd1"/>
+                    <pvm-ax-state>Degraded</pvm-ax-state>
+                </virtual-machine>
+                <virtual-machine id="281f4d5e-aa02-4a9a-9bab-15681f23ee76">
+                    <name>greece2</name>
+                    <mode>duplex</mode>
+                    <state>running</state>
+                    <state-reason>running</state-reason>
+                    <active-state>true</active-state>
+                    <enabled>true</enabled>
+                    <memory>2774</memory>
+                    <vcpus>2</vcpus>
+                    <availability>HA</availability>
+                    <quorumServerPrimary>8d6f9e78-be1a-4a9e-9a38-7f77c9961171</quorumServerPrimary>
+                    <quorumServerSecondary/>
+                    <quorumServerPrimaryReachable>true</quorumServerPrimaryReachable>
+                    <quorumServerSecondaryReachable>false</quorumServerSecondaryReachable>
+                    <config-vhost-net>true</config-vhost-net>
+                    <disable-vhost-net/>
+                    <protected-virtual-machine ref="0784a272-1b92-48cc-ae6f-be43864681f5"/>
+                    <pvm-ax-state>Degraded</pvm-ax-state>
+                </virtual-machine>
+            </virtual-machines>
+            <devices>
+                <chassis id="0beb4473-1b3f-4f03-9414-37b0446a9794">
+                    <status>normal</status>
+                    <vendor>Dell Inc.</vendor>
+                    <model>PowerEdge T310</model>
+                    <serialNumber>4CG71L1</serialNumber>
+                </chassis>
+                <processor id="168656e3-f16b-4539-bb81-6558dbdee49d">
+                    <status>normal</status>
+                    <index>0</index>
+                    <family>6</family>
+                    <model>30</model>
+                    <modelname>Intel(R) Xeon(R) CPU X3440 @ 2.53GHz</modelname>
+                </processor>
+                <card id="22cf6821-24e4-4088-813c-0082c3148982">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="3c73fb37-e9ac-433f-a822-ed7056fab62e">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="0ce4648c-46b2-48a9-9239-cb1f70cb08d2">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <card id="e09594cf-7078-4bbe-b153-495e593c5e5b">
+                    <status>normal</status>
+                    <vendor/>
+                    <model/>
+                </card>
+                <port id="3aa37f0b-385c-4b08-b963-d9ca729ca56e">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:26:b9:35:9d:f8</address>
+                    <mtu>1500</mtu>
+                    <device>ibiz0</device>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <card ref="3c73fb37-e9ac-433f-a822-ed7056fab62e"/>
+                    <slot>0</slot>
+                    <port>2</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="3afec789-7298-43ce-bd63-07a58bb5c43e">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:10:18:98:2f:60</address>
+                    <mtu>1500</mtu>
+                    <device>p3p1</device>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <card ref="0ce4648c-46b2-48a9-9239-cb1f70cb08d2"/>
+                    <slot>3</slot>
+                    <port>1</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="c977477b-e05f-4804-a030-06b7f1ea7e3e">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:10:18:98:2f:62</address>
+                    <mtu>1500</mtu>
+                    <device>p3p2</device>
+                    <maxBandwidth unit="Mb/s">10000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+                    <card ref="e09594cf-7078-4bbe-b153-495e593c5e5b"/>
+                    <slot>3</slot>
+                    <port>2</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+                <port id="cb158ec7-380a-4611-a287-ade11590636f">
+                    <status>normal</status>
+                    <kind>network</kind>
+                    <address>00:26:b9:35:9d:f7</address>
+                    <mtu>1500</mtu>
+                    <device>priv0</device>
+                    <maxBandwidth unit="Mb/s">1000</maxBandwidth>
+                    <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+                    <card ref="22cf6821-24e4-4088-813c-0082c3148982"/>
+                    <slot>0</slot>
+                    <port>1</port>
+                    <type>ENET</type>
+                    <is_slave>false</is_slave>
+                </port>
+            </devices>
+            <storage-devices>
+                <storage-controllers>
+                    <storage-controller id='abdca0cf-2e31-4b42-a31f-abefafdebb75'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller rev -r05</name>
+                        <type>USB controller</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset USB2 Enhanced Host Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>unknown</driver-rev>
+                        <driver-name>ehci-pci</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <removable-disks/>
+                    </storage-controller>
+                    <storage-controller id='9c41a6df-b4fd-4ace-8092-65967c5797e8'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller rev -r05</name>
+                        <type>USB controller</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset USB2 Enhanced Host Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>unknown</driver-rev>
+                        <driver-name>ehci-pci</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <removable-disks/>
+                    </storage-controller>
+                    <storage-controller id='848b2271-ba16-4356-82ef-529b74fe8db1'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset 4 port SATA IDE Controller rev -r05</name>
+                        <type>IDE interface</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset 4 port SATA IDE Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>2.13</driver-rev>
+                        <driver-name>ata_piix</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='24bd0300-247b-4e18-a131-c738cca7d507'>
+                        <name>Intel Corporation 5 Series/3400 Series Chipset 2 port SATA IDE Controller rev -r05</name>
+                        <type>IDE interface</type>
+                        <status>normal</status>
+                        <vendor>Intel Corporation</vendor>
+                        <model>5 Series/3400 Series Chipset 2 port SATA IDE Controller</model>
+                        <hw-rev>-r05</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>2.13</driver-rev>
+                        <driver-name>ata_piix</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='2a2da0fb-9c33-4cb9-a78b-634c6139cf91'>
+                        <name>LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] rev -r02</name>
+                        <type>Serial Attached SCSI controller</type>
+                        <status>normal</status>
+                        <vendor>LSI Logic / Symbios Logic</vendor>
+                        <model>SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon]</model>
+                        <hw-rev>-r02</hw-rev>
+                        <firmware-rev>unknown</firmware-rev>
+                        <driver-rev>20.103.00.00</driver-rev>
+                        <driver-name>mpt2sas</driver-name>
+                        <vendor-state>unknown</vendor-state>
+                        <vendor-status>unknown</vendor-status>
+                        <logical-disks>
+                            <logical-disk id='df0d494e-eb7e-4b03-9b5a-e43abb1c146a' uuid='df0d494e-eb7e-4b03-9b5a-e43abb1c146a'>
+                                <name>Logical Disk - 0</name>
+                                <device-number>0</device-number>
+                                <status>normal</status>
+                                <system-disk>true</system-disk>
+                                <status-epoch>1535509735</status-epoch>
+                                <device-path>/dev/sda</device-path>
+                                <vendor-status/>
+                                <vendor-state/>
+                                <size>159450660864</size>
+                                <phys-sector-size>512</phys-sector-size>
+                                <partitions>sda1,sda2,sda4</partitions>
+                                <data-partition>/dev/sda4</data-partition>
+                                <part-table>gpt</part-table>
+                                <is-foreign>false</is-foreign>
+                                <scsi-id>3600508e000000000bc516d25b8aead05</scsi-id>
+                                <logical-size>158393696256</logical-size>
+                            </logical-disk>
+                            <internal-path id='61910595-61e3-4b8f-a4b1-39a1eb30eca6'>
+                                <logical-disk ref='3600508e000000000bc516d25b8aead05'/>
+                            </internal-path>
+                            <logical-disk id='72b50ed4-dbcd-413a-b914-56b3af6c815f' uuid='72b50ed4-dbcd-413a-b914-56b3af6c815f'>
+                                <name>Logical Disk - 1</name>
+                                <device-number>1</device-number>
+                                <status>normal</status>
+                                <system-disk>true</system-disk>
+                                <status-epoch>1535509735</status-epoch>
+                                <device-path>/dev/sdb</device-path>
+                                <vendor-status/>
+                                <vendor-state/>
+                                <size>159450660864</size>
+                                <phys-sector-size>512</phys-sector-size>
+                                <partitions>sdb1,sdb2,sdb4</partitions>
+                                <data-partition>/dev/sdb4</data-partition>
+                                <part-table>gpt</part-table>
+                                <is-foreign>false</is-foreign>
+                                <scsi-id>3600508e0000000006b52a90067ad7109</scsi-id>
+                                <logical-size>158393696256</logical-size>
+                            </logical-disk>
+                            <internal-path id='a7bc33da-0a93-4ded-af2c-f76f36e00426'>
+                                <logical-disk ref='3600508e0000000006b52a90067ad7109'/>
+                            </internal-path>
+                        </logical-disks>
+                    </storage-controller>
+                    <storage-controller id='0fab150f-7807-43d0-984c-fe7720d6f2a8'>
+                        <name>Software iSCSI Initiator</name>
+                        <type>Software iSCSI Initiator</type>
+                        <status>normal</status>
+                        <vendor/>
+                        <model/>
+                        <hw-rev/>
+                        <firmware-rev/>
+                        <driver-rev/>
+                        <driver-name/>
+                        <vendor-state/>
+                        <vendor-status/>
+                        <logical-disks/>
+                    </storage-controller>
+                    <storage-controller id='7d20f9f9-4d08-4110-a322-86e00c12b289'>
+                        <name>Device Mapper Multipath</name>
+                        <type>Device Mapper Multipath</type>
+                        <status>normal</status>
+                        <vendor/>
+                        <model/>
+                        <hw-rev/>
+                        <firmware-rev/>
+                        <driver-rev/>
+                        <driver-name/>
+                        <vendor-state/>
+                        <vendor-status/>
+                        <logical-disks/>
+                    </storage-controller>
+                </storage-controllers>
+                <volume-groups>
+                    <volume-group id='2a9DLx-3hvJ-Bft7-AyQY-gvOw-CAe8-BJbiuK'>
+                        <name>everrun</name>
+                        <is-activated>true</is-activated>
+                        <physical-volume id='42tvFx-RiCM-asTg-XLML-noDb-I99T-SIgGBa'>
+                            <device-name>/dev/sda4</device-name>
+                        </physical-volume>
+                        <physical-volume id='66Hv6n-AnJK-MZ2b-egT1-yHbn-pRcL-m6crv5'>
+                            <device-name>/dev/sdb4</device-name>
+                        </physical-volume>
+                    </volume-group>
+                </volume-groups>
+            </storage-devices>
+            <storage>
+                <image-container id="3638d1e0-b63d-47fb-a313-18c8886e9a48">
+                    <name>diagdata</name>
+                    <size>8594128896</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <disk-image id="42b1de84-e3e0-46a6-90a2-39f7b9f6b7b8">
+                    <local-image-container ref="7f6679e5-d3dc-45f7-82e9-5a2ae7d990c6"/>
+                    <volume>479d3f71-e3fa-4811-b32b-9e43031a025f</volume>
+                    <path>/dev/everrun/diagdata_rimage_0</path>
+                    <size>8594128896</size>
+                    <virtual-size>8594128896</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512663860</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>diagdata</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <unity-volume id="479d3f71-e3fa-4811-b32b-9e43031a025f">
+                    <image-container ref="3638d1e0-b63d-47fb-a313-18c8886e9a48"/>
+                    <name>diagdata</name>
+                    <size>8594128896</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535512663859</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <disk-image id="4cb57fff-1784-412e-8c2f-776fa992addc">
+                    <local-image-container ref="b94a3fb4-4677-4fc4-ad7c-b2e6a10d7269"/>
+                    <volume>fd9cf17b-7677-43aa-8f35-cfaa9a4d58c1</volume>
+                    <path>/dev/everrun/swap_rimage_0</path>
+                    <size>2151677952</size>
+                    <virtual-size>2151677952</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512242068</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>swap</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <image-container id="5de18803-8b48-47ac-9a82-616095c4a4a7">
+                    <name>root</name>
+                    <size>21479030784</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <unity-volume id="6395525b-d507-4118-8839-b8e7e963404b">
+                    <image-container ref="5de18803-8b48-47ac-9a82-616095c4a4a7"/>
+                    <name>root</name>
+                    <size>21479030784</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535513505667</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <local-image-container id="7f6679e5-d3dc-45f7-82e9-5a2ae7d990c6">
+                    <image-container ref="3638d1e0-b63d-47fb-a313-18c8886e9a48"/>
+                    <name>diagdata_rimage_0</name>
+                    <path>/dev/everrun/diagdata_rimage_0</path>
+                    <device-size>8594128896</device-size>
+                    <logical-size>8594128896</logical-size>
+                    <used-size>8594128896</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="a1a15936-9c06-4157-8929-92b35f53dbb8">
+                    <local-image-container ref="ed196ac2-9813-4cdd-a5b7-b62692194957"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>21479030784</size>
+                </local-image-container-logical-disk-association>
+                <image-container id="ae99f255-3232-4294-81fb-6920ed933284">
+                    <name>swap</name>
+                    <size>2151677952</size>
+                    <phys-sector-size>512</phys-sector-size>
+                    <logical-sector-size>512</logical-sector-size>
+                    <has-file-system>false</has-file-system>
+                    <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+                    <disk-image-overhead-fix>0</disk-image-overhead-fix>
+                </image-container>
+                <local-image-container id="b94a3fb4-4677-4fc4-ad7c-b2e6a10d7269">
+                    <image-container ref="ae99f255-3232-4294-81fb-6920ed933284"/>
+                    <name>swap_rimage_0</name>
+                    <path>/dev/everrun/swap_rimage_0</path>
+                    <device-size>2151677952</device-size>
+                    <logical-size>2151677952</logical-size>
+                    <used-size>2151677952</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="cd138715-8725-4a3c-8c3b-17014f271b74">
+                    <local-image-container ref="b94a3fb4-4677-4fc4-ad7c-b2e6a10d7269"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>2151677952</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="ea2c5244-34cf-48c5-b9f1-243a0367f879">
+                    <local-image-container ref="7f6679e5-d3dc-45f7-82e9-5a2ae7d990c6"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>8594128896</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="ed196ac2-9813-4cdd-a5b7-b62692194957">
+                    <image-container ref="5de18803-8b48-47ac-9a82-616095c4a4a7"/>
+                    <name>root_rimage_0</name>
+                    <path>/dev/everrun/root_rimage_0</path>
+                    <device-size>21479030784</device-size>
+                    <logical-size>21479030784</logical-size>
+                    <used-size>21479030784</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="fce5bd1e-2525-4faa-a806-89c45aaecbbd">
+                    <local-image-container ref="ed196ac2-9813-4cdd-a5b7-b62692194957"/>
+                    <volume>6395525b-d507-4118-8839-b8e7e963404b</volume>
+                    <path>/dev/everrun/root_rimage_0</path>
+                    <size>21479030784</size>
+                    <virtual-size>21479030784</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535513505668</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>root</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <unity-volume id="fd9cf17b-7677-43aa-8f35-cfaa9a4d58c1">
+                    <image-container ref="ae99f255-3232-4294-81fb-6920ed933284"/>
+                    <name>swap</name>
+                    <size>2151677952</size>
+                    <system-storage>true</system-storage>
+                    <private-storage>false</private-storage>
+                    <writable>true</writable>
+                    <bootable>false</bootable>
+                    <isISO>false</isISO>
+                    <state>ready</state>
+                    <replication-progress>100.00</replication-progress>
+                    <replication-status>normal</replication-status>
+                    <replication-epoch>1535512242066</replication-epoch>
+                    <sync-percent>100</sync-percent>
+                    <sync-remaining-time>0</sync-remaining-time>
+                </unity-volume>
+                <local-image-container-logical-disk-association id="0b4be491-ca45-488a-9de8-b433b3ec4b68">
+                    <local-image-container ref="a3f03dac-552f-44f2-965f-c5c59f4e5392"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>1073741824</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="a3f03dac-552f-44f2-965f-c5c59f4e5392">
+                    <image-container ref="89dd2c7b-22cd-4c9f-a06a-6c316c012e31"/>
+                    <name>shared.fs_image_container_node1</name>
+                    <path>/dev/everrun/shared.fs_image_container_node1</path>
+                    <device-size>1073741824</device-size>
+                    <logical-size>1073741824</logical-size>
+                    <used-size>1073741824</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="441bdb69-862e-43d9-981f-70d704f55170">
+                    <local-image-container ref="a3f03dac-552f-44f2-965f-c5c59f4e5392"/>
+                    <volume>c9223b67-21da-40ab-bc31-836ebff75eed</volume>
+                    <path>/dev/everrun/shared.fs_image_container_node1</path>
+                    <size>1073741824</size>
+                    <virtual-size>1073741824</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535617704465</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>shared.fs_image_container_9166ea7c-6900-42f1-b6e5-0bd3efcd3ab2</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="0f43950a-86f6-4640-813b-feb31e4a500e">
+                    <image-container ref="3638d1e0-b63d-47fb-a313-18c8886e9a48"/>
+                    <name>diagdata_rimage_1</name>
+                    <path>/dev/everrun/diagdata_rimage_1</path>
+                    <device-size>8594128896</device-size>
+                    <logical-size>8594128896</logical-size>
+                    <used-size>8594128896</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="a1bf9ee9-3385-44db-a4b2-21f7468f01f0">
+                    <local-image-container ref="0f43950a-86f6-4640-813b-feb31e4a500e"/>
+                    <volume>479d3f71-e3fa-4811-b32b-9e43031a025f</volume>
+                    <path>/dev/everrun/diagdata_rimage_1</path>
+                    <size>8594128896</size>
+                    <virtual-size>8594128896</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512663862</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>diagdata_7f6b7899-e958-4f5f-bb20-024eaaa5cff4</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="227e5c06-571f-42b5-a862-fe46280698aa">
+                    <local-image-container ref="0f43950a-86f6-4640-813b-feb31e4a500e"/>
+                    <logical-disk ref="72b50ed4-dbcd-413a-b914-56b3af6c815f"/>
+                    <size>8594128896</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="2b97dcad-d79f-41d2-b6c2-e198a6312939">
+                    <image-container ref="ae99f255-3232-4294-81fb-6920ed933284"/>
+                    <name>swap_rimage_1</name>
+                    <path>/dev/everrun/swap_rimage_1</path>
+                    <device-size>2151677952</device-size>
+                    <logical-size>2151677952</logical-size>
+                    <used-size>2151677952</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="3690b853-361e-45ad-abc1-5d1f1827f686">
+                    <local-image-container ref="2b97dcad-d79f-41d2-b6c2-e198a6312939"/>
+                    <volume>fd9cf17b-7677-43aa-8f35-cfaa9a4d58c1</volume>
+                    <path>/dev/everrun/swap_rimage_1</path>
+                    <size>2151677952</size>
+                    <virtual-size>2151677952</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535512242069</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>swap_1463bb0e-a467-40ea-a0f6-3f00b590c1f0</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="2bc96f98-71f1-4357-abf3-9dc25c743721">
+                    <local-image-container ref="2b97dcad-d79f-41d2-b6c2-e198a6312939"/>
+                    <logical-disk ref="72b50ed4-dbcd-413a-b914-56b3af6c815f"/>
+                    <size>2151677952</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="a26ad63a-2faa-4b58-8d53-026c5488ad72">
+                    <image-container ref="5de18803-8b48-47ac-9a82-616095c4a4a7"/>
+                    <name>root_rimage_1</name>
+                    <path>/dev/everrun/root_rimage_1</path>
+                    <device-size>21479030784</device-size>
+                    <logical-size>21479030784</logical-size>
+                    <used-size>21479030784</used-size>
+                    <has-file-system>false</has-file-system>
+                    <mounted>false</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="5580dbdc-d0f4-4860-a47f-fce2c2dcd507">
+                    <local-image-container ref="a26ad63a-2faa-4b58-8d53-026c5488ad72"/>
+                    <volume>6395525b-d507-4118-8839-b8e7e963404b</volume>
+                    <path>/dev/everrun/root_rimage_1</path>
+                    <size>21479030784</size>
+                    <virtual-size>21479030784</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535513505670</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>BLOCK_DEVICE</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>false</available>
+                    <file-exist>true</file-exist>
+                    <name>root_ced10e24-47cf-48f8-aec9-6e220a200627</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="8135a2b0-0171-43b1-b7a8-2f5ce3b5da4f">
+                    <local-image-container ref="a26ad63a-2faa-4b58-8d53-026c5488ad72"/>
+                    <logical-disk ref="72b50ed4-dbcd-413a-b914-56b3af6c815f"/>
+                    <size>21479030784</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container-logical-disk-association id="000c9152-bcfa-4fbf-a786-3dc1f6bfaf92">
+                    <local-image-container ref="1b886e45-4c2e-4de3-a7b7-fdc4dea237cb"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>18295554048</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="1b886e45-4c2e-4de3-a7b7-fdc4dea237cb">
+                    <image-container ref="0522f4d0-68e2-49ec-b1f0-10956ca5ecc7"/>
+                    <name>rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node1</name>
+                    <path>/mnt/everrun/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node1</path>
+                    <device-size>18295554048</device-size>
+                    <logical-size>18285068288</logical-size>
+                    <used-size>2392412160</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="5e08e6fe-f072-4204-99b1-1f8de9e21fd9">
+                    <local-image-container ref="1b886e45-4c2e-4de3-a7b7-fdc4dea237cb"/>
+                    <volume>c943e9d3-6ec3-4cff-99e6-55c353ffab2b</volume>
+                    <path>/mnt/everrun/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_node1/rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_55854a5a-f0db-471b-8e9c-2e63f8317f55</path>
+                    <size>2358669312</size>
+                    <virtual-size>17179869184</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517352221</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83_55854a5a-f0db-471b-8e9c-2e63f8317f55</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="02ca6e44-122d-47fd-8682-cd08a3bf5cfe">
+                    <image-container ref="064e1904-cd40-4435-a777-0ea6e4b6ab3d"/>
+                    <name>rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node1</name>
+                    <path>/mnt/everrun/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node1</path>
+                    <device-size>18295554048</device-size>
+                    <logical-size>18285068288</logical-size>
+                    <used-size>3149029376</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="ac6953af-5665-4ff6-97f6-0788d46cd2c0">
+                    <local-image-container ref="02ca6e44-122d-47fd-8682-cd08a3bf5cfe"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>18295554048</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="3acf1042-636e-4645-9800-2c1fdf7fc429">
+                    <local-image-container ref="02ca6e44-122d-47fd-8682-cd08a3bf5cfe"/>
+                    <volume>31590c23-743d-4770-84c7-b6e176c1a1d3</volume>
+                    <path>/mnt/everrun/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_node1/rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_ec8c83d6-c777-4146-b15e-8cae0edeaa42</path>
+                    <size>3115286528</size>
+                    <virtual-size>17179869184</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517980234</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f_ec8c83d6-c777-4146-b15e-8cae0edeaa42</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="85976638-32ff-4e0c-bec5-8cce58001249">
+                    <local-image-container ref="891bf9e0-4ce1-496d-a0c8-de6803368c46"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="891bf9e0-4ce1-496d-a0c8-de6803368c46">
+                    <image-container ref="2846c28c-0063-40aa-a9c6-d6a1500dc6ce"/>
+                    <name>datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node1</name>
+                    <path>/mnt/everrun/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>469368832</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="71b3feae-fca9-46fc-8b98-35c4c1be9406">
+                    <local-image-container ref="891bf9e0-4ce1-496d-a0c8-de6803368c46"/>
+                    <volume>977aaa1f-38a1-42ba-a51b-ff50a1f55cc6</volume>
+                    <path>/mnt/everrun/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_node1/datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_5b78789e-5035-4543-8d75-dfdb6f8912b2</path>
+                    <size>435625984</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517372255</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc_5b78789e-5035-4543-8d75-dfdb6f8912b2</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="6bbd7bab-a3a5-440b-a723-9b7692d4cdf2">
+                    <local-image-container ref="850b31ca-9b9b-4c89-9a37-a447c3e53229"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="850b31ca-9b9b-4c89-9a37-a447c3e53229">
+                    <image-container ref="46f1a258-ba3a-479d-ace7-76ef608ccc30"/>
+                    <name>datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node1</name>
+                    <path>/mnt/everrun/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>465920000</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="2767bbff-5439-4ebd-9aa2-a70452c3d0dc">
+                    <local-image-container ref="850b31ca-9b9b-4c89-9a37-a447c3e53229"/>
+                    <volume>28a56488-b0b0-4b01-af18-6e895a94b478</volume>
+                    <path>/mnt/everrun/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_node1/datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_268d262d-eda3-4e61-a424-a5862d511f07</path>
+                    <size>432177152</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517372250</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2_268d262d-eda3-4e61-a424-a5862d511f07</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="8d66c44f-0e1b-4513-8141-70c58270ba14">
+                    <image-container ref="1e361b99-a430-40ed-96d7-df5b0cff8027"/>
+                    <name>datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node1</name>
+                    <path>/mnt/everrun/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>645996544</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="a4dfddbf-3d8b-4c7f-bcbe-e2b89a415cc3">
+                    <local-image-container ref="8d66c44f-0e1b-4513-8141-70c58270ba14"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="205c42a2-9639-4147-a9b4-daef0d5e996b">
+                    <local-image-container ref="8d66c44f-0e1b-4513-8141-70c58270ba14"/>
+                    <volume>30a9ff5e-8a0d-4906-84c2-9632330166a5</volume>
+                    <path>/mnt/everrun/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_node1/datagreece22_5a56118f-719b-4905-9542-c250839d8b60_29a8ec22-e20c-4a96-b2e8-5af48be3418e</path>
+                    <size>612253696</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535518005304</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece22_5a56118f-719b-4905-9542-c250839d8b60_29a8ec22-e20c-4a96-b2e8-5af48be3418e</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container id="c244b92d-a9d8-4446-b839-93acd5d2b7f2">
+                    <image-container ref="72a3ff6f-5fde-408b-9a57-f470c79b664a"/>
+                    <name>datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node1</name>
+                    <path>/mnt/everrun/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253845504</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <local-image-container-logical-disk-association id="f0e8db4b-18a9-4b7a-83e3-9dc206457822">
+                    <local-image-container ref="c244b92d-a9d8-4446-b839-93acd5d2b7f2"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <disk-image id="70418dc3-a03a-416c-a59f-935676cbbb69">
+                    <local-image-container ref="c244b92d-a9d8-4446-b839-93acd5d2b7f2"/>
+                    <volume>83bac6c5-02bb-4e65-89f6-d9a6cc838fc6</volume>
+                    <path>/mnt/everrun/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_node1/datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_c02bae2a-5430-485a-bc54-f2500a5e117a</path>
+                    <size>220102656</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535517996278</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115_c02bae2a-5430-485a-bc54-f2500a5e117a</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="67d15dcf-437d-42ca-9599-d89a1af1ac98">
+                    <local-image-container ref="e38d5dde-77d0-4aec-a4e1-d4eb7db56742"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="e38d5dde-77d0-4aec-a4e1-d4eb7db56742">
+                    <image-container ref="8cde439c-facc-4643-8643-32d2ea572664"/>
+                    <name>datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node1</name>
+                    <path>/mnt/everrun/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253845504</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="952da9a2-be29-4d43-8377-7bdba9ec1026">
+                    <local-image-container ref="e38d5dde-77d0-4aec-a4e1-d4eb7db56742"/>
+                    <volume>70ad9419-a951-4dd2-9062-f4172f99546e</volume>
+                    <path>/mnt/everrun/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_node1/datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_d6fd85a0-0cc7-4080-af83-79efa1ee4597</path>
+                    <size>220102656</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535518002328</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89_d6fd85a0-0cc7-4080-af83-79efa1ee4597</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+                <local-image-container-logical-disk-association id="34685eeb-5c8d-4fb9-9af1-e1f23389e6e9">
+                    <local-image-container ref="a16266f6-83d0-44c5-9cb6-6b10c2d96c90"/>
+                    <logical-disk ref="df0d494e-eb7e-4b03-9b5a-e43abb1c146a"/>
+                    <size>5737807872</size>
+                </local-image-container-logical-disk-association>
+                <local-image-container id="a16266f6-83d0-44c5-9cb6-6b10c2d96c90">
+                    <image-container ref="6fc22d94-6a81-4573-8def-c2f448358da0"/>
+                    <name>datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node1</name>
+                    <path>/mnt/everrun/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node1</path>
+                    <device-size>5737807872</device-size>
+                    <logical-size>5727322112</logical-size>
+                    <used-size>253845504</used-size>
+                    <has-file-system>true</has-file-system>
+                    <mounted>true</mounted>
+                    <accessible>true</accessible>
+                    <state>ready</state>
+                </local-image-container>
+                <disk-image id="b2244d35-7a65-4351-91e3-8887d6f9e066">
+                    <local-image-container ref="a16266f6-83d0-44c5-9cb6-6b10c2d96c90"/>
+                    <volume>2fa60a5f-3275-427b-9f96-59774a6fa3c8</volume>
+                    <path>/mnt/everrun/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_node1/datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_b925ccd8-0a6d-4d83-a626-bfa46ad873da</path>
+                    <size>220102656</size>
+                    <virtual-size>5368709120</virtual-size>
+                    <snapshot>false</snapshot>
+                    <connected>true</connected>
+                    <disabled>false</disabled>
+                    <replication-state>normal</replication-state>
+                    <replication-status-epoch>1535518002332</replication-status-epoch>
+                    <state>ready</state>
+                    <image-type>RAW</image-type>
+                    <status>normal</status>
+                    <online>true</online>
+                    <available>true</available>
+                    <file-exist>true</file-exist>
+                    <name>datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab_b925ccd8-0a6d-4d83-a626-bfa46ad873da</name>
+                    <block-status>normal</block-status>
+                    <unexpected>false</unexpected>
+                    <convert-state>idle</convert-state>
+                    <copy-disk-image-state>idle</copy-disk-image-state>
+                    <progress>100</progress>
+                </disk-image>
+            </storage>
+        </node>
+    </nodes>
+    <storage>
+        <image-container id="89dd2c7b-22cd-4c9f-a06a-6c316c012e31">
+            <name>shared.fs_image_container</name>
+            <size>1073741824</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>false</has-file-system>
+            <disk-image-overhead-coefficient>0</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>0</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="c9223b67-21da-40ab-bc31-836ebff75eed">
+            <name>shared.fs</name>
+            <image-container ref="89dd2c7b-22cd-4c9f-a06a-6c316c012e31"/>
+            <size>1073741824</size>
+            <system-storage>true</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>0</sync-source>
+            <sync-target>0</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+        </unity-volume>
+        <image-container id="0522f4d0-68e2-49ec-b1f0-10956ca5ecc7">
+            <name>rhel73x86_64sda_0f7b801e-4c22-4355-be73-a06be54e9d83</name>
+            <size>18295554048</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="c943e9d3-6ec3-4cff-99e6-55c353ffab2b">
+            <name>rhel73x86_64sda</name>
+            <image-container ref="0522f4d0-68e2-49ec-b1f0-10956ca5ecc7"/>
+            <size>17179869184</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <orig-mirror-copy-src-node-uuid>94dddf08-ef98-4384-983b-bb61b9246708</orig-mirror-copy-src-node-uuid>
+            <sync-active>false</sync-active>
+            <sync-source>0</sync-source>
+            <sync-target>0</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:35:55 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:35:55 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="064e1904-cd40-4435-a777-0ea6e4b6ab3d">
+            <name>rhel73x86_64sdaA_cfff6601-97c5-4240-a013-96b75c83f19f</name>
+            <size>18295554048</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="31590c23-743d-4770-84c7-b6e176c1a1d3">
+            <name>rhel73x86_64sdaA</name>
+            <image-container ref="064e1904-cd40-4435-a777-0ea6e4b6ab3d"/>
+            <size>17179869184</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <orig-mirror-copy-src-node-uuid>94dddf08-ef98-4384-983b-bb61b9246708</orig-mirror-copy-src-node-uuid>
+            <sync-active>false</sync-active>
+            <sync-source>0</sync-source>
+            <sync-target>0</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:46:33 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:46:33 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="2846c28c-0063-40aa-a9c6-d6a1500dc6ce">
+            <name>datagreece10_9ba66ffe-80a9-448f-92f8-e099df9c9ddc</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="977aaa1f-38a1-42ba-a51b-ff50a1f55cc6">
+            <name>datagreece10</name>
+            <image-container ref="2846c28c-0063-40aa-a9c6-d6a1500dc6ce"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>1</sync-source>
+            <sync-target>2</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:36:22 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:36:22 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="46f1a258-ba3a-479d-ace7-76ef608ccc30">
+            <name>datagreece11_fa7fe3f7-2711-45b9-8fd7-1292e9488ef2</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="28a56488-b0b0-4b01-af18-6e895a94b478">
+            <name>datagreece11</name>
+            <image-container ref="46f1a258-ba3a-479d-ace7-76ef608ccc30"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>1</sync-source>
+            <sync-target>2</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:36:14 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:36:14 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="1e361b99-a430-40ed-96d7-df5b0cff8027">
+            <name>datagreece22_5a56118f-719b-4905-9542-c250839d8b60</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="30a9ff5e-8a0d-4906-84c2-9632330166a5">
+            <name>datagreece22</name>
+            <image-container ref="1e361b99-a430-40ed-96d7-df5b0cff8027"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>2</sync-source>
+            <sync-target>1</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:46:53 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:46:53 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="72a3ff6f-5fde-408b-9a57-f470c79b664a">
+            <name>datagreece23_87b295c3-6dac-47f1-a729-a55d3efe2115</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="83bac6c5-02bb-4e65-89f6-d9a6cc838fc6">
+            <name>datagreece23</name>
+            <image-container ref="72a3ff6f-5fde-408b-9a57-f470c79b664a"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>2</sync-source>
+            <sync-target>1</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:46:44 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:46:44 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="8cde439c-facc-4643-8643-32d2ea572664">
+            <name>datagreece20_c289c07e-2de6-4147-8b3d-762aff3a7e89</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="70ad9419-a951-4dd2-9062-f4172f99546e">
+            <name>datagreece20</name>
+            <image-container ref="8cde439c-facc-4643-8643-32d2ea572664"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>2</sync-source>
+            <sync-target>1</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:46:45 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:46:45 -0400</sync-update-time>
+        </unity-volume>
+        <image-container id="6fc22d94-6a81-4573-8def-c2f448358da0">
+            <name>datagreece21_d849ee21-e01f-4ab0-8411-3791e291e8ab</name>
+            <size>5737807872</size>
+            <phys-sector-size>512</phys-sector-size>
+            <logical-sector-size>512</logical-sector-size>
+            <has-file-system>true</has-file-system>
+            <disk-image-overhead-coefficient>0.005</disk-image-overhead-coefficient>
+            <disk-image-overhead-fix>10485760</disk-image-overhead-fix>
+        </image-container>
+        <unity-volume id="2fa60a5f-3275-427b-9f96-59774a6fa3c8">
+            <name>datagreece21</name>
+            <image-container ref="6fc22d94-6a81-4573-8def-c2f448358da0"/>
+            <size>5368709120</size>
+            <system-storage>false</system-storage>
+            <private-storage>false</private-storage>
+            <writable>true</writable>
+            <bootable>false</bootable>
+            <isISO>false</isISO>
+            <state>ready</state>
+            <replication-progress>100.0</replication-progress>
+            <replication-status>normal</replication-status>
+            <sync-active>false</sync-active>
+            <sync-source>2</sync-source>
+            <sync-target>1</sync-target>
+            <sync-percent>100</sync-percent>
+            <sync-current-time>2018-08-29 00:46:46 -0400</sync-current-time>
+            <sync-remaining-time>0</sync-remaining-time>
+            <sync-need-update>false</sync-need-update>
+            <sync-update-time>2018-08-29 00:46:46 -0400</sync-update-time>
+        </unity-volume>
+    </storage>
+    <networks>
+        <network id="439d7db0-c3f1-46fd-8eb1-83ed6e37dac1">
+            <name>network0</name>
+            <role>BUSINESS</role>
+            <address family="ipv4" prefix="16">10.86.0.0</address>
+            <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+            <mtu>1500</mtu>
+            <local-networks>
+                <local-network ref="d6976248-8d28-44d1-8d01-cce2dcf04c50"/>
+                <local-network ref="108e50cf-aa1f-4188-a134-5146e38584cc"/>
+            </local-networks>
+            <capabilities>
+                <business/>
+                <portal/>
+            </capabilities>
+        </network>
+        <network id="ea1686ce-a87a-490e-9d67-768952e66663">
+            <name>priv0</name>
+            <role>PRIVATE</role>
+            <address family="ipv4" prefix=""/>
+            <bandwidth unit="Mb/s" duplex="full">1000</bandwidth>
+            <mtu>1500</mtu>
+            <local-networks>
+                <local-network ref="65965af8-e228-4376-ab64-527907c936b4"/>
+                <local-network ref="470d0736-e0cf-460e-aee5-21ca72827775"/>
+            </local-networks>
+            <capabilities>
+                <internal/>
+                <sync-disk/>
+                <vm-migration/>
+            </capabilities>
+        </network>
+        <network id="43a8f7c2-2dee-4873-9784-a37d39323063">
+            <name>net_80</name>
+            <role>ALINK</role>
+            <address family="ipv4" prefix=""/>
+            <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+            <mtu>1500</mtu>
+            <local-networks>
+                <local-network ref="48396042-635a-4f93-9075-81a88dea9291"/>
+                <local-network ref="332dc3be-06d6-4ca8-907e-8bd6857dee23"/>
+            </local-networks>
+            <capabilities>
+                <sync-disk/>
+                <vm-migration/>
+                <policy-paired/>
+            </capabilities>
+        </network>
+        <network id="107ce2d5-85d9-4a28-8c72-f620c3938bbc">
+            <name>net_81</name>
+            <role>ALINK</role>
+            <address family="ipv4" prefix=""/>
+            <bandwidth unit="Mb/s" duplex="full">10000</bandwidth>
+            <mtu>1500</mtu>
+            <local-networks>
+                <local-network ref="62294798-52dd-43fa-bd76-96ee475a2e27"/>
+                <local-network ref="292e842d-2124-41ec-89ba-a0232889da47"/>
+            </local-networks>
+            <capabilities>
+                <sync-disk/>
+                <vm-migration/>
+                <policy-paired/>
+            </capabilities>
+        </network>
+    </networks>
+    <protected-virtual-machines>
+        <protected-virtual-machine id="06a43cf3-b46d-4e3a-8f47-79ca115a9dd1">
+            <name>greece1</name>
+            <node ref="94dddf08-ef98-4384-983b-bb61b9246708">node0</node>
+            <migration_target ref="94dddf08-ef98-4384-983b-bb61b9246708">node0</migration_target>
+            <migration_source ref="94dddf08-ef98-4384-983b-bb61b9246708">node0</migration_source>
+            <virtualization>hvm</virtualization>
+            <state>running</state>
+            <id>06a43cf3-b46d-4e3a-8f47-79ca115a9dd1</id>
+            <availability>FT</availability>
+            <mode>duplex</mode>
+            <memory>2071</memory>
+            <vcpus>1</vcpus>
+            <hardware_uuid>3e9c922b-b23b-4cbf-91f8-4750cda5f16a</hardware_uuid>
+            <hardware_sn>9bd5aefe-1b70-4210-aac3-b279e1d33ef3</hardware_sn>
+            <axsjoined>true</axsjoined>
+            <synch-state>synch-complete</synch-state>
+            <crashes>0</crashes>
+            <dump-and-go-state>idle</dump-and-go-state>
+            <vhost-net-disabled/>
+            <booted>1535517289</booted>
+            <uptime>113219</uptime>
+            <console>1</console>
+            <vnc>
+                <port>6903</port>
+                <password>NcPJLE</password>
+            </vnc>
+            <cpus DEPRECATED="true">1</cpus>
+            <template ref="832bc2bd-9b1b-4695-8298-3b616af91a10"/>
+            <os>
+                <name>KVM-aware Linux</name>
+                <distro>rhel</distro>
+                <product>Red Hat Enterprise Linux Server 7.3 (Maipo)</product>
+            </os>
+            <hmr-events>
+                <event type="GuestOS">
+                    <name>Guest CPU usage</name>
+                    <status>warning</status>
+                </event>
+            </hmr-events>
+            <boot-count>2</boot-count>
+            <quiescence-state>unquiesced</quiescence-state>
+            <network-connectors>
+                <network-connector id="efad2a1f-7d09-4862-8148-56328d38b182">
+                    <network ref="439d7db0-c3f1-46fd-8eb1-83ed6e37dac1"/>
+                    <MAC>00:04:fc:40:18:00</MAC>
+                    <enabled>true</enabled>
+                    <net0-enabled>true</net0-enabled>
+                    <net1-enabled>true</net1-enabled>
+                </network-connector>
+            </network-connectors>
+            <volume-connectors>
+                <volume-connector id="0058665f-dde6-4569-a8a5-c989a49738b0">
+                    <storage ref="c943e9d3-6ec3-4cff-99e6-55c353ffab2b"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vda</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>true</boot>
+                </volume-connector>
+                <volume-connector id="3cf6823a-fbd6-4435-9ae1-8b2eedf8745e">
+                    <storage ref=""/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>hdb:cdrom</device>
+                    <removable-disk-uuid/>
+                    <type>cdrom</type>
+                    <writable>false</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="0a0045f8-038b-46ee-9068-47bd1e7b5f59">
+                    <storage ref="977aaa1f-38a1-42ba-a51b-ff50a1f55cc6"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vdc</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="1301ab17-91e7-43b2-accd-57e961128e72">
+                    <storage ref="28a56488-b0b0-4b01-af18-6e895a94b478"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vdd</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+            </volume-connectors>
+            <a-links>
+                <a-link id="ab688953-4584-4011-82b6-6e8412a3c50f">
+                    <network ref="107ce2d5-85d9-4a28-8c72-f620c3938bbc"/>
+                    <link-condition>healthy</link-condition>
+                </a-link>
+                <a-link id="2dc57a1d-b531-488f-9e53-9c4d2dddeb40">
+                    <network ref="43a8f7c2-2dee-4873-9784-a37d39323063"/>
+                    <link-condition>healthy</link-condition>
+                </a-link>
+            </a-links>
+            <q-links>
+                <q-link id="4cc655cb-31f1-464c-a8f0-79a83b708a8e" primary="true">
+                    <quorum-server ref="8d6f9e78-be1a-4a9e-9a38-7f77c9961171"/>
+                </q-link>
+            </q-links>
+            <apps>
+                <app name="app_exe">
+                    <hmr-events>
+                        <event type="GuestApp">
+                            <name>Guest CPU usage</name>
+                            <status>warning</status>
+                        </event>
+                    </hmr-events>
+                </app>
+            </apps>
+        </protected-virtual-machine>
+        <protected-virtual-machine id="0784a272-1b92-48cc-ae6f-be43864681f5">
+            <name>greece2</name>
+            <node ref="ec9029bc-9206-4691-81d7-fdfa12401803">node1</node>
+            <migration_target ref="ec9029bc-9206-4691-81d7-fdfa12401803">node1</migration_target>
+            <migration_source ref="ec9029bc-9206-4691-81d7-fdfa12401803">node1</migration_source>
+            <virtualization>hvm</virtualization>
+            <state>running</state>
+            <id>0784a272-1b92-48cc-ae6f-be43864681f5</id>
+            <availability>HA</availability>
+            <mode>duplex</mode>
+            <memory>2784</memory>
+            <vcpus>2</vcpus>
+            <hardware_uuid>c4f10913-3fa9-4d82-ace5-855755f6e364</hardware_uuid>
+            <hardware_sn>85856896-74ee-4dbc-96e6-9152bb05538b</hardware_sn>
+            <axsjoined>true</axsjoined>
+            <synch-state>none</synch-state>
+            <crashes>0</crashes>
+            <dump-and-go-state>idle</dump-and-go-state>
+            <vhost-net-disabled/>
+            <booted>1535517926</booted>
+            <uptime>112582</uptime>
+            <console>1</console>
+            <vnc>
+                <port>6945</port>
+                <password>rOwKyjSu</password>
+            </vnc>
+            <cpus DEPRECATED="true">2</cpus>
+            <template ref="832bc2bd-9b1b-4695-8298-3b616af91a10"/>
+            <os>
+                <name>KVM-aware Linux</name>
+                <distro>rhel</distro>
+                <product>Red Hat Enterprise Linux Server 7.3 (Maipo)</product>
+            </os>
+            <hmr-events/>
+            <boot-count>2</boot-count>
+            <quiescence-state>unquiesced</quiescence-state>
+            <network-connectors>
+                <network-connector id="4c0c8144-982f-41ec-b693-4cd1cddf8ff8">
+                    <network ref="439d7db0-c3f1-46fd-8eb1-83ed6e37dac1"/>
+                    <MAC>00:04:fc:40:18:01</MAC>
+                    <enabled>true</enabled>
+                    <net0-enabled>true</net0-enabled>
+                    <net1-enabled>true</net1-enabled>
+                </network-connector>
+            </network-connectors>
+            <volume-connectors>
+                <volume-connector id="9f3b4c87-3017-48b9-94aa-77b273ec8245">
+                    <storage ref="31590c23-743d-4770-84c7-b6e176c1a1d3"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vda</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>true</boot>
+                </volume-connector>
+                <volume-connector id="61a70261-c23a-4056-86b9-64673dbbf5cc">
+                    <storage ref=""/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>hdb:cdrom</device>
+                    <removable-disk-uuid/>
+                    <type>cdrom</type>
+                    <writable>false</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="8d257eac-bc79-409b-ab6c-29e86801dcf2">
+                    <storage ref="30a9ff5e-8a0d-4906-84c2-9632330166a5"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vdc</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="4abc582e-bf7e-4b2b-8ba8-ae5c96c5c0ea">
+                    <storage ref="83bac6c5-02bb-4e65-89f6-d9a6cc838fc6"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vdd</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="3d544d0a-2cdf-468a-9c7a-20f7345247ee">
+                    <storage ref="70ad9419-a951-4dd2-9062-f4172f99546e"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vde</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+                <volume-connector id="fb5498b3-8d0d-474c-bf03-8f15ee1ced39">
+                    <storage ref="2fa60a5f-3275-427b-9f96-59774a6fa3c8"/>
+                    <remote-iso-path/>
+                    <remote-type/>
+                    <state>ready</state>
+                    <device>vdf</device>
+                    <removable-disk-uuid/>
+                    <type>disk</type>
+                    <writable>true</writable>
+                    <boot>false</boot>
+                </volume-connector>
+            </volume-connectors>
+            <a-links>
+                <a-link id="b699a29c-c9b0-49e7-912e-f7daa266cf7a">
+                    <network ref="43a8f7c2-2dee-4873-9784-a37d39323063"/>
+                    <link-condition>healthy</link-condition>
+                </a-link>
+                <a-link id="7131c3fc-39d4-49bc-bc76-98fa2a488f6a">
+                    <network ref="107ce2d5-85d9-4a28-8c72-f620c3938bbc"/>
+                    <link-condition>healthy</link-condition>
+                </a-link>
+            </a-links>
+            <q-links>
+                <q-link id="24f4a5da-3993-4064-b9c7-e7ecc2f52b2d" primary="true">
+                    <quorum-server ref="8d6f9e78-be1a-4a9e-9a38-7f77c9961171"/>
+                </q-link>
+            </q-links>
+            <apps/>
+        </protected-virtual-machine>
+    </protected-virtual-machines>
+    <quorum-servers>
+        <quorum-server id="8d6f9e78-be1a-4a9e-9a38-7f77c9961171">
+            <name>134.111.26.144:4557</name>
+            <address>134.111.26.144</address>
+            <port>4557</port>
+        </quorum-server>
+    </quorum-servers>
+    <debug private='true'>
+        <hoard_refreshes>0</hoard_refreshes>
+        <topo_duration>0.115466324</topo_duration>
+    </debug>
+</cluster>
