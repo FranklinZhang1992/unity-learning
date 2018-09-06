@@ -1,0 +1,10 @@
+server:
+    port: 8760
+eureka:
+    instance:
+        hostname: localhost
+    client:
+        registerWithEureka: false # As this is Eureka server, so set this to false to avoid registering it self to Eureka server
+        fetchRegistry: false # Set to false to not fetching registration Information (can be set to true if there are multi Eureka servers)
+        serviceUrl:
+            defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
