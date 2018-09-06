@@ -1,7 +1,5 @@
 package com.my.demo.multithread;
 
-import java.lang.Thread.State;
-
 public class Runner implements Runnable {
 
 	private Thread thread;

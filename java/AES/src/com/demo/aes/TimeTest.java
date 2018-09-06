@@ -100,8 +100,8 @@ public class TimeTest {
         String encoded = Base64.getUrlEncoder().encodeToString(s.getBytes());
         log(encoded, verbose);
         System.out.println("len = " + encoded.length());
-        byte[] decoded0 = Base64.getUrlDecoder().decode(encoded);
-        char[] decoded = new String(decoded0).toCharArray();
+        // byte[] decoded0 = Base64.getUrlDecoder().decode(encoded);
+        // char[] decoded = new String(decoded0).toCharArray();
         // long r = ((decoded[0] << 56) & 0xff00000000000000L) | ((decoded[1] <<
         // 48) & 0x00ff000000000000L)
         // | ((decoded[2] << 40) & 0x0000ff0000000000L) | ((decoded[3] << 32) &

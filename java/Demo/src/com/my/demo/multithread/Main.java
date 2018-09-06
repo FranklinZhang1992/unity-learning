@@ -3,7 +3,6 @@ package com.my.demo.multithread;
 public class Main {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 //		Service.getInstance().test1();
 //		Service.getInstance().test2();
 		Runner t1 = new Runner();
@@ -23,7 +22,6 @@ public class Main {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		t1.stop();
