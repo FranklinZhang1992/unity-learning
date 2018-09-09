@@ -8,9 +8,3 @@ eureka:
         fetchRegistry: false # Set to false to not fetching registration Information (can be set to true if there are multi Eureka servers)
         serviceUrl:
             defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
-
-spring:
-    security:
-        user:
-            name: user
-            password: password123
