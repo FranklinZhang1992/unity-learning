@@ -1,0 +1,35 @@
+#!/bin/bash
+
+user="$1"
+password="$2"
+
+if [ -z "$user" ]; then
+    echo "user name is required"
+    exit 1
+fi
+
+if [ -z "$password" ]; then
+    echo "password is required"
+    exit 1
+fi
+
+
+graphql='query {
+    repository(owner:\"octocat\", name:\"Hello-World\") {
+    pullRequests(last: 10) {
+      edges {
+        node {
+          number
+          mergeable
+        }
+      }
+    }
+  }
+}'
+
+graphql="$(echo $graphql)"
+auth="$(echo -n $user:$password | base64)"
+
+curl -H 'Content-Type: application/json' \
+   -H "Authorization: Basic $auth" \
+   -X POST -d "{ \"query\": \"$graphql\"}" https://api.github.com/graphql
