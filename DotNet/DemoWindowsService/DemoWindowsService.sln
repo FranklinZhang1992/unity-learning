@@ -5,16 +5,30 @@ VisualStudioVersion = 15.0.28010.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoService", "DemoService\DemoService.csproj", "{DBE9C404-402D-49B1-857A-8D39634E94DF}"
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SetupProject", "SetupProject\SetupProject.wixproj", "{2ED79C20-C10F-4312-830A-BC625B779863}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Debug|x86.Build.0 = Debug|Any CPU
 		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Release|x86.ActiveCfg = Release|Any CPU
+		{DBE9C404-402D-49B1-857A-8D39634E94DF}.Release|x86.Build.0 = Release|Any CPU
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Debug|x86.ActiveCfg = Debug|x86
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Debug|x86.Build.0 = Debug|x86
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Release|Any CPU.ActiveCfg = Release|x86
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Release|x86.ActiveCfg = Release|x86
+		{2ED79C20-C10F-4312-830A-BC625B779863}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

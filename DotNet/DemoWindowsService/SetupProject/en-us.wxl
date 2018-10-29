@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <!-- Variables -->
+	<String Id="ApplicationName">Monitoring Agent Service</String>
+  <String Id="ManufacturerName">franklin</String>
+  <String Id="ServiceDescription">A Sample Monitoring Agent Service</String>
+  <String Id="SetupProgramTitle">Monitoring Agent Installation</String>
+
+  <!-- Error messages -->
+  <String Id="NewerVersionAlreadyInstalled">A later version of !(loc.ApplicationName) is already installed. Setup will now exit.</String>
+  <String Id="OsNotSupported">This application is only supported on Windows 7, Windows Server 2012, or higher.</String>
+</WixLocalization>

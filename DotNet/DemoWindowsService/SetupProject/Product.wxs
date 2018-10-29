@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include "config.wxi"?>
+	<Product Id="*" Name="!(loc.ApplicationName)" Language="1033" Version="1.0.1.0" Manufacturer="!(loc.ManufacturerName)" UpgradeCode="496F841A-EC25-4FAC-A610-BDD5C252EC7B">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="!(loc.NewerVersionAlreadyInstalled)" />
+    <Media Id="1" Cabinet="DemoService.cab" EmbedCab="yes" />
+
+    <!-- Define pre-conditions for the installer (OS version >= Windows 7) -->
+    <Condition Message="!(loc.OsNotSupported)">
+      <![CDATA[Installed OR (VersionNT >= 601)]]>
+    </Condition>
+    
+    <!-- Define the directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="SetupProject" />
+      </Directory>
+    </Directory>
+
+    <!-- Add files to the installer package -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="ProductComponent">
+        <File Id='DemoServiceEXE' Name='DemoService.exe' DiskId='1' Source='$(var.SourceDir)\DemoService.exe'  KeyPath='yes'/>
+        <ServiceInstall
+          Id="ServiceInstaller"
+          Type="ownProcess"
+          Name="MonitoringService"
+          DisplayName="Sample Monitoring Agent Service"
+          Description="!(loc.ServiceDescription)"
+          Start="auto"
+          ErrorControl="normal"
+          />
+        <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name="DemoService" Wait="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Tell WiX to install the files -->
+		<Feature Id="ProductFeature" Title="!(loc.SetupProgramTitle)" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+    </UI>
+
+    <!-- Specify license -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\license.rtf" />
+	</Product>
+</Wix>

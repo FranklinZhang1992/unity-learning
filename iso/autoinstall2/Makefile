@@ -6,7 +6,7 @@ default: build
 
 build:
 	install -d ISO
-	mkisofs -U -V "Guest Monitoring Agent" -input-charset utf-8 -o ISO/demo.iso $(DIRNAME)
+	mkisofs -U -input-charset utf-8 -o ISO/demo2.iso $(DIRNAME)
 
 clean:
 	-rm -rf ISO
