@@ -5,7 +5,7 @@
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="!(loc.NewerVersionAlreadyInstalled)" />
-    <Media Id="1" Cabinet="DemoService.cab" EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" />
 
     <!-- Define pre-conditions for the installer (OS version >= Windows 7) -->
     <Condition Message="!(loc.OsNotSupported)">
@@ -26,13 +26,14 @@
         <ServiceInstall
           Id="ServiceInstaller"
           Type="ownProcess"
-          Name="MonitoringService"
-          DisplayName="Sample Monitoring Agent Service"
+          Name="$(var.ServiceName)"
+          DisplayName="$(var.ServiceDisplayName)"
           Description="!(loc.ServiceDescription)"
           Start="auto"
           ErrorControl="normal"
+          Vital="yes"
           />
-        <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name="DemoService" Wait="yes" />
+        <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name="$(var.ServiceName)" Wait="yes" />
       </Component>
     </ComponentGroup>
 
