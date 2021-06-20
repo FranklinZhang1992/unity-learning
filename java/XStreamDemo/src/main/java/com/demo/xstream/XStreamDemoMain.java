@@ -26,8 +26,8 @@ public class XStreamDemoMain {
         return "<PERSON id=\"123\">\n" +
                 "  <name>X-rapido</name>\n" +
                 "  <age>22</age>\n" +
-                "  <profile>\n" +
-                "    <job>软件工程师</job>\n" +
+                "  <profile type=\"en\">\n" +
+                "    <job type=\"技术\">软件工程师</job>\n" +
                 "    <tel>13051594850</tel>\n" +
                 "    <remark>备注说明</remark>\n" +
                 "  </profile>\n" +
@@ -43,4 +43,5 @@ public class XStreamDemoMain {
                 "  </addlist>\n" +
                 "</PERSON>";
     }
+
 }

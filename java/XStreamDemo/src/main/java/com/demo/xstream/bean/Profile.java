@@ -1,15 +1,28 @@
 package com.demo.xstream.bean;
 
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+
 public class Profile {
-    private String job;
+
+    @XStreamAsAttribute
+    private String type;
+    private Job job;
     private String tel;
     private String remark;
 
-    public String getJob() {
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Job getJob() {
         return job;
     }
 
-    public void setJob(String job) {
+    public void setJob(Job job) {
         this.job = job;
     }
 
