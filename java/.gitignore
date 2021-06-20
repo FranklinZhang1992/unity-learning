@@ -16,3 +16,4 @@ local.properties
 .recommenders
 RemoteSystemsTempFiles
 .settings
+.idea
