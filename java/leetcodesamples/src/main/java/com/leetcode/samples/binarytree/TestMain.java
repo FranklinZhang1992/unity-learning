@@ -7,7 +7,18 @@ public class TestMain {
     public static void main(String[] args) {
 //        testMaxDepth();
 //        testLeafSimilar();
-        testGoodNodes();
+//        testGoodNodes();
+        testSearchBST();
+    }
+
+    private static void testSearchBST() {
+        SearchBST searchBST = new SearchBST();
+
+        TreeNode root = new TreeNode(4, new TreeNode(2), new TreeNode(7));
+        root.left.left = new TreeNode(1);
+        root.left.right = new TreeNode(3);
+        AssertUtils.equals(root.left, searchBST.searchBST(root, 2));
+        AssertUtils.equals(null, searchBST.searchBST(root, 5));
     }
 
     private static void testGoodNodes() {
