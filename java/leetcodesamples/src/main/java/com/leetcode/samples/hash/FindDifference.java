@@ -1,4 +1,4 @@
-package com.leetcode.samples.findDifference;
+package com.leetcode.samples.hash;
 
 import java.util.HashSet;
 import java.util.LinkedList;

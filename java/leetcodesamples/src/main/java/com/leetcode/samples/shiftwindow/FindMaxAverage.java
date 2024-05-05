@@ -1,4 +1,4 @@
-package com.leetcode.samples.findMaxAverage;
+package com.leetcode.samples.shiftwindow;
 
 /**
  * 643. 子数组最大平均数 I

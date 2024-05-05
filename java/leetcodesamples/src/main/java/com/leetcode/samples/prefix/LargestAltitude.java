@@ -1,4 +1,4 @@
-package com.leetcode.samples.largestAltitude;
+package com.leetcode.samples.prefix;
 
 /**
  * 1732. 找到最高海拔
